@@ -63,7 +63,7 @@ public class RestaurantController {
 
         // Map domain to dto
 
-        Map<DayOfWeek, TimeRange> openingHoursResponse = restaurant.getOpeningHours().openingHours().entrySet()
+        Map<DayOfWeek, TimeRange> openingHoursResponse = restaurant.getOpeningHours().schedule().entrySet()
                 .stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new TimeRange(e.getValue().open(), e.getValue().closed())));
 
         CreateRestaurantResponse response = new CreateRestaurantResponse(
