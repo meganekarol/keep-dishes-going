@@ -1,0 +1,37 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+###
+POST localhost:8080/api/restaurant/create
+Accept: application/json
+Content-Type: application/json
+
+### Create a restaurant
+POST http://localhost:8080/api/restaurants/create
+Content-Type: application/json
+
+{
+  "ownerId": "123e4567-e89b-12d3-a456-426614174000",
+  "name": "La Petite Maison",
+  "address": {
+    "street": "Main Street",
+    "number": "42",
+    "postalCode": "1000",
+    "city": "Brussels",
+    "country": "Belgium"
+  },
+  "contactEmail": "contact@lapetitemaison.be",
+  "cuisineType": "FRENCH",
+  "defaultPreparationTime": 30,
+  "openingHours": {
+    "MONDAY": "09:00",
+    "TUESDAY": "10:00",
+    "WEDNESDAY": "09:30"
+  },
+  "pictureUrls": [
+    "https://example.com/pictures/restaurant-front.jpg",
+    "https://example.com/pictures/restaurant-inside.jpg"
+  ]
+}
+
