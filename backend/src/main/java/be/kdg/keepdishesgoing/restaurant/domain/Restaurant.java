@@ -15,11 +15,11 @@ public class Restaurant {
     private String contactEmail;
     private CuisineType cuisineType;
     private int defaultPrepTime;
-    private Map<DayOfWeek, LocalTime> openingHours;
+    private OpeningHours openingHours;
     private List<PictureUrl> pictureUrls;
 
 
-    public Restaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, Map<DayOfWeek, LocalTime> openingHours, List<PictureUrl> pictureUrls) {
+    public Restaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<PictureUrl> pictureUrls) {
         this.restaurantId = restaurantId;
         this.ownerId = ownerId;
         this.name = name;
@@ -31,7 +31,7 @@ public class Restaurant {
         this.pictureUrls = pictureUrls;
     }
 
-    public static Restaurant createRestaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, Map<DayOfWeek, LocalTime> openingHours, List<PictureUrl> pictureUrls) {
+    public static Restaurant createRestaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<PictureUrl> pictureUrls) {
         return new Restaurant(
                 restaurantId,
                 ownerId,
@@ -73,7 +73,7 @@ public class Restaurant {
         return defaultPrepTime;
     }
 
-    public Map<DayOfWeek, LocalTime> getOpeningHours() {
+    public OpeningHours getOpeningHours() {
         return openingHours;
     }
 

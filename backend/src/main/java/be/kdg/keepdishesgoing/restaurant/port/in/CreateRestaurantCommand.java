@@ -15,7 +15,7 @@ public record CreateRestaurantCommand(
         String contactEmail,
         CuisineType cuisineType,
         int defaultPreparationTime,
-        Map<DayOfWeek, LocalTime> openingHours,
+        OpeningHours openingHours,
         List<PictureUrl> pictureUrls
 ) {
 

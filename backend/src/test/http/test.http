@@ -25,9 +25,8 @@ Content-Type: application/json
   "cuisineType": "FRENCH",
   "defaultPreparationTime": 30,
   "openingHours": {
-    "MONDAY": "09:00",
-    "TUESDAY": "10:00",
-    "WEDNESDAY": "09:30"
+    "MONDAY": { "open": "09:00:00", "closed": "17:00:00" },
+    "TUESDAY": { "open": "10:00:00", "closed": "20:00:00" }
   },
   "pictureUrls": [
     "https://example.com/pictures/restaurant-front.jpg",

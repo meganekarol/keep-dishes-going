@@ -1,5 +1,7 @@
 package be.kdg.keepdishesgoing.restaurant.port.in;
 
+import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
+
 public interface CreateRestaurantUseCase {
-    void createRestaurant(CreateRestaurantCommand command);
+    Restaurant createRestaurant(CreateRestaurantCommand command);
 }

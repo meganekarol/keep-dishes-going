@@ -1,6 +1,7 @@
 package be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request;
 
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Address;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.TimeRange;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -13,7 +14,7 @@ public record CreateRestaurantRequest(
         String contactEmail,
         String cuisineType,
         int defaultPreparationTime,
-        Map<DayOfWeek, LocalTime> openingHours,
+        Map<DayOfWeek, TimeRange> openingHours,
         List<String> pictureUrls
 ) {
 }

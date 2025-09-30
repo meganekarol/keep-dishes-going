@@ -16,8 +16,9 @@ public class RestaurantRepositoryInMemoryAdapter implements RestaurantRepository
     private final Map<RestaurantId, Restaurant> restaurants = new HashMap<>();
 
     @Override
-    public void saveRestaurant(Restaurant restaurant) {
-        this.restaurants.put(restaurant.getRestaurantId(), restaurant);
+    public Restaurant saveRestaurant(Restaurant restaurant) {
+       this.restaurants.put(restaurant.getRestaurantId(), restaurant);
+       return restaurant;
     }
 
     @Override

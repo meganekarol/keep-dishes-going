@@ -8,7 +8,7 @@ public record OwnerId(UUID uuid) {
         return new OwnerId(uuid);
     }
 
-    public static OwnerId create(String id) {
+    public static OwnerId create() {
         return new OwnerId(UUID.randomUUID());
     }
 }

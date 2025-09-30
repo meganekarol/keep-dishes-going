@@ -20,7 +20,7 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
     }
 
     @Override
-    public void createRestaurant(CreateRestaurantCommand command) {
+    public Restaurant createRestaurant(CreateRestaurantCommand command) {
 
         OwnerId ownerId = OwnerId.of(command.ownerId()); // Later get the id from authentication
 
@@ -28,7 +28,7 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
                 restaurantRepositoryPort.findByOwnerId(ownerId);
 
         if (existingRestaurant.isPresent()) {
-            return;
+            throw new RuntimeException("Restaurant with id " + ownerId + " already exists");
         }
 
         Restaurant restaurant = Restaurant.createRestaurant(
@@ -43,7 +43,7 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
                 command.pictureUrls()
         );
 
-        restaurantRepositoryPort.saveRestaurant(restaurant);
+        return restaurantRepositoryPort.saveRestaurant(restaurant);
 
     }
 }
