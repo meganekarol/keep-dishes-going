@@ -48,14 +48,10 @@ public class Restaurant {
 
     public Dish addDish(String name, DishType type, Set<FoodTag> foodTags,
                         String description, Money price, PictureUrl pictureUrl) {
-
-        this.dishes = new ArrayList<>();
         Dish newDish = Dish.createDraft(
-                DishId.create(),
-                this.restaurantId,
-                name,
-                type,
-                foodTags,description,price,pictureUrl);
+                DishId.create(), this.restaurantId, name, type,
+                foodTags, description, price, pictureUrl
+        );
         dishes.add(newDish);
         return newDish;
     }
@@ -69,11 +65,39 @@ public class Restaurant {
 
     }
 
+    public void publishDish(DishId dishId) {
+        Dish dish = findDish(dishId);
+
+        if (!dish.hasDraft() && dish.getStatus() != DishState.UNPUBLISHED) {
+            throw new IllegalStateException("No draft changes available to publish");
+        }
+        int dishCount = countDishes();
+        if (dishCount >= 10) {
+            throw new RuntimeException("Cannot publish more than 10 dishes");
+        }
+        dish.publishDish();
+    }
+
+    public void unpublishDish(DishId dishId) {
+        Dish dish = findDish(dishId);
+
+        if (dish.getStatus() != DishState.PUBLISHED) {
+            throw new IllegalStateException("Dish is not published");
+        }
+        dish.unpublishDish();
+    }
+
     public Dish findDish(DishId dishId) {
         return dishes.stream()
                 .filter(d -> d.getDishId().equals(dishId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Dish not found: " + dishId));
+    }
+
+    public int countDishes() {
+      return (int) dishes.stream()
+              .filter(d -> d.getStatus() == DishState.PUBLISHED)
+              .count();
     }
 
     public RestaurantId getRestaurantId() {

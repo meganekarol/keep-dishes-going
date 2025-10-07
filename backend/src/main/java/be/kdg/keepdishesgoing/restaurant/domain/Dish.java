@@ -64,6 +64,53 @@ public class Dish {
 
     }
 
+    public void publishDish()  {
+        // Ensure that a draft version actually exists before trying to publish it
+        if (!hasDraft()) {
+            throw new IllegalStateException("No draft to publish");
+        }
+
+        this.publishedName = draftName;
+        this.publishedType = draftType;
+        this.publishedFoodTags = Set.copyOf(draftFoodTags);
+        this.publishedDescription = draftDescription;
+        this.publishedPrice = draftPrice;
+        this.publishedPictureUrl = draftPictureUrl;
+        this.status = DishState.PUBLISHED;
+
+        this.lastPublishedAt = LocalDateTime.now();
+        this.scheduledPublishAt = null;
+
+        // After a dish is published, clear its draft fields
+        clearDraft();
+    }
+
+    public void unpublishDish() {
+        if (hasDraft()) {
+            throw new IllegalStateException("Cannot unpublish a draft dish");
+        }
+
+        this.status = DishState.UNPUBLISHED;
+    }
+
+    public boolean hasDraft() {
+        return draftName != null
+                || draftType != null
+                || draftFoodTags != null
+                || draftDescription != null
+                || draftPrice != null
+                || draftPictureUrl != null;
+    }
+
+    public void clearDraft() {
+        this.draftName = null;
+        this.draftType = null;
+        this.draftFoodTags = null;
+        this.draftDescription = null;
+        this.draftPrice = null;
+        this.draftPictureUrl = null;
+    }
+
     public DishId getDishId() {
         return dishId;
     }
@@ -90,5 +137,45 @@ public class Dish {
 
     public PictureUrl getDraftPictureUrl() {
         return draftPictureUrl;
+    }
+
+    public RestaurantId getRestaurantId() {
+        return restaurantId;
+    }
+
+    public String getPublishedName() {
+        return publishedName;
+    }
+
+    public DishType getPublishedType() {
+        return publishedType;
+    }
+
+    public Set<FoodTag> getPublishedFoodTags() {
+        return publishedFoodTags;
+    }
+
+    public String getPublishedDescription() {
+        return publishedDescription;
+    }
+
+    public Money getPublishedPrice() {
+        return publishedPrice;
+    }
+
+    public PictureUrl getPublishedPictureUrl() {
+        return publishedPictureUrl;
+    }
+
+    public DishState getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getScheduledPublishAt() {
+        return scheduledPublishAt;
+    }
+
+    public LocalDateTime getLastPublishedAt() {
+        return lastPublishedAt;
     }
 }
