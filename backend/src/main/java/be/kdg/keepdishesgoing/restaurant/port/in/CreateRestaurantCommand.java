@@ -2,10 +2,7 @@ package be.kdg.keepdishesgoing.restaurant.port.in;
 
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public record CreateRestaurantCommand(

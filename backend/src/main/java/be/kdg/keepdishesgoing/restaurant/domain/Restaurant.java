@@ -2,11 +2,11 @@ package be.kdg.keepdishesgoing.restaurant.domain;
 
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
+// Pure domain model - no framework dependencies
 public class Restaurant {
     private RestaurantId restaurantId;
     private OwnerId ownerId;
@@ -17,6 +17,7 @@ public class Restaurant {
     private int defaultPrepTime;
     private OpeningHours openingHours;
     private List<PictureUrl> pictureUrls;
+    private List<Dish> dishes;
 
 
     public Restaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<PictureUrl> pictureUrls) {
@@ -31,7 +32,7 @@ public class Restaurant {
         this.pictureUrls = pictureUrls;
     }
 
-    public static Restaurant createRestaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<PictureUrl> pictureUrls) {
+    public static Restaurant createRestaurant(RestaurantId restaurantId, OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<PictureUrl> pictureUrls) {
         return new Restaurant(
                 restaurantId,
                 ownerId,
@@ -43,6 +44,36 @@ public class Restaurant {
                 openingHours,
                 pictureUrls
         );
+    }
+
+    public Dish addDish(String name, DishType type, Set<FoodTag> foodTags,
+                        String description, Money price, PictureUrl pictureUrl) {
+
+        this.dishes = new ArrayList<>();
+        Dish newDish = Dish.createDraft(
+                DishId.create(),
+                this.restaurantId,
+                name,
+                type,
+                foodTags,description,price,pictureUrl);
+        dishes.add(newDish);
+        return newDish;
+    }
+
+    public void editDishDraft(DishId dishId,String name, DishType type, Set<FoodTag> foodTags,
+                              String description, Money price, PictureUrl pictureUrl) {
+        Dish dish = findDish(dishId);
+        dish.editDraft(
+                name,type,foodTags,description,price,pictureUrl
+        );
+
+    }
+
+    public Dish findDish(DishId dishId) {
+        return dishes.stream()
+                .filter(d -> d.getDishId().equals(dishId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Dish not found: " + dishId));
     }
 
     public RestaurantId getRestaurantId() {
@@ -79,5 +110,9 @@ public class Restaurant {
 
     public List<PictureUrl> getPictureUrls() {
         return pictureUrls;
+    }
+
+    public List<Dish> getDishes() {
+        return dishes;
     }
 }

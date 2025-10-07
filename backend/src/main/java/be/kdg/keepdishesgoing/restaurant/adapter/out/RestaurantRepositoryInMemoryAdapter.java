@@ -26,4 +26,9 @@ public class RestaurantRepositoryInMemoryAdapter implements RestaurantRepository
         return restaurants.values().stream()
                 .filter(restaurant -> restaurant.getOwnerId().equals(ownerId)).findFirst();
     }
+
+    @Override
+    public Optional<Restaurant> findById(RestaurantId restaurantId) {
+        return Optional.of(restaurants.get(restaurantId));
+    }
 }

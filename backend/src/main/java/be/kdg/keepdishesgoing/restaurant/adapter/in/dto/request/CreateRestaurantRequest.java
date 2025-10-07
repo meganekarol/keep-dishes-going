@@ -4,7 +4,6 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Address;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.TimeRange;
 
 import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
