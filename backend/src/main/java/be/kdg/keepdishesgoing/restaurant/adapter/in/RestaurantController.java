@@ -61,7 +61,7 @@ public class RestaurantController {
                 openingHours,
                 pictureUrls
         );
-       Restaurant restaurant =  createRestaurantUseCase.createRestaurant(command); // Returns the domain Model
+       Restaurant restaurant =  createRestaurantUseCase.createRestaurant(command); //Execute use case (returns Domain Model)
 
         // Map domain to dto
 

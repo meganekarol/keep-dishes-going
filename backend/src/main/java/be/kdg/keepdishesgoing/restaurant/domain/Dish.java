@@ -93,6 +93,19 @@ public class Dish {
         this.status = DishState.UNPUBLISHED;
     }
 
+    public void markDishOutOfStock() {
+        if (status != DishState.PUBLISHED) {
+            throw new IllegalArgumentException(
+                    "Only published dishes can be marked out of stock. Current status: " + status
+            );
+        }
+        this.status = DishState.OUT_OF_STOCK;
+    }
+
+    public void markDishInStock() {
+        this.status = DishState.PUBLISHED;
+    }
+
     public boolean hasDraft() {
         return draftName != null
                 || draftType != null

@@ -17,7 +17,7 @@ public class Restaurant {
     private int defaultPrepTime;
     private OpeningHours openingHours;
     private List<PictureUrl> pictureUrls;
-    private List<Dish> dishes;
+    private List<Dish> dishes = new ArrayList<>();
 
 
     public Restaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<PictureUrl> pictureUrls) {
@@ -85,6 +85,14 @@ public class Restaurant {
             throw new IllegalStateException("Dish is not published");
         }
         dish.unpublishDish();
+    }
+
+    public void markDishOutOfStock(DishId dishId) {
+      findDish(dishId).markDishOutOfStock();
+    }
+
+    public void markDishInStock(DishId dishId) {
+      findDish(dishId).markDishInStock();
     }
 
     public Dish findDish(DishId dishId) {

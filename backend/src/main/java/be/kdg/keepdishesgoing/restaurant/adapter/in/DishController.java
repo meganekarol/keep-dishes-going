@@ -25,11 +25,13 @@ public class DishController {
     private final EditDishAsDraftUseCase editDishAsDraftUseCase;
     private final PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase;
     private final CreateDishUseCase createDishUseCase;
+    private final MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase;
 
-    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase) {
+    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase) {
         this.editDishAsDraftUseCase = editDishAsDraftUseCase;
         this.publishAndUnpublishDishUseCase = publishAndUnpublishDishUseCase;
         this.createDishUseCase = createDishUseCase;
+        this.markDishInAndOutOfStockUseCase = markDishInAndOutOfStockUseCase;
     }
 
     @PostMapping("/new")
@@ -109,11 +111,27 @@ public class DishController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{dishId}/publish")
+    @PostMapping("/{dishId}/unpublish")
     public ResponseEntity<Void> unpublishDish(@PathVariable UUID restaurantId, @PathVariable UUID dishId) {
 
         UnpublishDishCommand command = new UnpublishDishCommand(restaurantId, dishId);
         publishAndUnpublishDishUseCase.unpublishDish(command);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{dishId}/mark-in-stock")
+    public ResponseEntity<Void> markDishInStock(@PathVariable UUID restaurantId, @PathVariable UUID dishId) {
+
+        MarkDishInStockCommand command = new MarkDishInStockCommand(restaurantId, dishId);
+        markDishInAndOutOfStockUseCase.markDishInStock(command);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{dishId}/mark-out-of-stock")
+    public ResponseEntity<Void> markDishOutOfStock(@PathVariable UUID restaurantId, @PathVariable UUID dishId) {
+
+        MarkDishOutOfStockCommand command = new MarkDishOutOfStockCommand(restaurantId, dishId);
+        markDishInAndOutOfStockUseCase.markDishOutOfStock(command);
         return ResponseEntity.ok().build();
     }
 }
