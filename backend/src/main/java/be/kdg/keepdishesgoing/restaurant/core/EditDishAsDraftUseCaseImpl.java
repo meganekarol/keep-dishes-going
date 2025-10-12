@@ -2,10 +2,7 @@ package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishId;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Money;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.PictureUrl;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.EditDishAsDraftCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.EditDishAsDraftUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantRepositoryPort;
@@ -29,14 +26,16 @@ public class EditDishAsDraftUseCaseImpl implements EditDishAsDraftUseCase {
         DishId dishId = DishId.of(command.dishId());
         Money price = Money.of(command.price());
         PictureUrl picture = new PictureUrl(command.pictureUrl());
-        restaurant.editDishDraft(
-                dishId,
+        DishVersion draftVersion = new DishVersion(
                 command.name(),
                 command.type(),
                 command.foodTags(),
                 command.description(),
                 price,
-                picture
+                picture);
+        restaurant.editDishDraft(
+                dishId,
+                draftVersion
         );
 
         restaurantRepositoryPort.saveRestaurant(restaurant);

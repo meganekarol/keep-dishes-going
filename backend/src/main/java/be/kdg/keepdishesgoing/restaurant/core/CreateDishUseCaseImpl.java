@@ -2,6 +2,7 @@ package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishVersion;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Money;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.PictureUrl;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
@@ -24,14 +25,16 @@ public class CreateDishUseCaseImpl implements CreateDishUseCase {
         Restaurant restaurant = restaurantRepositoryPort
                 .findById(RestaurantId.of(command.restaurantId()))
                 .orElseThrow(() -> new IllegalArgumentException("Restaurant not found"));
-        Dish dish = restaurant.addDish(
+
+        DishVersion draftVersion = new DishVersion(
                 command.name(),
                 command.type(),
                 command.foodTags(),
                 command.description(),
                 Money.of(command.price()),
-                new PictureUrl(command.pictureUrl())
-        );
+                new PictureUrl(command.pictureUrl()));
+
+        Dish dish = restaurant.addDish(draftVersion);
         restaurantRepositoryPort.saveRestaurant(restaurant);
         return dish;
     }
