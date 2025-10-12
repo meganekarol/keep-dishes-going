@@ -3,19 +3,18 @@ package be.kdg.keepdishesgoing.restaurant.adapter.in;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.CreateDishRequest;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.EditDishRequest;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.CreateDishResponse;
-import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.CreateRestaurantResponse;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.EditDishResponse;
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.FoodTag;
 import be.kdg.keepdishesgoing.restaurant.port.in.*;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @RestController
@@ -26,12 +25,16 @@ public class DishController {
     private final PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase;
     private final CreateDishUseCase createDishUseCase;
     private final MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase;
+    private final ApplyPendingChangesUseCase applyPendingChangesUseCase;
+    private final ScheduleChangesUseCase scheduleChangesUseCase;
 
-    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase) {
+    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase, ApplyPendingChangesUseCase applyPendingChangesUseCase, ScheduleChangesUseCase scheduleChangesUseCase) {
         this.editDishAsDraftUseCase = editDishAsDraftUseCase;
         this.publishAndUnpublishDishUseCase = publishAndUnpublishDishUseCase;
         this.createDishUseCase = createDishUseCase;
         this.markDishInAndOutOfStockUseCase = markDishInAndOutOfStockUseCase;
+        this.applyPendingChangesUseCase = applyPendingChangesUseCase;
+        this.scheduleChangesUseCase = scheduleChangesUseCase;
     }
 
     @PostMapping("/new")
@@ -57,12 +60,12 @@ public class DishController {
         CreateDishResponse response = new CreateDishResponse(
                 dish.getRestaurantId().uuid(),
                 dish.getDishId().uuid(),
-                dish.getDraftName(),
-                dish.getDraftType(),
-                dish.getDraftFoodTags(),
-                dish.getDraftDescription(),
-                dish.getDraftPrice().getAmount(),
-                dish.getDraftPictureUrl().toString()
+                dish.getDraftVersion().name(),
+                dish.getDraftVersion().type(),
+                dish.getDraftVersion().foodTags(),
+                dish.getDraftVersion().description(),
+                dish.getDraftVersion().price().getAmount(),
+                dish.getDraftVersion().pictureUrl().toString()
         );
 
         return new ResponseEntity<>(response,HttpStatus.CREATED);
@@ -91,12 +94,12 @@ public class DishController {
 
         // Map to Domain to DTO
         EditDishResponse response = new EditDishResponse(
-                dishDraft.getDraftName(),
-                dishDraft.getDraftType(),
-                dishDraft.getDraftFoodTags(),
-                dishDraft.getDraftDescription(),
-                dishDraft.getDraftPrice().getAmount(),
-                dishDraft.getDraftPictureUrl().toString()
+                dishDraft.getDraftVersion().name(),
+                dishDraft.getDraftVersion().type(),
+                dishDraft.getDraftVersion().foodTags(),
+                dishDraft.getDraftVersion().description(),
+                dishDraft.getDraftVersion().price().getAmount(),
+                dishDraft.getDraftVersion().pictureUrl().toString()
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -132,6 +135,26 @@ public class DishController {
 
         MarkDishOutOfStockCommand command = new MarkDishOutOfStockCommand(restaurantId, dishId);
         markDishInAndOutOfStockUseCase.markDishOutOfStock(command);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @PostMapping("/{restaurantId}/schedule-changes")
+    public ResponseEntity<Void> scheduleChanges(
+            @PathVariable UUID restaurantId,
+            @RequestParam LocalDateTime scheduledTime) {
+
+        ScheduleDishChangesCommand command = new ScheduleDishChangesCommand(restaurantId, scheduledTime);
+
+        scheduleChangesUseCase.schedulePendingChanges(command);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{restaurantId}/apply-changes")
+    public ResponseEntity<Void> applyPendingChanges(@PathVariable UUID restaurantId) {
+
+        ApplyPendingChangesCommand command = new ApplyPendingChangesCommand(restaurantId);
+        applyPendingChangesUseCase.applyPendingChanges(command);
         return ResponseEntity.ok().build();
     }
 }

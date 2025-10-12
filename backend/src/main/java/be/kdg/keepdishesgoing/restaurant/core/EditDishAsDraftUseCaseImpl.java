@@ -6,7 +6,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Money;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.PictureUrl;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
-import be.kdg.keepdishesgoing.restaurant.port.in.EditDishAsDraftCommand;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.EditDishAsDraftCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.EditDishAsDraftUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantRepositoryPort;
 import org.springframework.stereotype.Service;

@@ -2,9 +2,9 @@ package be.kdg.keepdishesgoing.restaurant.domain;
 
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 // Pure domain model - no framework dependencies
 public class Restaurant {
@@ -46,23 +46,19 @@ public class Restaurant {
         );
     }
 
-    public Dish addDish(String name, DishType type, Set<FoodTag> foodTags,
-                        String description, Money price, PictureUrl pictureUrl) {
+    public Dish addDish(DishVersion dishDraft) {
         Dish newDish = Dish.createDraft(
-                DishId.create(), this.restaurantId, name, type,
-                foodTags, description, price, pictureUrl
+                DishId.create(),
+                this.restaurantId,
+                dishDraft
         );
         dishes.add(newDish);
         return newDish;
     }
 
-    public void editDishDraft(DishId dishId,String name, DishType type, Set<FoodTag> foodTags,
-                              String description, Money price, PictureUrl pictureUrl) {
+    public void editDishDraft(DishId dishId,DishVersion dishDraft) {
         Dish dish = findDish(dishId);
-        dish.editDraft(
-                name,type,foodTags,description,price,pictureUrl
-        );
-
+        dish.editDraft(dishDraft);
     }
 
     public void publishDish(DishId dishId) {
@@ -71,7 +67,7 @@ public class Restaurant {
         if (!dish.hasDraft() && dish.getStatus() != DishState.UNPUBLISHED) {
             throw new IllegalStateException("No draft changes available to publish");
         }
-        int dishCount = countDishes();
+        int dishCount = countPublishedDishes();
         if (dishCount >= 10) {
             throw new RuntimeException("Cannot publish more than 10 dishes");
         }
@@ -87,6 +83,36 @@ public class Restaurant {
         dish.unpublishDish();
     }
 
+
+    // Publish multiple dishes at once
+    public void publishAllPendingChanges() {
+        List<Dish> pendingDishes = dishes.stream()
+                .filter(Dish::hasPendingChanges)
+                .toList();
+
+        // Check business rule
+        int totalAfterPublish = countPublishedDishes() +
+                (int) pendingDishes.stream()
+                        .filter(d -> d.getStatus() == DishState.UNPUBLISHED)
+                        .count();
+
+        if (totalAfterPublish > 10) {
+            throw new IllegalArgumentException("Cannot publish more than 10 dishes in total");
+        }
+
+        pendingDishes.forEach(Dish::publishDish);
+    }
+
+    public void scheduleChanges(LocalDateTime scheduledTime) {
+        if (scheduledTime.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Cannot schedule changes in the past");
+        }
+        dishes.forEach(dish -> {
+            if (dish.hasPendingChanges()) {
+                dish.scheduleChanges(scheduledTime);
+            }
+        });
+    }
     public void markDishOutOfStock(DishId dishId) {
       findDish(dishId).markDishOutOfStock();
     }
@@ -95,6 +121,7 @@ public class Restaurant {
       findDish(dishId).markDishInStock();
     }
 
+
     public Dish findDish(DishId dishId) {
         return dishes.stream()
                 .filter(d -> d.getDishId().equals(dishId))
@@ -102,7 +129,7 @@ public class Restaurant {
                 .orElseThrow(() -> new RuntimeException("Dish not found: " + dishId));
     }
 
-    public int countDishes() {
+    public int countPublishedDishes() {
       return (int) dishes.stream()
               .filter(d -> d.getStatus() == DishState.PUBLISHED)
               .count();

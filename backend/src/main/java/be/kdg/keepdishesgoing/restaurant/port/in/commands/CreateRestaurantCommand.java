@@ -1,4 +1,4 @@
-package be.kdg.keepdishesgoing.restaurant.port.in;
+package be.kdg.keepdishesgoing.restaurant.port.in.commands;
 
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 

@@ -4,8 +4,8 @@ import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.MarkDishInAndOutOfStockUseCase;
-import be.kdg.keepdishesgoing.restaurant.port.in.MarkDishInStockCommand;
-import be.kdg.keepdishesgoing.restaurant.port.in.MarkDishOutOfStockCommand;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.MarkDishInStockCommand;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.MarkDishOutOfStockCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantRepositoryPort;
 import org.springframework.stereotype.Service;
 

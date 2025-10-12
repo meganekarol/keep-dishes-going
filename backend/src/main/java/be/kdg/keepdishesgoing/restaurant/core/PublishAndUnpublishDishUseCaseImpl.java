@@ -4,8 +4,8 @@ import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.PublishAndUnpublishDishUseCase;
-import be.kdg.keepdishesgoing.restaurant.port.in.PublishDishCommand;
-import be.kdg.keepdishesgoing.restaurant.port.in.UnpublishDishCommand;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.PublishDishCommand;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.UnpublishDishCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantRepositoryPort;
 import org.springframework.stereotype.Service;
 

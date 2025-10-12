@@ -3,7 +3,7 @@ package be.kdg.keepdishesgoing.restaurant.core;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OwnerId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
-import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantCommand;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantRepositoryPort;
 import org.springframework.stereotype.Service;

@@ -1,19 +1,14 @@
 package be.kdg.keepdishesgoing.restaurant.adapter.in;
 
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.CreateRestaurantRequest;
-import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.EditDishRequest;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.CreateRestaurantResponse;
-import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.EditDishResponse;
-import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.CuisineType;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OpeningHours;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.PictureUrl;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.TimeRange;
-import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantCommand;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
-import be.kdg.keepdishesgoing.restaurant.port.in.EditDishAsDraftCommand;
-import be.kdg.keepdishesgoing.restaurant.port.in.EditDishAsDraftUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
