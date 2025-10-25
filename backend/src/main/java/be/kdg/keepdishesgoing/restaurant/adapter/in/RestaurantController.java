@@ -1,11 +1,12 @@
 package be.kdg.keepdishesgoing.restaurant.adapter.in;
 
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.CreateRestaurantRequest;
+import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.UpdateRestaurantHours;
+import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.UpdateRestaurantStatusRequest;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.CreateRestaurantResponse;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.mappers.RestaurantDtoMapper;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantStatus;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.TimeRange;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OwnerId;
 import be.kdg.keepdishesgoing.restaurant.port.in.ChangeRestaurantStatusUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.SetOpeningHoursUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.ChangeRestaurantStatusCommand;
@@ -16,8 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.DayOfWeek;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -36,10 +35,10 @@ public class RestaurantController {
         this.mapper = mapper;
     }
 
-    @PostMapping("/new")
+    @PostMapping
     public ResponseEntity<CreateRestaurantResponse> createRestaurant(@RequestBody CreateRestaurantRequest request) {
 
-        UUID ownerId = UUID.randomUUID(); // Get later from authentication
+        var ownerId = OwnerId.BOBBY.uuid(); // Get later from authentication
 
         CreateRestaurantCommand command = mapper.toCommand(request, ownerId);
 
@@ -53,16 +52,18 @@ public class RestaurantController {
 
     }
 
-    @PutMapping("/{restaurantId}/opening-hours")
+    @PatchMapping("/{restaurantId}/opening-hours")
     public ResponseEntity<Void> setOpeningHours(@PathVariable UUID restaurantId,
-                                                @RequestBody Map<DayOfWeek, TimeRange> schedule) {
-        setOpeningHoursUseCase.setOpeningHours(new SetOpeningHoursCommand(restaurantId, schedule));
+                                                @RequestBody UpdateRestaurantHours request) {
+
+        setOpeningHoursUseCase.setOpeningHours(new SetOpeningHoursCommand(restaurantId, request.schedule()));
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{restaurantId}/status")
+    @PatchMapping("/{restaurantId}/status")
     public ResponseEntity<Void> changeStatus(@PathVariable UUID restaurantId,
-                                             @RequestParam RestaurantStatus status) {
+                                             @RequestBody UpdateRestaurantStatusRequest request) {
+        var status = request.status();
         changeRestaurantStatusUseCase.changeRestaurantStatus(new ChangeRestaurantStatusCommand(restaurantId, status));
         return ResponseEntity.ok().build();
     }

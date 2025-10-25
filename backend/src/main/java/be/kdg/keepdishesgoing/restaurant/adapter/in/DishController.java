@@ -19,7 +19,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/restaurants/{restaurantId}/dishes")
+@RequestMapping("/api/{restaurantId}/dishes")
 public class DishController {
 
     private final EditDishAsDraftUseCase editDishAsDraftUseCase;
@@ -98,7 +98,7 @@ public class DishController {
     }
 
 
-    @PostMapping("/{restaurantId}/schedule-changes")
+    @PostMapping("/schedule-changes")
     public ResponseEntity<Void> scheduleChanges(
             @PathVariable UUID restaurantId,
             @RequestParam LocalDateTime scheduledTime) {
@@ -109,7 +109,7 @@ public class DishController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{restaurantId}/apply-changes")
+    @PostMapping("/apply-changes")
     public ResponseEntity<Void> applyPendingChanges(@PathVariable UUID restaurantId) {
 
         ApplyPendingChangesCommand command = new ApplyPendingChangesCommand(restaurantId);

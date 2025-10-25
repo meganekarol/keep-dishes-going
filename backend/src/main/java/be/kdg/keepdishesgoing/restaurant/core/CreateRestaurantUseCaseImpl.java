@@ -28,6 +28,11 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
 
        var ownerId = OwnerId.of(command.ownerId()); // Later get the id from authentication
 
+        //you can check if the owner exists.
+        if (!ownerId.equals(OwnerId.BOBBY)) {
+            throw new IllegalArgumentException("The owner id is not Bobby");
+        }
+
         Optional<Restaurant> existingRestaurant =
                 loadRestaurantPort.loadByOwnerId(ownerId);
 

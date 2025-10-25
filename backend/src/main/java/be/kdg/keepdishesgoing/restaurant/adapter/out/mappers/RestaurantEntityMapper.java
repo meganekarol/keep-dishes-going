@@ -38,6 +38,7 @@ public class RestaurantEntityMapper {
         entity.setOpeningHours(toOpeningHoursEmbeddable(domain.getOpeningHours()));
 
         entity.setPictureUrls(domain.getPictureUrls());
+        entity.setStatus(domain.getStatus());
         return entity;
     }
 
@@ -84,7 +85,7 @@ public class RestaurantEntityMapper {
                 entity.getDefaultPrepTime(),
                 openingHours,
                 entity.getPictureUrls()
-        );
+        ).withStatus(entity.getStatus());
     }
 
     private Address toAddress(AddressEmbeddable emb) {

@@ -23,9 +23,8 @@ public class DishJpaEntity {
             @AttributeOverride(name = "type", column = @Column(name = "published_type")),
             @AttributeOverride(name = "foodTags", column = @Column(name = "published_food_tags")),
             @AttributeOverride(name = "description", column = @Column(name = "published_description")),
-            @AttributeOverride(name = "price.amount", column = @Column(name = "published_price_amount")),
-            @AttributeOverride(name = "price.currency", column = @Column(name = "published_price_currency")),
-            @AttributeOverride(name = "pictureUrl.url", column = @Column(name = "published_picture_url"))
+            @AttributeOverride(name = "price", column = @Column(name = "published_price_amount")),
+            @AttributeOverride(name = "pictureUrl", column = @Column(name = "published_picture_url"))
     })
     private DishVersionEmbeddable publishedVersion;
 
@@ -35,9 +34,8 @@ public class DishJpaEntity {
             @AttributeOverride(name = "type", column = @Column(name = "draft_type")),
             @AttributeOverride(name = "foodTags", column = @Column(name = "draft_food_tags")),
             @AttributeOverride(name = "description", column = @Column(name = "draft_description")),
-            @AttributeOverride(name = "price.amount", column = @Column(name = "draft_price_amount")),
-            @AttributeOverride(name = "price.currency", column = @Column(name = "draft_price_currency")),
-            @AttributeOverride(name = "pictureUrl.url", column = @Column(name = "draft_picture_url"))
+            @AttributeOverride(name = "price", column = @Column(name = "draft_price_amount")),
+            @AttributeOverride(name = "pictureUrl", column = @Column(name = "draft_picture_url"))
     })
     private DishVersionEmbeddable draftVersion;
 

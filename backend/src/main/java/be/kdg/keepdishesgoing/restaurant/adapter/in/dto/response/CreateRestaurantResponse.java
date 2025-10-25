@@ -16,6 +16,7 @@ public record CreateRestaurantResponse(
         String cuisineType,
         int defaultPreparationTime,
         Map<DayOfWeek, TimeRange> openingHours,
-        List<String> pictureUrls
+        List<String> pictureUrls,
+        String status
 ) {
 }

@@ -32,8 +32,9 @@ public class Restaurant {
         this.pictureUrls = pictureUrls;
     }
 
+
     public static Restaurant createRestaurant(RestaurantId restaurantId, OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<String> pictureUrls) {
-        return new Restaurant(
+        Restaurant restaurant =  new Restaurant(
                 restaurantId,
                 ownerId,
                 name,
@@ -44,6 +45,19 @@ public class Restaurant {
                 openingHours,
                 pictureUrls
         );
+
+        // Determine initial status using the domain logic itself
+        LocalDateTime now = LocalDateTime.now();
+        restaurant.status = restaurant.isOpen(now)
+                ? RestaurantStatus.OPEN
+                : RestaurantStatus.CLOSED;
+
+        return restaurant;
+    }
+
+    public Restaurant withStatus(RestaurantStatus status) {
+        this.status = status;
+        return this;
     }
 
     /** Define or update the weekly schedule */
@@ -72,6 +86,7 @@ public class Restaurant {
         if (status == RestaurantStatus.MANUALLY_OPENED) return true;
         return openingHours.isOpenAt(now.toLocalTime(), now.getDayOfWeek());
     }
+
     public RestaurantId getRestaurantId() {
         return restaurantId;
     }

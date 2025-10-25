@@ -10,7 +10,6 @@ import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantComman
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -46,7 +45,10 @@ public class RestaurantDtoMapper {
                 .stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        e -> new TimeRange(e.getValue().open(), e.getValue().closed())
+                        e -> new TimeRange(
+                                e.getValue().open(),
+                                e.getValue().closed()
+                        )
                 ));
 
         return new CreateRestaurantResponse(
@@ -57,7 +59,8 @@ public class RestaurantDtoMapper {
                 restaurant.getCuisineType().toString(),
                 restaurant.getDefaultPrepTime(),
                 openingHoursResponse,
-                restaurant.getPictureUrls()
+                restaurant.getPictureUrls(),
+                restaurant.getStatus().toString()
         );
     }
 }
