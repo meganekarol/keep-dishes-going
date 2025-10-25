@@ -13,7 +13,7 @@ public record CreateRestaurantCommand(
         CuisineType cuisineType,
         int defaultPreparationTime,
         OpeningHours openingHours,
-        List<PictureUrl> pictureUrls
+        List<String> pictureUrls
 ) {
 
 }

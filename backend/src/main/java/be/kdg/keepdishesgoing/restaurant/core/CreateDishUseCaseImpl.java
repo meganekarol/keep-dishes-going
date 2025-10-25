@@ -2,28 +2,30 @@ package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishVersion;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Money;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.PictureUrl;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateDishCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateDishUseCase;
-import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantRepositoryPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.UpdateDishPort;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class CreateDishUseCaseImpl implements CreateDishUseCase {
 
-    private final RestaurantRepositoryPort restaurantRepositoryPort;
+    private final LoadRestaurantPort restaurantPort;
+    private final UpdateDishPort dishPort;
 
-    public CreateDishUseCaseImpl(RestaurantRepositoryPort restaurantRepositoryPort) {
-        this.restaurantRepositoryPort = restaurantRepositoryPort;
+    public CreateDishUseCaseImpl(LoadRestaurantPort restaurantPort, UpdateDishPort dishPort) {
+        this.restaurantPort = restaurantPort;
+        this.dishPort = dishPort;
     }
 
     @Override
     public Dish createDish(CreateDishCommand command) {
-        Restaurant restaurant = restaurantRepositoryPort
-                .findById(RestaurantId.of(command.restaurantId()))
+        Restaurant restaurant = restaurantPort
+                .loadById(RestaurantId.of(command.restaurantId()))
                 .orElseThrow(() -> new IllegalArgumentException("Restaurant not found"));
 
         DishVersion draftVersion = new DishVersion(
@@ -31,11 +33,16 @@ public class CreateDishUseCaseImpl implements CreateDishUseCase {
                 command.type(),
                 command.foodTags(),
                 command.description(),
-                Money.of(command.price()),
-                new PictureUrl(command.pictureUrl()));
+                command.price(),
+                command.pictureUrl());
 
-        Dish dish = restaurant.addDish(draftVersion);
-        restaurantRepositoryPort.saveRestaurant(restaurant);
+        Dish dish = Dish.createDraft(
+                DishId.create(),
+                restaurant.getRestaurantId(),
+                draftVersion
+        );
+
+        dishPort.updateDish(dish);
         return dish;
     }
 }

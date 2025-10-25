@@ -4,6 +4,7 @@ import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.CreateDishReques
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.EditDishRequest;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.CreateDishResponse;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.EditDishResponse;
+import be.kdg.keepdishesgoing.restaurant.adapter.in.mappers.DishDtoMapper;
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.FoodTag;
 import be.kdg.keepdishesgoing.restaurant.port.in.*;
@@ -27,48 +28,26 @@ public class DishController {
     private final MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase;
     private final ApplyPendingChangesUseCase applyPendingChangesUseCase;
     private final ScheduleChangesUseCase scheduleChangesUseCase;
+    private final DishDtoMapper mapper;
 
-    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase, ApplyPendingChangesUseCase applyPendingChangesUseCase, ScheduleChangesUseCase scheduleChangesUseCase) {
+    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase, ApplyPendingChangesUseCase applyPendingChangesUseCase, ScheduleChangesUseCase scheduleChangesUseCase, DishDtoMapper mapper) {
         this.editDishAsDraftUseCase = editDishAsDraftUseCase;
         this.publishAndUnpublishDishUseCase = publishAndUnpublishDishUseCase;
         this.createDishUseCase = createDishUseCase;
         this.markDishInAndOutOfStockUseCase = markDishInAndOutOfStockUseCase;
         this.applyPendingChangesUseCase = applyPendingChangesUseCase;
         this.scheduleChangesUseCase = scheduleChangesUseCase;
+        this.mapper = mapper;
     }
 
     @PostMapping("/new")
     public ResponseEntity<CreateDishResponse> addDish(@PathVariable UUID restaurantId,@RequestBody CreateDishRequest request) {
-        // Map request DTO to command
 
-        Set<FoodTag> foodTags = request.foodTags().stream()
-                .map(FoodTag::valueOf)
-                .collect(Collectors.toSet());
+        var command = mapper.toCreateCommand(restaurantId, request);
+        var dish = createDishUseCase.createDish(command);
+        var response = mapper.toCreateResponse(dish);
 
-        CreateDishCommand command = new CreateDishCommand(
-                restaurantId,
-                request.name(),
-                request.type(),
-                foodTags,
-                request.description(),
-                request.price(),
-                request.pictureUrl()
-        );
-        Dish dish = createDishUseCase.createDish(command); // Returns domain object
-
-        // Map Domain to response DTO
-        CreateDishResponse response = new CreateDishResponse(
-                dish.getRestaurantId().uuid(),
-                dish.getDishId().uuid(),
-                dish.getDraftVersion().name(),
-                dish.getDraftVersion().type(),
-                dish.getDraftVersion().foodTags(),
-                dish.getDraftVersion().description(),
-                dish.getDraftVersion().price().getAmount(),
-                dish.getDraftVersion().pictureUrl().toString()
-        );
-
-        return new ResponseEntity<>(response,HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
     }
 
@@ -78,31 +57,11 @@ public class DishController {
             @PathVariable UUID dishId,
             @RequestBody EditDishRequest request) {
 
-        // Map request DTO to Command
-        EditDishAsDraftCommand command = new EditDishAsDraftCommand(
-                restaurantId,
-                dishId,
-                request.name(),
-                request.type(),
-                request.foodTags(),
-                request.description(),
-                request.price(),
-                request.pictureUrl()
-        );
+        var command = mapper.toEditCommand(restaurantId, dishId, request);
+        var dishDraft = editDishAsDraftUseCase.editDish(command);
+        var response = mapper.toEditResponse(dishDraft);
 
-        Dish dishDraft = editDishAsDraftUseCase.editDish(command);
-
-        // Map to Domain to DTO
-        EditDishResponse response = new EditDishResponse(
-                dishDraft.getDraftVersion().name(),
-                dishDraft.getDraftVersion().type(),
-                dishDraft.getDraftVersion().foodTags(),
-                dishDraft.getDraftVersion().description(),
-                dishDraft.getDraftVersion().price().getAmount(),
-                dishDraft.getDraftVersion().pictureUrl().toString()
-        );
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
 
     }
 

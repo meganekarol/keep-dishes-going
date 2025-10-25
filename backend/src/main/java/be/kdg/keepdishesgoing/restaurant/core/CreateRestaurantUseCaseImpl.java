@@ -5,7 +5,8 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OwnerId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
-import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantRepositoryPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.UpdateRestaurantPort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -13,19 +14,22 @@ import java.util.Optional;
 @Service
 public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
 
-    private final RestaurantRepositoryPort restaurantRepositoryPort;
+    private final LoadRestaurantPort loadRestaurantPort;
+    private final UpdateRestaurantPort updateRestaurantPort;
 
-    public CreateRestaurantUseCaseImpl(RestaurantRepositoryPort restaurantRepositoryPort) {
-        this.restaurantRepositoryPort = restaurantRepositoryPort;
+
+    public CreateRestaurantUseCaseImpl( LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort) {
+        this.loadRestaurantPort = loadRestaurantPort;
+        this.updateRestaurantPort = updateRestaurantPort;
     }
 
     @Override
     public Restaurant createRestaurant(CreateRestaurantCommand command) {
 
-        OwnerId ownerId = OwnerId.of(command.ownerId()); // Later get the id from authentication
+       var ownerId = OwnerId.of(command.ownerId()); // Later get the id from authentication
 
         Optional<Restaurant> existingRestaurant =
-                restaurantRepositoryPort.findByOwnerId(ownerId);
+                loadRestaurantPort.loadByOwnerId(ownerId);
 
         if (existingRestaurant.isPresent()) {
             throw new RuntimeException("Restaurant with id " + ownerId + " already exists");
@@ -43,7 +47,7 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
                 command.pictureUrls()
         );
 
-        return restaurantRepositoryPort.saveRestaurant(restaurant);
+        return updateRestaurantPort.updateRestaurant(restaurant);
 
     }
 }

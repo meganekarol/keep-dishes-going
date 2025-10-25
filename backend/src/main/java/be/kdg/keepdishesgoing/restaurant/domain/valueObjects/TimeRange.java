@@ -14,4 +14,8 @@ public record TimeRange(LocalTime open, LocalTime closed) {
             throw new IllegalArgumentException("closed must be before open");
         }
     }
+
+    public boolean isWithin(LocalTime time) {
+        return time.isAfter(open) && time.isBefore(closed);
+    }
 }

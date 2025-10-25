@@ -8,7 +8,7 @@ public record DishVersion(
         DishType type,
         Set<FoodTag> foodTags,
         String description,
-        Money price,
-        PictureUrl pictureUrl
+        BigDecimal price,
+        String pictureUrl
 ) {
 }

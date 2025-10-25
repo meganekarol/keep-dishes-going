@@ -4,4 +4,5 @@ import be.kdg.keepdishesgoing.restaurant.port.in.commands.ScheduleDishChangesCom
 
 public interface ScheduleChangesUseCase {
     void schedulePendingChanges(ScheduleDishChangesCommand command);
+
 }

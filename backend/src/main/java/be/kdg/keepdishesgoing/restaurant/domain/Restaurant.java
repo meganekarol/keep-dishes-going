@@ -2,11 +2,11 @@ package be.kdg.keepdishesgoing.restaurant.domain;
 
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-// Pure domain model - no framework dependencies
 public class Restaurant {
     private RestaurantId restaurantId;
     private OwnerId ownerId;
@@ -16,11 +16,11 @@ public class Restaurant {
     private CuisineType cuisineType;
     private int defaultPrepTime;
     private OpeningHours openingHours;
-    private List<PictureUrl> pictureUrls;
-    private List<Dish> dishes = new ArrayList<>();
+    private List<String> pictureUrls;
 
+    private RestaurantStatus status = RestaurantStatus.CLOSED;
 
-    public Restaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<PictureUrl> pictureUrls) {
+    public Restaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<String> pictureUrls) {
         this.restaurantId = restaurantId;
         this.ownerId = ownerId;
         this.name = name;
@@ -32,7 +32,7 @@ public class Restaurant {
         this.pictureUrls = pictureUrls;
     }
 
-    public static Restaurant createRestaurant(RestaurantId restaurantId, OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<PictureUrl> pictureUrls) {
+    public static Restaurant createRestaurant(RestaurantId restaurantId, OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<String> pictureUrls) {
         return new Restaurant(
                 restaurantId,
                 ownerId,
@@ -46,95 +46,32 @@ public class Restaurant {
         );
     }
 
-    public Dish addDish(DishVersion dishDraft) {
-        Dish newDish = Dish.createDraft(
-                DishId.create(),
-                this.restaurantId,
-                dishDraft
-        );
-        dishes.add(newDish);
-        return newDish;
-    }
-
-    public void editDishDraft(DishId dishId,DishVersion dishDraft) {
-        Dish dish = findDish(dishId);
-        dish.editDraft(dishDraft);
-    }
-
-    public void publishDish(DishId dishId) {
-        Dish dish = findDish(dishId);
-
-        if (!dish.hasDraft() && dish.getStatus() != DishState.UNPUBLISHED) {
-            throw new IllegalStateException("No draft changes available to publish");
+    /** Define or update the weekly schedule */
+    public void defineOpeningHours(Map<DayOfWeek, TimeRange> schedule) {
+        if (schedule == null || schedule.isEmpty()) {
+            throw new IllegalArgumentException("Opening hours cannot be empty");
         }
-        int dishCount = countPublishedDishes();
-        if (dishCount >= 10) {
-            throw new RuntimeException("Cannot publish more than 10 dishes");
-        }
-        dish.publishDish();
+        this.openingHours = new OpeningHours(schedule);
     }
 
-    public void unpublishDish(DishId dishId) {
-        Dish dish = findDish(dishId);
-
-        if (dish.getStatus() != DishState.PUBLISHED) {
-            throw new IllegalStateException("Dish is not published");
-        }
-        dish.unpublishDish();
+    /** Manually open the restaurant (overrides schedule) */
+    public void manuallyOpen() {
+        if (status == RestaurantStatus.MANUALLY_OPENED) return;
+        this.status = RestaurantStatus.MANUALLY_OPENED;
     }
 
-
-    // Publish multiple dishes at once
-    public void publishAllPendingChanges() {
-        List<Dish> pendingDishes = dishes.stream()
-                .filter(Dish::hasPendingChanges)
-                .toList();
-
-        // Check business rule
-        int totalAfterPublish = countPublishedDishes() +
-                (int) pendingDishes.stream()
-                        .filter(d -> d.getStatus() == DishState.UNPUBLISHED)
-                        .count();
-
-        if (totalAfterPublish > 10) {
-            throw new IllegalArgumentException("Cannot publish more than 10 dishes in total");
-        }
-
-        pendingDishes.forEach(Dish::publishDish);
+    /** Manually close the restaurant (overrides schedule) */
+    public void manuallyClose() {
+        if (status == RestaurantStatus.MANUALLY_CLOSED) return;
+        this.status = RestaurantStatus.MANUALLY_CLOSED;
     }
 
-    public void scheduleChanges(LocalDateTime scheduledTime) {
-        if (scheduledTime.isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Cannot schedule changes in the past");
-        }
-        dishes.forEach(dish -> {
-            if (dish.hasPendingChanges()) {
-                dish.scheduleChanges(scheduledTime);
-            }
-        });
+    /** Evaluate whether the restaurant is open based on schedule and manual overrides */
+    public boolean isOpen(LocalDateTime now) {
+        if (status == RestaurantStatus.MANUALLY_CLOSED) return false;
+        if (status == RestaurantStatus.MANUALLY_OPENED) return true;
+        return openingHours.isOpenAt(now.toLocalTime(), now.getDayOfWeek());
     }
-    public void markDishOutOfStock(DishId dishId) {
-      findDish(dishId).markDishOutOfStock();
-    }
-
-    public void markDishInStock(DishId dishId) {
-      findDish(dishId).markDishInStock();
-    }
-
-
-    public Dish findDish(DishId dishId) {
-        return dishes.stream()
-                .filter(d -> d.getDishId().equals(dishId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Dish not found: " + dishId));
-    }
-
-    public int countPublishedDishes() {
-      return (int) dishes.stream()
-              .filter(d -> d.getStatus() == DishState.PUBLISHED)
-              .count();
-    }
-
     public RestaurantId getRestaurantId() {
         return restaurantId;
     }
@@ -167,11 +104,11 @@ public class Restaurant {
         return openingHours;
     }
 
-    public List<PictureUrl> getPictureUrls() {
+    public List<String> getPictureUrls() {
         return pictureUrls;
     }
 
-    public List<Dish> getDishes() {
-        return dishes;
+    public RestaurantStatus getStatus() {
+        return status;
     }
 }

@@ -2,79 +2,68 @@ package be.kdg.keepdishesgoing.restaurant.adapter.in;
 
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.CreateRestaurantRequest;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.CreateRestaurantResponse;
+import be.kdg.keepdishesgoing.restaurant.adapter.in.mappers.RestaurantDtoMapper;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.CuisineType;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OpeningHours;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.PictureUrl;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantStatus;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.TimeRange;
+import be.kdg.keepdishesgoing.restaurant.port.in.ChangeRestaurantStatusUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.SetOpeningHoursUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.ChangeRestaurantStatusCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.SetOpeningHoursCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/restaurants")
 public class RestaurantController {
 
     private final CreateRestaurantUseCase createRestaurantUseCase;
+    private final SetOpeningHoursUseCase setOpeningHoursUseCase;
+    private final ChangeRestaurantStatusUseCase changeRestaurantStatusUseCase;
+    private final RestaurantDtoMapper mapper;
 
-    public RestaurantController(CreateRestaurantUseCase createRestaurantUseCase) {
+    public RestaurantController(CreateRestaurantUseCase createRestaurantUseCase, SetOpeningHoursUseCase setOpeningHoursUseCase, ChangeRestaurantStatusUseCase changeRestaurantStatusUseCase, RestaurantDtoMapper mapper) {
         this.createRestaurantUseCase = createRestaurantUseCase;
+        this.setOpeningHoursUseCase = setOpeningHoursUseCase;
+        this.changeRestaurantStatusUseCase = changeRestaurantStatusUseCase;
+        this.mapper = mapper;
     }
 
-    @PostMapping("/create")
+    @PostMapping("/new")
     public ResponseEntity<CreateRestaurantResponse> createRestaurant(@RequestBody CreateRestaurantRequest request) {
 
         UUID ownerId = UUID.randomUUID(); // Get later from authentication
 
-        // Map DTO to Command
-        List<PictureUrl> pictureUrls = request.pictureUrls().stream()
-                .map(PictureUrl::new)
-                .toList();
+        CreateRestaurantCommand command = mapper.toCommand(request, ownerId);
 
-        OpeningHours openingHours = new OpeningHours(
-                request.openingHours().entrySet().stream()
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey, e -> new TimeRange(e.getValue().open(), e.getValue().closed())
-                        ))
-        );
-
-        CreateRestaurantCommand command = new CreateRestaurantCommand(
-                ownerId,
-                request.name(),
-                request.address(),
-                request.contactEmail(),
-                CuisineType.valueOf(request.cuisineType()),
-                request.defaultPreparationTime(),
-                openingHours,
-                pictureUrls
-        );
-       Restaurant restaurant =  createRestaurantUseCase.createRestaurant(command); //Execute use case (returns Domain Model)
+        //Execute use case (returns Domain Model)
+        Restaurant restaurant = createRestaurantUseCase.createRestaurant(command);
 
         // Map domain to dto
-
-        Map<DayOfWeek, TimeRange> openingHoursResponse = restaurant.getOpeningHours().schedule().entrySet()
-                .stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new TimeRange(e.getValue().open(), e.getValue().closed())));
-
-        CreateRestaurantResponse response = new CreateRestaurantResponse(
-                restaurant.getRestaurantId().uuid(),
-                restaurant.getName(),
-                restaurant.getAddress(),
-                restaurant.getContactEmail(),
-                restaurant.getCuisineType().toString(),
-                restaurant.getDefaultPrepTime(),
-                openingHoursResponse,
-                restaurant.getPictureUrls().stream().map(PictureUrl::value).toList()
-                );
+        CreateRestaurantResponse response = mapper.toResponse(restaurant);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
+    }
+
+    @PutMapping("/{restaurantId}/opening-hours")
+    public ResponseEntity<Void> setOpeningHours(@PathVariable UUID restaurantId,
+                                                @RequestBody Map<DayOfWeek, TimeRange> schedule) {
+        setOpeningHoursUseCase.setOpeningHours(new SetOpeningHoursCommand(restaurantId, schedule));
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{restaurantId}/status")
+    public ResponseEntity<Void> changeStatus(@PathVariable UUID restaurantId,
+                                             @RequestParam RestaurantStatus status) {
+        changeRestaurantStatusUseCase.changeRestaurantStatus(new ChangeRestaurantStatusCommand(restaurantId, status));
+        return ResponseEntity.ok().build();
     }
 }

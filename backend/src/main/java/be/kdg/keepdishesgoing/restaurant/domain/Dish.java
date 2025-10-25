@@ -23,6 +23,24 @@ public class Dish {
         this.status = DishState.DRAFT;
     }
 
+    public static Dish restore(
+            DishId dishId,
+            RestaurantId restaurantId,
+            DishVersion publishedVersion,
+            DishVersion draftVersion,
+            DishState status,
+            LocalDateTime scheduledPublishAt,
+            LocalDateTime lastPublishedAt
+    ) {
+        Dish dish = new Dish(dishId, restaurantId, draftVersion);
+        dish.publishedVersion = publishedVersion;
+        dish.status = status;
+        dish.scheduledPublishAt = scheduledPublishAt;
+        dish.lastPublishedAt = lastPublishedAt;
+        return dish;
+    }
+
+
     public static Dish createDraft(DishId dishId, RestaurantId restaurantId, DishVersion draftVersion) {
         return new Dish(dishId, restaurantId, draftVersion);
     }
@@ -33,7 +51,7 @@ public class Dish {
 
     public void publishDish()  {
         // Ensure that a draft version actually exists before trying to publish it
-        if (draftVersion == null) {
+        if (!hasDraft()) {
             throw new IllegalStateException("No draft version to publish");
         }
         this.publishedVersion = draftVersion;
@@ -44,15 +62,14 @@ public class Dish {
     }
 
     public void unpublishDish() {
-        if (status == DishState.DRAFT) {
+        if (hasDraft()) {
             throw new IllegalStateException("Cannot unpublish a draft dish");
         }
-
         this.status = DishState.UNPUBLISHED;
     }
 
     public void markDishOutOfStock() {
-        if (status != DishState.PUBLISHED) {
+        if (!isPublished()) {
             throw new IllegalArgumentException(
                     "Only published dishes can be marked out of stock. Current status: " + status
             );
@@ -75,10 +92,6 @@ public class Dish {
         this.scheduledPublishAt = dateTime;
     }
 
-    public boolean isReadyForScheduledPublish(LocalDateTime now) {
-        return scheduledPublishAt != null && scheduledPublishAt.isBefore(now);
-    }
-
     // --- State Checks ---
     public boolean hasPendingChanges() {
         return draftVersion != null && !draftVersion.equals(publishedVersion);
@@ -88,6 +101,11 @@ public class Dish {
         return draftVersion != null;
     }
 
+    public boolean isPublished() {
+        return status == DishState.PUBLISHED;
+    }
+
+    // -- Getters ---
     public DishId getDishId() {
         return dishId;
     }
