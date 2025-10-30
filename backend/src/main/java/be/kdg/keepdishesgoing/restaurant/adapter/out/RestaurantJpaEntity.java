@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "restaurants")
+@Table(name = "restaurants", schema = "kdg_restaurant")
 public class RestaurantJpaEntity {
 
     @Id

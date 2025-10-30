@@ -16,19 +16,19 @@ import java.util.List;
 public class ApplyPendingChangesUseCaseImpl implements ApplyPendingChangesUseCase {
 
     private final LoadDishPort loadDishPort;
-    private final UpdateDishPort updateDishPort;
+    private final SaveDishPort saveDishPort;
     private final LoadRestaurantPort loadRestaurantPort;
-    private final UpdateRestaurantPort updateRestaurantPort;
+    private final SaveRestaurantPort saveRestaurantPort;
 
     public ApplyPendingChangesUseCaseImpl(
             LoadDishPort loadDishPort,
-            UpdateDishPort updateDishPort,
+            SaveDishPort saveDishPort,
             LoadRestaurantPort loadRestaurantPort,
-            UpdateRestaurantPort updateRestaurantPort) {
+            SaveRestaurantPort saveRestaurantPort) {
         this.loadDishPort = loadDishPort;
-        this.updateDishPort = updateDishPort;
+        this.saveDishPort = saveDishPort;
         this.loadRestaurantPort = loadRestaurantPort;
-        this.updateRestaurantPort = updateRestaurantPort;
+        this.saveRestaurantPort = saveRestaurantPort;
     }
 
     @Override
@@ -48,10 +48,10 @@ public class ApplyPendingChangesUseCaseImpl implements ApplyPendingChangesUseCas
         for (Dish dish : pendingDishes) {
             restaurant.getMenu().publishDish(dish.getDishId()); // enforce "max 10"
             dish.publishDish();
-            updateDishPort.updateDish(dish);
+            saveDishPort.saveDish(dish);
         }
 
         // Persist the updated restaurant (menu state updated)
-        updateRestaurantPort.updateRestaurant(restaurant);
+        saveRestaurantPort.saveRestaurant(restaurant);
     }
 }

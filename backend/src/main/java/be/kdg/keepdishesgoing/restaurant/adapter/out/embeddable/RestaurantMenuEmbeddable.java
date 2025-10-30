@@ -12,7 +12,8 @@ public class RestaurantMenuEmbeddable {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "restaurant_menu_dishes",
-            joinColumns = @JoinColumn(name = "restaurant_id")
+            joinColumns = @JoinColumn(name = "restaurant_id"),
+            schema = "kdg_restaurant"
     )
     @Column(name = "dish_id", nullable = false)
     private List<UUID> publishedDishIds = new ArrayList<>();

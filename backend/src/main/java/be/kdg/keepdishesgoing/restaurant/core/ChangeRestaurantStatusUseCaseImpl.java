@@ -7,7 +7,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.ChangeRestaurantStatusUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.ChangeRestaurantStatusCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.UpdateRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatusUseCase {
 
     private final LoadRestaurantPort loadRestaurantPort;
-    private final UpdateRestaurantPort updateRestaurantPort;
+    private final SaveRestaurantPort saveRestaurantPort;
     private final PublishEventPort publishEventPort;
 
-    public ChangeRestaurantStatusUseCaseImpl(LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort, PublishEventPort publishEventPort) {
+    public ChangeRestaurantStatusUseCaseImpl(LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort, PublishEventPort publishEventPort) {
         this.loadRestaurantPort = loadRestaurantPort;
-        this.updateRestaurantPort = updateRestaurantPort;
+        this.saveRestaurantPort = saveRestaurantPort;
         this.publishEventPort = publishEventPort;
     }
 
@@ -39,7 +39,7 @@ public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatus
             throw new IllegalArgumentException("Invalid manual state change: " + command.newStatus());
         }
 
-        updateRestaurantPort.updateRestaurant(restaurant);
+        saveRestaurantPort.saveRestaurant(restaurant);
 
         publishEventPort.publishAll(restaurant.getUncommittedEvents());
 

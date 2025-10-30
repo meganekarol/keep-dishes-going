@@ -6,7 +6,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.UpdateDishPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.SaveDishPort;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class DishJpaAdapter implements LoadDishPort, UpdateDishPort {
+public class DishJpaAdapter implements LoadDishPort, SaveDishPort {
 
     private final DishJpaRepository dishes;
     private final DishEntityMapper mapper;
@@ -52,7 +52,7 @@ public class DishJpaAdapter implements LoadDishPort, UpdateDishPort {
     }
 
     @Override
-    public Dish updateDish(Dish dish) {
+    public Dish saveDish(Dish dish) {
         DishJpaEntity entity = mapper.toEntity(dish);
         DishJpaEntity saved = this.dishes.save(entity);
         return mapper.toDomain(saved);

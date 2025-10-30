@@ -11,6 +11,7 @@ public class OpeningHoursEmbeddable {
     @ElementCollection
     @CollectionTable(
             name = "restaurant_opening_hours",
+            schema = "kdg_restaurant",
             joinColumns = @JoinColumn(name = "restaurant_id")
     )
     @MapKeyColumn(name = "day_of_week")

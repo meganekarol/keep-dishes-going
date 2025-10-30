@@ -7,7 +7,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantComman
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.UpdateRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +18,12 @@ import java.util.Optional;
 public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
 
     private final LoadRestaurantPort loadRestaurantPort;
-    private final UpdateRestaurantPort updateRestaurantPort;
+    private final SaveRestaurantPort saveRestaurantPort;
     private final PublishEventPort publishEventPort;
 
-    public CreateRestaurantUseCaseImpl(LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort, PublishEventPort publishEventPort) {
+    public CreateRestaurantUseCaseImpl(LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort, PublishEventPort publishEventPort) {
         this.loadRestaurantPort = loadRestaurantPort;
-        this.updateRestaurantPort = updateRestaurantPort;
+        this.saveRestaurantPort = saveRestaurantPort;
         this.publishEventPort = publishEventPort;
     }
 
@@ -51,7 +51,7 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
                 command.pictureUrls()
         );
 
-        updateRestaurantPort.updateRestaurant(restaurant);
+        saveRestaurantPort.saveRestaurant(restaurant);
 
         publishEventPort.publishAll(restaurant.getUncommittedEvents());
         restaurant.markEventAsCommitted();

@@ -1,23 +1,22 @@
 package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
-import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.EditDishAsDraftCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.EditDishAsDraftUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.UpdateDishPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.SaveDishPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class EditDishAsDraftUseCaseImpl implements EditDishAsDraftUseCase {
-    private final UpdateDishPort updateDishPort;
+    private final SaveDishPort saveDishPort;
     private final LoadDishPort loadDishPort;
 
-    public EditDishAsDraftUseCaseImpl(UpdateDishPort updateDishPort, LoadDishPort loadDishPort) {
-        this.updateDishPort = updateDishPort;
+    public EditDishAsDraftUseCaseImpl(SaveDishPort saveDishPort, LoadDishPort loadDishPort) {
+        this.saveDishPort = saveDishPort;
         this.loadDishPort = loadDishPort;
     }
 
@@ -41,7 +40,7 @@ public class EditDishAsDraftUseCaseImpl implements EditDishAsDraftUseCase {
         dish.editDraft(newDraft);
 
         // Persist the modified dish
-        updateDishPort.updateDish(dish);
+        saveDishPort.saveDish(dish);
 
         // Return updated dish
         return dish;

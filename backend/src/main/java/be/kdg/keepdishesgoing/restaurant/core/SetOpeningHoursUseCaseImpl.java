@@ -5,7 +5,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.SetOpeningHoursUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.SetOpeningHoursCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.UpdateRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,11 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class SetOpeningHoursUseCaseImpl implements SetOpeningHoursUseCase {
 
     private final LoadRestaurantPort loadRestaurantPort;
-    private final UpdateRestaurantPort updateRestaurantPort;
+    private final SaveRestaurantPort saveRestaurantPort;
 
-    public SetOpeningHoursUseCaseImpl(LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort) {
+    public SetOpeningHoursUseCaseImpl(LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort) {
         this.loadRestaurantPort = loadRestaurantPort;
-        this.updateRestaurantPort = updateRestaurantPort;
+        this.saveRestaurantPort = saveRestaurantPort;
     }
 
     @Override
@@ -28,6 +28,6 @@ public class SetOpeningHoursUseCaseImpl implements SetOpeningHoursUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("Restaurant not found"));
 
         restaurant.defineOpeningHours(command.schedule());
-        updateRestaurantPort.updateRestaurant(restaurant);
+        saveRestaurantPort.saveRestaurant(restaurant);
     }
 }

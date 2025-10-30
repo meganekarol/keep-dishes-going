@@ -4,7 +4,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.ScheduleChangesUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.ScheduleDishChangesCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.UpdateDishPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.SaveDishPort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,11 +14,11 @@ import java.util.List;
 public class ScheduleChangesUseCaseImpl implements ScheduleChangesUseCase {
 
     private final LoadDishPort loadDishPort;
-    private final UpdateDishPort updateDishPort;
+    private final SaveDishPort saveDishPort;
 
-    public ScheduleChangesUseCaseImpl(LoadDishPort loadDishPort, UpdateDishPort updateDishPort) {
+    public ScheduleChangesUseCaseImpl(LoadDishPort loadDishPort, SaveDishPort saveDishPort) {
         this.loadDishPort = loadDishPort;
-        this.updateDishPort = updateDishPort;
+        this.saveDishPort = saveDishPort;
     }
 
     @Override
@@ -35,7 +35,7 @@ public class ScheduleChangesUseCaseImpl implements ScheduleChangesUseCase {
         }
         for (Dish pendingDish : pendingDishes) {
             pendingDish.scheduleChanges(scheduledTime);
-            updateDishPort.updateDish(pendingDish);
+            saveDishPort.saveDish(pendingDish);
         }
     }
 

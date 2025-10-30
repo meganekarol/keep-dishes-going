@@ -6,14 +6,14 @@ import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OwnerId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.UpdateRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class RestaurantJpaAdapter implements LoadRestaurantPort, UpdateRestaurantPort {
+public class RestaurantJpaAdapter implements LoadRestaurantPort, SaveRestaurantPort {
 
     private final RestaurantJpaRepository restaurants;
     private final RestaurantEntityMapper mapper;
@@ -44,7 +44,7 @@ public class RestaurantJpaAdapter implements LoadRestaurantPort, UpdateRestauran
     }
 
     @Override
-    public Restaurant updateRestaurant(Restaurant restaurant) {
+    public Restaurant saveRestaurant(Restaurant restaurant) {
         RestaurantJpaEntity entity = mapper.toJpa(restaurant);
         RestaurantJpaEntity saved = this.restaurants.save(entity);
         return mapper.toDomain(saved);

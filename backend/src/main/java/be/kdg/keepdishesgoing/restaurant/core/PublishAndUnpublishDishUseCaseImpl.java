@@ -1,6 +1,5 @@
 package be.kdg.keepdishesgoing.restaurant.core;
 
-import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.PublishAndUnpublishDishUseCase;
@@ -13,16 +12,16 @@ import org.springframework.stereotype.Service;
 public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDishUseCase {
 
     private final LoadDishPort loadDishPort;
-    private final UpdateDishPort updateDishPort;
+    private final SaveDishPort saveDishPort;
     private final LoadRestaurantPort loadRestaurantPort;
-    private final UpdateRestaurantPort updateRestaurantPort;
+    private final SaveRestaurantPort saveRestaurantPort;
     private final PublishEventPort publishEventPort;
 
-    public PublishAndUnpublishDishUseCaseImpl(LoadDishPort loadDishPort, UpdateDishPort updateDishPort, LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort, PublishEventPort publishEventPort) {
+    public PublishAndUnpublishDishUseCaseImpl(LoadDishPort loadDishPort, SaveDishPort saveDishPort, LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort, PublishEventPort publishEventPort) {
         this.loadDishPort = loadDishPort;
-        this.updateDishPort = updateDishPort;
+        this.saveDishPort = saveDishPort;
         this.loadRestaurantPort = loadRestaurantPort;
-        this.updateRestaurantPort = updateRestaurantPort;
+        this.saveRestaurantPort = saveRestaurantPort;
         this.publishEventPort = publishEventPort;
     }
 
@@ -50,8 +49,8 @@ public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDi
         dish.publishDish();
 
         // Persist updates
-        updateDishPort.updateDish(dish);
-        updateRestaurantPort.updateRestaurant(restaurant);
+        saveDishPort.saveDish(dish);
+        saveRestaurantPort.saveRestaurant(restaurant);
 
         // Publish events
         publishEventPort.publishAll(dish.getUncommittedEvents());
@@ -86,8 +85,8 @@ public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDi
         dish.unpublishDish();
 
         // Persist updates
-        updateDishPort.updateDish(dish);
-        updateRestaurantPort.updateRestaurant(restaurant);
+        saveDishPort.saveDish(dish);
+        saveRestaurantPort.saveRestaurant(restaurant);
 
         publishEventPort.publishAll(dish.getUncommittedEvents());
         publishEventPort.publishAll(restaurant.getUncommittedEvents());

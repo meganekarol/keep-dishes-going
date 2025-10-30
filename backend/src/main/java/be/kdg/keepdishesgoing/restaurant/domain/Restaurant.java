@@ -2,7 +2,9 @@ package be.kdg.keepdishesgoing.restaurant.domain;
 
 import be.kdg.keepdishesgoing.common.DomainEvent;
 import be.kdg.keepdishesgoing.common.EventPublisherHelper;
-import be.kdg.keepdishesgoing.restaurant.domain.events.*;
+import be.kdg.keepdishesgoing.common.events.RestaurantCreatedEvent;
+import be.kdg.keepdishesgoing.common.events.RestaurantManuallyClosedEvent;
+import be.kdg.keepdishesgoing.common.events.RestaurantManuallyOpenedEvent;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
 import java.time.DayOfWeek;

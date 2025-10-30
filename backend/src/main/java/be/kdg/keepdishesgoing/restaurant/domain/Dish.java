@@ -1,7 +1,7 @@
 package be.kdg.keepdishesgoing.restaurant.domain;
 
 import be.kdg.keepdishesgoing.common.EventPublisherHelper;
-import be.kdg.keepdishesgoing.restaurant.domain.events.*;
+import be.kdg.keepdishesgoing.common.events.*;
 import be.kdg.keepdishesgoing.common.DomainEvent;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
@@ -48,15 +48,7 @@ public class Dish {
 
 
     public static Dish createDraft(DishId dishId, RestaurantId restaurantId, DishVersion initialVersion) {
-        Dish dish = new Dish(dishId, restaurantId, initialVersion);
-
-        dish.eventPublisher.register(new DishDraftCreatedEvent(
-                dishId.uuid(),
-                restaurantId.uuid(),
-                initialVersion.name()
-        ));
-
-        return dish;
+        return new Dish(dishId, restaurantId, initialVersion);
     }
 
     public void editDraft(DishVersion newDraft) {
@@ -79,7 +71,9 @@ public class Dish {
                 this.dishId.uuid(),
                 this.restaurantId.uuid(),
                 this.publishedVersion.name(),
-                this.publishedVersion.price()
+                this.publishedVersion.type().toString(),
+                this.publishedVersion.price(),
+                this.publishedVersion.description()
         ));
     }
 
@@ -103,7 +97,8 @@ public class Dish {
         this.status = DishState.OUT_OF_STOCK;
         eventPublisher.register(new DishMarkedOutOfStockEvent(
                 this.dishId.uuid(),
-                this.restaurantId.uuid()
+                this.restaurantId.uuid(),
+                this.publishedVersion.name()
         ));
     }
 

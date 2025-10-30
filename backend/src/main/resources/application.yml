@@ -6,34 +6,47 @@ spring:
     name: keep-dishes-going
 
   datasource:
-    url: jdbc:postgresql://app_postgres:5432/keep-dishes-going  # Changed: service name and port
-    username: user                                                # Changed: username
-    password: password                                            # Changed: password
+    url: jdbc:postgresql://localhost:5443/keep-dishes-going
+    username: user
+    password: password
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        hbm2ddl:
+          create_namespaces: true
     open-in-view: false
 
   rabbitmq:
-    host: app_rabbitmq      # Changed: service name
+    host: localhost      # Changed: use localhost
     port: 5672
-    username: user          # Changed: username
-    password: password      # Changed: password
+    username: user
+    password: password
 
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://idp_keycloak:8080/realms/keepdishesgoing  # Changed: service name and port
-          jwk-set-uri: http://idp_keycloak:8080/realms/keepdishesgoing/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8180/realms/keepdishesgoing  # Changed: use localhost
+          jwk-set-uri: http://localhost:8180/realms/keepdishesgoing/protocol/openid-connect/certs
+
+cors:
+  allowed-origins: http://localhost:5173
 
 logging:
   level:
     org.springframework.security: INFO
     org.hibernate.SQL: DEBUG
+    # RabbitMQ/AMQP logging
+    org.springframework.amqp: DEBUG
+    org.springframework.rabbit: DEBUG
+    org.springframework.amqp.rabbit.core.RabbitTemplate: TRACE
+    # Spring Modulith event externalization
+    org.springframework.modulith: DEBUG
+    org.springframework.modulith.events: DEBUG
