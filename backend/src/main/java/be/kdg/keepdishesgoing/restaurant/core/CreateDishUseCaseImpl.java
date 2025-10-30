@@ -6,6 +6,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateDishCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateDishUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.UpdateDishPort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,12 @@ public class CreateDishUseCaseImpl implements CreateDishUseCase {
 
     private final LoadRestaurantPort restaurantPort;
     private final UpdateDishPort dishPort;
+    private final PublishEventPort publishEventPort;
 
-    public CreateDishUseCaseImpl(LoadRestaurantPort restaurantPort, UpdateDishPort dishPort) {
+    public CreateDishUseCaseImpl(LoadRestaurantPort restaurantPort, UpdateDishPort dishPort, PublishEventPort publishEventPort) {
         this.restaurantPort = restaurantPort;
         this.dishPort = dishPort;
+        this.publishEventPort = publishEventPort;
     }
 
     @Override
@@ -43,6 +46,14 @@ public class CreateDishUseCaseImpl implements CreateDishUseCase {
         );
 
         dishPort.updateDish(dish);
+
+        publishEventPort.publishAll(dish.getUncommittedEvents());
+        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+
+        // Clear events
+        dish.markEventAsCommitted();
+        restaurant.markEventAsCommitted();
+
         return dish;
     }
 }

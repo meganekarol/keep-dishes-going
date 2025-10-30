@@ -4,5 +4,6 @@ public enum DishState {
     DRAFT,
     PUBLISHED,
     UNPUBLISHED,
-    OUT_OF_STOCK
+    OUT_OF_STOCK,
+    IN_STOCK
 }

@@ -1,8 +1,6 @@
 package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
-import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
-import be.kdg.keepdishesgoing.restaurant.domain.RestaurantMenu;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.PublishAndUnpublishDishUseCase;
@@ -16,14 +14,16 @@ public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDi
 
     private final LoadDishPort loadDishPort;
     private final UpdateDishPort updateDishPort;
-    private final LoadRestaurantMenuPort loadRestaurantMenuPort;
-    private final UpdateRestaurantMenuPort updateRestaurantMenuPort;
+    private final LoadRestaurantPort loadRestaurantPort;
+    private final UpdateRestaurantPort updateRestaurantPort;
+    private final PublishEventPort publishEventPort;
 
-    public PublishAndUnpublishDishUseCaseImpl(LoadDishPort loadDishPort, UpdateDishPort updateDishPort, LoadRestaurantMenuPort loadRestaurantMenuPort, UpdateRestaurantMenuPort updateRestaurantMenuPort) {
+    public PublishAndUnpublishDishUseCaseImpl(LoadDishPort loadDishPort, UpdateDishPort updateDishPort, LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort, PublishEventPort publishEventPort) {
         this.loadDishPort = loadDishPort;
         this.updateDishPort = updateDishPort;
-        this.loadRestaurantMenuPort = loadRestaurantMenuPort;
-        this.updateRestaurantMenuPort = updateRestaurantMenuPort;
+        this.loadRestaurantPort = loadRestaurantPort;
+        this.updateRestaurantPort = updateRestaurantPort;
+        this.publishEventPort = publishEventPort;
     }
 
 
@@ -32,50 +32,69 @@ public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDi
         var restaurantId = RestaurantId.of(command.restaurantId());
         var dishId = DishId.of(command.dishId());
 
-
-        Dish dish = loadDishPort.loadById(dishId)
+        // Load aggregates
+        var restaurant = loadRestaurantPort.loadById(restaurantId)
+                .orElseThrow(() -> new IllegalArgumentException("Restaurant not found"));
+        var dish = loadDishPort.loadById(dishId)
                 .orElseThrow(() -> new IllegalArgumentException("Dish not found"));
 
+        // Verify ownership
         if (!dish.getRestaurantId().equals(restaurantId)) {
             throw new IllegalStateException("Dish does not belong to this restaurant");
         }
 
-        // Load or initialize RestaurantMenu
-        RestaurantMenu menu = loadRestaurantMenuPort.loadByRestaurantId(restaurantId)
-                .orElseGet(() -> RestaurantMenu.forRestaurant(restaurantId));
+        // Enforce policy via the restaurant (menu)
+        restaurant.getMenu().publishDish(dish.getDishId());
 
-        // Enforce policy
-        menu.publishDish(dishId);
-
-        // Update aggregates
+        // Domain behavior inside Dish (raises DishPublishedEvent)
         dish.publishDish();
 
-        // Persist both
-        updateRestaurantMenuPort.updateRestaurantMenu(menu);
+        // Persist updates
         updateDishPort.updateDish(dish);
+        updateRestaurantPort.updateRestaurant(restaurant);
+
+        // Publish events
+        publishEventPort.publishAll(dish.getUncommittedEvents());
+        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+
+        // Clear events
+        dish.markEventAsCommitted();
+        restaurant.markEventAsCommitted();
     }
+
 
     @Override
     public void unpublishDish(UnpublishDishCommand command) {
         var restaurantId = RestaurantId.of(command.restaurantId());
         var dishId = DishId.of(command.dishId());
 
-
-        Dish dish = loadDishPort.loadById(dishId)
+        // Load aggregates
+        var restaurant = loadRestaurantPort.loadById(restaurantId)
+                .orElseThrow(() -> new IllegalArgumentException("Restaurant not found"));
+        var dish = loadDishPort.loadById(dishId)
                 .orElseThrow(() -> new IllegalArgumentException("Dish not found"));
 
+        // Verify ownership
         if (!dish.getRestaurantId().equals(restaurantId)) {
             throw new IllegalStateException("Dish does not belong to this restaurant");
         }
 
-        // Load or initialize RestaurantMenu
-        RestaurantMenu menu = loadRestaurantMenuPort.loadByRestaurantId(restaurantId)
-                .orElseGet(() -> RestaurantMenu.forRestaurant(restaurantId));
+        // Enforce policy via the restaurant (menu)
+        restaurant.getMenu().unpublishDish(dish.getDishId());
 
-        menu.unpublishDish(dishId);
+        // Domain behavior inside Dish (raises DishPublishedEvent)
         dish.unpublishDish();
 
-        updateRestaurantMenuPort.updateRestaurantMenu(menu);
+        // Persist updates
         updateDishPort.updateDish(dish);
+        updateRestaurantPort.updateRestaurant(restaurant);
+
+        publishEventPort.publishAll(dish.getUncommittedEvents());
+        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+
+        // Clear events
+        dish.markEventAsCommitted();
+        restaurant.markEventAsCommitted();
+
     }
 }

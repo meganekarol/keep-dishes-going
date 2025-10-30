@@ -35,3 +35,12 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Docker volumes - runtime data
+postgresql/data/
+rabbitmq/data/
+rabbitmq/log/
+idp_mysql_data/
+
+# Keep init scripts if they exist
+!init-scripts/

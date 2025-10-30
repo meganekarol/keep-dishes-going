@@ -6,32 +6,31 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.UpdateRestaurantPort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Service
+@Transactional
 public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
 
     private final LoadRestaurantPort loadRestaurantPort;
     private final UpdateRestaurantPort updateRestaurantPort;
+    private final PublishEventPort publishEventPort;
 
-
-    public CreateRestaurantUseCaseImpl( LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort) {
+    public CreateRestaurantUseCaseImpl(LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort, PublishEventPort publishEventPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.updateRestaurantPort = updateRestaurantPort;
+        this.publishEventPort = publishEventPort;
     }
 
     @Override
     public Restaurant createRestaurant(CreateRestaurantCommand command) {
 
-       var ownerId = OwnerId.of(command.ownerId()); // Later get the id from authentication
-
-        //you can check if the owner exists.
-        if (!ownerId.equals(OwnerId.BOBBY)) {
-            throw new IllegalArgumentException("The owner id is not Bobby");
-        }
+       var ownerId = OwnerId.of(command.ownerId()); // comes from Keycloak-authenticated user
 
         Optional<Restaurant> existingRestaurant =
                 loadRestaurantPort.loadByOwnerId(ownerId);
@@ -52,7 +51,12 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
                 command.pictureUrls()
         );
 
-        return updateRestaurantPort.updateRestaurant(restaurant);
+        updateRestaurantPort.updateRestaurant(restaurant);
+
+        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurant.markEventAsCommitted();
+
+        return restaurant;
 
     }
 }

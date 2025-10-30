@@ -1,0 +1,39 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: keep-dishes-going
+
+  datasource:
+    url: jdbc:postgresql://app_postgres:5432/keep-dishes-going  # Changed: service name and port
+    username: user                                                # Changed: username
+    password: password                                            # Changed: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  rabbitmq:
+    host: app_rabbitmq      # Changed: service name
+    port: 5672
+    username: user          # Changed: username
+    password: password      # Changed: password
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://idp_keycloak:8080/realms/keepdishesgoing  # Changed: service name and port
+          jwk-set-uri: http://idp_keycloak:8080/realms/keepdishesgoing/protocol/openid-connect/certs
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG

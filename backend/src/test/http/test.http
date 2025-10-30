@@ -72,3 +72,29 @@ Content-Type: application/json
 POST http://localhost:8080/api/{{restaurantId}}/dishes/{{dishId}}/publish
 Content-Type: application/json
 Accept: application/json
+
+###
+# curl -X POST http://localhost:8180/realms/keepdishesgoing/protocol/openid-connect/token
+#  -H "Content-Type: application/x-www-form-urlencoded"
+#  -d "grant_type=password"
+#  -d "client_id=backend-client"
+#  -d "client_secret=YOUR_CLIENT_SECRET"
+#  -d "username=owner"
+#  -d "password=owner"
+POST http://localhost:8180/realms/keepdishesgoing/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type = password &
+client_id = backend-client &
+client_secret = REMOVED-SECRET &
+username = owner &
+password = owner
+
+###
+# curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+#  http://localhost:8080/api/owner/restaurants/me
+GET http://localhost:8080/api/restaurants/me
+Authorization: Bearer REMOVED-SECRET",
+
+
+

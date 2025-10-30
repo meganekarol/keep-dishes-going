@@ -8,6 +8,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.MarkDishInAndOutOfStockUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.MarkDishInStockCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.MarkDishOutOfStockCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.UpdateDishPort;
 import org.springframework.stereotype.Service;
 
@@ -15,10 +16,13 @@ import org.springframework.stereotype.Service;
 public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfStockUseCase {
     private final UpdateDishPort updateDishPort;
     private final LoadDishPort loadDishPort;
+    private final PublishEventPort publishEventPort;
 
-    public MarkDishInAndOutOfStockUseCaseImpl(UpdateDishPort updateDishPort, LoadDishPort loadDishPort) {
+    public MarkDishInAndOutOfStockUseCaseImpl(UpdateDishPort updateDishPort, LoadDishPort loadDishPort, PublishEventPort publishEventPort) {
         this.updateDishPort = updateDishPort;
         this.loadDishPort = loadDishPort;
+
+        this.publishEventPort = publishEventPort;
     }
 
     @Override
@@ -34,6 +38,8 @@ public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfSto
         }
 
         updateDishPort.updateDish(dish);
+        publishEventPort.publishAll(dish.getUncommittedEvents());
+        dish.markEventAsCommitted();
     }
 
     @Override
@@ -49,5 +55,9 @@ public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfSto
         }
 
         updateDishPort.updateDish(dish);
+
+        publishEventPort.publishAll(dish.getUncommittedEvents());
+        dish.markEventAsCommitted();
+
     }
 }

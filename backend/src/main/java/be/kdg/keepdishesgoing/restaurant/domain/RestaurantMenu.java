@@ -6,7 +6,6 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import java.util.ArrayList;
 import java.util.List;
 
-// I'm an aggregate
 public class RestaurantMenu {
 
     private static final int MAX_PUBLISHED_DISHES = 10;
@@ -41,10 +40,6 @@ public class RestaurantMenu {
 
     public void unpublishDish(DishId dishId) {
         publishedDishes.remove(dishId);
-    }
-
-    public int publishedCount() {
-        return publishedDishes.size();
     }
 
     public RestaurantId getRestaurantId() {

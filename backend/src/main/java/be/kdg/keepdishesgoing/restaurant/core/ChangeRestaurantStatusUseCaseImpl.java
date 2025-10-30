@@ -6,6 +6,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantStatus;
 import be.kdg.keepdishesgoing.restaurant.port.in.ChangeRestaurantStatusUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.ChangeRestaurantStatusCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.UpdateRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +17,12 @@ public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatus
 
     private final LoadRestaurantPort loadRestaurantPort;
     private final UpdateRestaurantPort updateRestaurantPort;
+    private final PublishEventPort publishEventPort;
 
-    public ChangeRestaurantStatusUseCaseImpl(LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort) {
+    public ChangeRestaurantStatusUseCaseImpl(LoadRestaurantPort loadRestaurantPort, UpdateRestaurantPort updateRestaurantPort, PublishEventPort publishEventPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.updateRestaurantPort = updateRestaurantPort;
+        this.publishEventPort = publishEventPort;
     }
 
     @Override
@@ -37,6 +40,11 @@ public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatus
         }
 
         updateRestaurantPort.updateRestaurant(restaurant);
+
+        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+
+        // Clear events
+        restaurant.markEventAsCommitted();
     }
 
 }

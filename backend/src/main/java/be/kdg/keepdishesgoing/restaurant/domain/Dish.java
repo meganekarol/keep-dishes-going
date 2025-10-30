@@ -1,8 +1,12 @@
 package be.kdg.keepdishesgoing.restaurant.domain;
 
+import be.kdg.keepdishesgoing.common.EventPublisherHelper;
+import be.kdg.keepdishesgoing.restaurant.domain.events.*;
+import be.kdg.keepdishesgoing.common.DomainEvent;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Dish {
     private DishId dishId;
@@ -13,6 +17,8 @@ public class Dish {
     private DishState status;  // DRAFT, PUBLISHED, OUT_OF_STOCK, UNPUBLISHED
     private LocalDateTime scheduledPublishAt;
     private LocalDateTime lastPublishedAt;
+
+    private final EventPublisherHelper eventPublisher = new EventPublisherHelper();
 
     private Dish(DishId dishId, RestaurantId restaurantId, DishVersion draftVersion) {
         this.dishId = dishId;
@@ -41,12 +47,21 @@ public class Dish {
     }
 
 
-    public static Dish createDraft(DishId dishId, RestaurantId restaurantId, DishVersion draftVersion) {
-        return new Dish(dishId, restaurantId, draftVersion);
+    public static Dish createDraft(DishId dishId, RestaurantId restaurantId, DishVersion initialVersion) {
+        Dish dish = new Dish(dishId, restaurantId, initialVersion);
+
+        dish.eventPublisher.register(new DishDraftCreatedEvent(
+                dishId.uuid(),
+                restaurantId.uuid(),
+                initialVersion.name()
+        ));
+
+        return dish;
     }
 
-    public void editDraft(DishVersion draftVersion) {
-        this.draftVersion = draftVersion;
+    public void editDraft(DishVersion newDraft) {
+        this.draftVersion = newDraft;
+        this.hasPendingChanges();
     }
 
     public void publishDish()  {
@@ -59,6 +74,13 @@ public class Dish {
         this.status = DishState.PUBLISHED;
         this.lastPublishedAt = LocalDateTime.now();
         this.scheduledPublishAt = null;
+
+        eventPublisher.register(new DishPublishedEvent(
+                this.dishId.uuid(),
+                this.restaurantId.uuid(),
+                this.publishedVersion.name(),
+                this.publishedVersion.price()
+        ));
     }
 
     public void unpublishDish() {
@@ -66,6 +88,10 @@ public class Dish {
             throw new IllegalStateException("Cannot unpublish a draft dish");
         }
         this.status = DishState.UNPUBLISHED;
+        eventPublisher.register(new DishUnpublishedEvent(
+                this.dishId.uuid(),
+                this.restaurantId.uuid()
+        ));
     }
 
     public void markDishOutOfStock() {
@@ -75,11 +101,20 @@ public class Dish {
             );
         }
         this.status = DishState.OUT_OF_STOCK;
+        eventPublisher.register(new DishMarkedOutOfStockEvent(
+                this.dishId.uuid(),
+                this.restaurantId.uuid()
+        ));
     }
 
     public void markDishInStock() {
-        this.status = DishState.PUBLISHED;
+        this.status = DishState.IN_STOCK;
+        eventPublisher.register(new DishMarkedInStockEvent(
+                this.dishId.uuid(),
+                this.restaurantId.uuid()
+        ));
     }
+
 
     public void scheduleChanges(LocalDateTime dateTime) {
         if (!hasPendingChanges()) {
@@ -90,6 +125,15 @@ public class Dish {
         }
 
         this.scheduledPublishAt = dateTime;
+    }
+
+    // Event access methods
+    public List<DomainEvent> getUncommittedEvents() {
+        return eventPublisher.getEvents();
+    }
+
+    public void markEventAsCommitted() {
+        eventPublisher.clear();
     }
 
     // --- State Checks ---

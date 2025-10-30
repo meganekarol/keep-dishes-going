@@ -2,6 +2,7 @@ package be.kdg.keepdishesgoing.restaurant.adapter.out;
 
 import be.kdg.keepdishesgoing.restaurant.adapter.out.embeddable.AddressEmbeddable;
 import be.kdg.keepdishesgoing.restaurant.adapter.out.embeddable.OpeningHoursEmbeddable;
+import be.kdg.keepdishesgoing.restaurant.adapter.out.embeddable.RestaurantMenuEmbeddable;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 import jakarta.persistence.*;
 
@@ -49,7 +50,12 @@ public class RestaurantJpaEntity {
     @Column(name = "status", nullable = false)
     private RestaurantStatus status = RestaurantStatus.CLOSED;
 
-    public RestaurantJpaEntity(UUID restaurantId, UUID ownerId, String name, AddressEmbeddable address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHoursEmbeddable openingHours, List<String> pictureUrls,RestaurantStatus status) {
+
+    /** Embedded menu (policy state) */
+    @Embedded
+    private RestaurantMenuEmbeddable menu;
+
+    public RestaurantJpaEntity(UUID restaurantId, UUID ownerId, String name, AddressEmbeddable address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHoursEmbeddable openingHours, List<String> pictureUrls, RestaurantStatus status, RestaurantMenuEmbeddable menu) {
         this.restaurantId = restaurantId;
         this.ownerId = ownerId;
         this.name = name;
@@ -60,6 +66,7 @@ public class RestaurantJpaEntity {
         this.openingHours = openingHours;
         this.pictureUrls = pictureUrls;
         this.status = status;
+        this.menu = menu;
     }
 
     public RestaurantJpaEntity() {
@@ -152,5 +159,13 @@ public class RestaurantJpaEntity {
 
     public void setStatus(RestaurantStatus status) {
         this.status = status;
+    }
+
+    public RestaurantMenuEmbeddable getMenu() {
+        return menu;
+    }
+
+    public void setMenu(RestaurantMenuEmbeddable menu) {
+        this.menu = menu;
     }
 }

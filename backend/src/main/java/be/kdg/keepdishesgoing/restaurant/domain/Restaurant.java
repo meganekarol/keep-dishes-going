@@ -1,5 +1,8 @@
 package be.kdg.keepdishesgoing.restaurant.domain;
 
+import be.kdg.keepdishesgoing.common.DomainEvent;
+import be.kdg.keepdishesgoing.common.EventPublisherHelper;
+import be.kdg.keepdishesgoing.restaurant.domain.events.*;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
 import java.time.DayOfWeek;
@@ -10,6 +13,7 @@ import java.util.Map;
 public class Restaurant {
     private RestaurantId restaurantId;
     private OwnerId ownerId;
+    private RestaurantMenu menu;
     private String name;
     private Address address;
     private String contactEmail;
@@ -19,6 +23,9 @@ public class Restaurant {
     private List<String> pictureUrls;
 
     private RestaurantStatus status = RestaurantStatus.CLOSED;
+
+    // Composition: event publisher
+    private final EventPublisherHelper eventPublisher = new EventPublisherHelper();
 
     public Restaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<String> pictureUrls) {
         this.restaurantId = restaurantId;
@@ -52,6 +59,13 @@ public class Restaurant {
                 ? RestaurantStatus.OPEN
                 : RestaurantStatus.CLOSED;
 
+        restaurant.eventPublisher.register(new RestaurantCreatedEvent(
+                restaurantId.uuid(),
+                ownerId.uuid(),
+                name,
+                cuisineType.toString()
+        ));
+
         return restaurant;
     }
 
@@ -72,12 +86,14 @@ public class Restaurant {
     public void manuallyOpen() {
         if (status == RestaurantStatus.MANUALLY_OPENED) return;
         this.status = RestaurantStatus.MANUALLY_OPENED;
+        eventPublisher.register(new RestaurantManuallyOpenedEvent(this.restaurantId.uuid()));
     }
 
     /** Manually close the restaurant (overrides schedule) */
     public void manuallyClose() {
         if (status == RestaurantStatus.MANUALLY_CLOSED) return;
         this.status = RestaurantStatus.MANUALLY_CLOSED;
+        eventPublisher.register(new RestaurantManuallyClosedEvent(this.restaurantId.uuid()));
     }
 
     /** Evaluate whether the restaurant is open based on schedule and manual overrides */
@@ -85,6 +101,16 @@ public class Restaurant {
         if (status == RestaurantStatus.MANUALLY_CLOSED) return false;
         if (status == RestaurantStatus.MANUALLY_OPENED) return true;
         return openingHours.isOpenAt(now.toLocalTime(), now.getDayOfWeek());
+    }
+
+    // Event access methods
+    // Event access methods
+    public List<DomainEvent> getUncommittedEvents() {
+        return eventPublisher.getEvents();
+    }
+
+    public void markEventAsCommitted() {
+        eventPublisher.clear();
     }
 
     public RestaurantId getRestaurantId() {
@@ -125,5 +151,9 @@ public class Restaurant {
 
     public RestaurantStatus getStatus() {
         return status;
+    }
+
+    public RestaurantMenu getMenu() {
+        return menu;
     }
 }

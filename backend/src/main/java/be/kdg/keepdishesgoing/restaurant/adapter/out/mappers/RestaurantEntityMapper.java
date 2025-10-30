@@ -1,15 +1,13 @@
 package be.kdg.keepdishesgoing.restaurant.adapter.out.mappers;
 
 import be.kdg.keepdishesgoing.restaurant.adapter.out.RestaurantJpaEntity;
-import be.kdg.keepdishesgoing.restaurant.adapter.out.embeddable.AddressEmbeddable;
-import be.kdg.keepdishesgoing.restaurant.adapter.out.embeddable.OpeningHoursEmbeddable;
-import be.kdg.keepdishesgoing.restaurant.adapter.out.embeddable.TimeRangeEmbeddable;
+import be.kdg.keepdishesgoing.restaurant.adapter.out.embeddable.*;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
+import be.kdg.keepdishesgoing.restaurant.domain.RestaurantMenu;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,15 +28,18 @@ public class RestaurantEntityMapper {
         entity.setContactEmail(domain.getContactEmail());
         entity.setCuisineType(domain.getCuisineType());
         entity.setDefaultPrepTime(domain.getDefaultPrepTime());
-
-        // Address (embedded)
         entity.setAddress(toAddressEmbeddable(domain.getAddress()));
-
-        // Opening hours (embedded with element collection)
         entity.setOpeningHours(toOpeningHoursEmbeddable(domain.getOpeningHours()));
-
         entity.setPictureUrls(domain.getPictureUrls());
         entity.setStatus(domain.getStatus());
+
+        // ✅ Map RestaurantMenu to embeddable
+        if (domain.getMenu() != null) {
+            entity.setMenu(toRestaurantMenuEmbeddable(domain.getMenu()));
+        } else {
+            entity.setMenu(new RestaurantMenuEmbeddable(List.of()));
+        }
+
         return entity;
     }
 
@@ -46,6 +47,7 @@ public class RestaurantEntityMapper {
         if (address == null) return null;
         AddressEmbeddable emb = new AddressEmbeddable();
         emb.setStreet(address.street());
+        emb.setNumber(address.number());
         emb.setPostalCode(address.postalCode());
         emb.setCity(address.city());
         emb.setCountry(address.country());
@@ -54,14 +56,21 @@ public class RestaurantEntityMapper {
 
     private OpeningHoursEmbeddable toOpeningHoursEmbeddable(OpeningHours openingHours) {
         if (openingHours == null) return null;
-
         Map<String, TimeRangeEmbeddable> scheduleEmbeddable = openingHours.schedule().entrySet().stream()
                 .collect(Collectors.toMap(
-                        entry -> entry.getKey().name(), // e.g. MONDAY → "MONDAY"
+                        entry -> entry.getKey().name(),
                         entry -> new TimeRangeEmbeddable(entry.getValue().open(), entry.getValue().closed())
                 ));
-
         return new OpeningHoursEmbeddable(scheduleEmbeddable);
+    }
+
+    // ✅ New: map RestaurantMenu → Embeddable
+    private RestaurantMenuEmbeddable toRestaurantMenuEmbeddable(RestaurantMenu menu) {
+        return new RestaurantMenuEmbeddable(
+                menu.getPublishedDishes().stream()
+                        .map(DishId::uuid)
+                        .collect(Collectors.toList())
+        );
     }
 
     /* ============================================================
@@ -75,7 +84,7 @@ public class RestaurantEntityMapper {
         Address address = toAddress(entity.getAddress());
         OpeningHours openingHours = toOpeningHours(entity.getOpeningHours());
 
-        return new Restaurant(
+        Restaurant restaurant = new Restaurant(
                 restaurantId,
                 ownerId,
                 entity.getName(),
@@ -86,6 +95,8 @@ public class RestaurantEntityMapper {
                 openingHours,
                 entity.getPictureUrls()
         ).withStatus(entity.getStatus());
+
+        return restaurant;
     }
 
     private Address toAddress(AddressEmbeddable emb) {
@@ -106,12 +117,19 @@ public class RestaurantEntityMapper {
 
         Map<DayOfWeek, TimeRange> schedule = emb.getSchedule().entrySet().stream()
                 .collect(Collectors.toMap(
-                        entry -> DayOfWeek.valueOf(entry.getKey()), // "MONDAY" → DayOfWeek.MONDAY
-                        entry -> new TimeRange(
-                                entry.getValue().getOpenTime(),
-                                entry.getValue().getCloseTime()
-                        )
+                        entry -> DayOfWeek.valueOf(entry.getKey()),
+                        entry -> new TimeRange(entry.getValue().getOpenTime(), entry.getValue().getCloseTime())
                 ));
         return new OpeningHours(schedule);
+    }
+
+    // ✅ New: map RestaurantMenuEmbeddable → Domain
+    private RestaurantMenu toRestaurantMenu(RestaurantMenuEmbeddable emb, RestaurantId restaurantId) {
+        return new RestaurantMenu(
+                restaurantId,
+                emb.getPublishedDishIds().stream()
+                        .map(DishId::of)
+                        .collect(Collectors.toList())
+        );
     }
 }
