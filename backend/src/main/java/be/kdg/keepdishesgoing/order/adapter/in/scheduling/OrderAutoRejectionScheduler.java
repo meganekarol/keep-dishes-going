@@ -3,7 +3,7 @@ package be.kdg.keepdishesgoing.order.adapter.in.scheduling;
 import be.kdg.keepdishesgoing.order.adapter.out.persistence.OrderEventJpaEntity;
 import be.kdg.keepdishesgoing.order.adapter.out.persistence.OrderEventJpaRepository;
 import be.kdg.keepdishesgoing.order.domain.Order;
-import be.kdg.keepdishesgoing.order.domain.OrderId;
+import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.port.out.LoadOrderPort;
 import be.kdg.keepdishesgoing.order.port.out.OrderEventPublisherPort;
 import be.kdg.keepdishesgoing.order.port.out.SaveOrderPort;

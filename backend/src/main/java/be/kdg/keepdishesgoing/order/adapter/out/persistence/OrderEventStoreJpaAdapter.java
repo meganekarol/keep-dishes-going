@@ -2,8 +2,8 @@ package be.kdg.keepdishesgoing.order.adapter.out.persistence;
 
 import be.kdg.keepdishesgoing.common.DomainEvent;
 import be.kdg.keepdishesgoing.order.domain.Order;
-import be.kdg.keepdishesgoing.order.domain.OrderId;
 import be.kdg.keepdishesgoing.order.domain.OrderSnapshot;
+import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.port.out.LoadOrderPort;
 import be.kdg.keepdishesgoing.order.port.out.SaveOrderPort;
 import com.fasterxml.jackson.core.JsonProcessingException;

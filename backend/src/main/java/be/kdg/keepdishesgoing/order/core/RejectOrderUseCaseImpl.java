@@ -1,7 +1,7 @@
 package be.kdg.keepdishesgoing.order.core;
 
 import be.kdg.keepdishesgoing.order.domain.Order;
-import be.kdg.keepdishesgoing.order.domain.OrderId;
+import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.port.in.RejectOrderUseCase;
 import be.kdg.keepdishesgoing.order.port.in.commands.RejectOrderCommand;
 import be.kdg.keepdishesgoing.order.port.out.*;
