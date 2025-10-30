@@ -1,7 +1,7 @@
 package be.kdg.keepdishesgoing.order.core;
 
 import be.kdg.keepdishesgoing.order.domain.Order;
-import be.kdg.keepdishesgoing.order.domain.OrderId;
+import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderLine;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.order.port.in.PlaceOrderUseCase;

@@ -1,4 +1,4 @@
-package be.kdg.keepdishesgoing.order.domain;
+package be.kdg.keepdishesgoing.order.domain.valueObjects;
 
 import java.util.Objects;
 import java.util.UUID;

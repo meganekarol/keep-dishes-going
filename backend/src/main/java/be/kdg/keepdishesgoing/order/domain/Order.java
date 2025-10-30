@@ -2,7 +2,6 @@ package be.kdg.keepdishesgoing.order.domain;
 
 import be.kdg.keepdishesgoing.common.DomainEvent;
 import be.kdg.keepdishesgoing.common.events.*;
-import be.kdg.keepdishesgoing.order.domain.OrderId;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.*;
 
 import java.math.BigDecimal;
