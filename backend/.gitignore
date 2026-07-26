@@ -36,11 +36,11 @@ out/
 ### VS Code ###
 .vscode/
 
-# Docker volumes - runtime data
-postgresql/data/
-rabbitmq/data/
-rabbitmq/log/
-idp_mysql_data/
+# Docker volumes - runtime data, mapped under the infrastructure folder
+infrastructure/postgresql/
+infrastructure/rabbitmq/
+infrastructure/idp_mysql_data/
 
-# Keep init scripts if they exist
-!init-scripts/
+# Keep the seed/config directories that ARE part of the repo
+!infrastructure/init-scripts/
+!infrastructure/keycloak/

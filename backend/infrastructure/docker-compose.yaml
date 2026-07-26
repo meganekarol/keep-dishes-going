@@ -55,6 +55,15 @@ services:
       - '3307:3306'
     networks:
       - kdg-kc
+    # Added: on a cold boot MySQL spends minutes initialising its data
+    # directory. Without this gate Keycloak races it, fails to obtain a JDBC
+    # connection and exits(1) permanently.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ukeycloak", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
 
   idp_keycloak:
     image: quay.io/keycloak/keycloak:26.3
@@ -66,11 +75,15 @@ services:
       KC_DB_URL_DATABASE: 'keycloak'
       KC_DB_USERNAME: 'keycloak'
       KC_DB_PASSWORD: 'password'
-    command: start-dev
+    command: start-dev --import-realm
+    restart: unless-stopped
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
     ports:
       - "8180:8080"
     depends_on:
-      - idp_mysql
+      idp_mysql:
+        condition: service_healthy
     networks:
       - kdg-kc
 
