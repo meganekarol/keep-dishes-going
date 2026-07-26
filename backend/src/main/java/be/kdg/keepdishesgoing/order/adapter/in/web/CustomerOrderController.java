@@ -3,7 +3,7 @@ package be.kdg.keepdishesgoing.order.adapter.in.web;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.CustomerInfo;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.DeliveryAddress;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
-import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderLine;
+import be.kdg.keepdishesgoing.order.port.in.commands.OrderItemCommand;
 import be.kdg.keepdishesgoing.order.port.in.commands.PlaceOrderCommand;
 import be.kdg.keepdishesgoing.order.port.in.PlaceOrderUseCase;
 import org.slf4j.Logger;
@@ -12,10 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller for customer-facing order operations
@@ -79,20 +77,17 @@ public class CustomerOrderController {
             request.deliveryCountry
         );
         
-        List<OrderLine> orderLines = request.items.stream()
-            .map(item -> new OrderLine(
-                item.dishId,
-                "",
-                BigDecimal.ZERO,
-                item.quantity
-            ))
-            .collect(Collectors.toList());
-        
+        // Only dish + quantity: the use case resolves name and price from the
+        // dish projection so the client cannot influence what the order costs.
+        List<OrderItemCommand> items = request.items.stream()
+            .map(item -> new OrderItemCommand(item.dishId, item.quantity))
+            .toList();
+
         return new PlaceOrderCommand(
             request.restaurantId,
             customerInfo,
             deliveryAddress,
-            orderLines
+            items
         );
     }
     

@@ -5,6 +5,7 @@ import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderLine;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.order.port.in.PlaceOrderUseCase;
+import be.kdg.keepdishesgoing.order.port.in.commands.OrderItemCommand;
 import be.kdg.keepdishesgoing.order.port.in.commands.PlaceOrderCommand;
 import be.kdg.keepdishesgoing.order.port.out.LoadDishProjectionPort;
 import be.kdg.keepdishesgoing.order.port.out.LoadRestaurantProjectionPort;
@@ -17,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Use case implementation for placing a new order
@@ -52,10 +52,10 @@ public class PlaceOrderUseCaseImpl implements PlaceOrderUseCase {
         validateRestaurantOpen(command.restaurantId());
         
         // Validate all dishes are available and belong to restaurant
-        validateDishes(command.orderLines(), command.restaurantId());
-        
-        // Enrich order lines with current dish information
-        List<OrderLine> enrichedOrderLines = enrichOrderLines(command.orderLines());
+        validateDishes(command.items(), command.restaurantId());
+
+        // Resolve the requested items into priced order lines
+        List<OrderLine> enrichedOrderLines = toOrderLines(command.items());
 
         // Create Order aggregate
         OrderId orderId = OrderId.create();
@@ -86,11 +86,11 @@ public class PlaceOrderUseCaseImpl implements PlaceOrderUseCase {
         }
     }
     
-    private void validateDishes(List<OrderLine> orderLines, UUID restaurantId) {
-        List<UUID> dishIds = orderLines.stream()
-            .map(OrderLine::dishId)
-            .collect(Collectors.toList());
-        
+    private void validateDishes(List<OrderItemCommand> items, UUID restaurantId) {
+        List<UUID> dishIds = items.stream()
+            .map(OrderItemCommand::dishId)
+            .toList();
+
         // Check all dishes are available
         boolean allAvailable = loadDishPort.areAllDishesAvailable(dishIds);
         if (!allAvailable) {
@@ -107,15 +107,19 @@ public class PlaceOrderUseCaseImpl implements PlaceOrderUseCase {
         }
     }
     
-    private List<OrderLine> enrichOrderLines(List<OrderLine> orderLines) {
-        // Enrich with current prices and names from projections
-        return orderLines.stream()
-            .map(line -> new OrderLine(
-                line.dishId(),
-                loadDishPort.getDishName(line.dishId()),
-                loadDishPort.getDishPrice(line.dishId()),
-                line.quantity()
+    /**
+     * Turns the requested dish/quantity pairs into order lines, taking the name
+     * and price from the dish projection. Prices are never accepted from the
+     * client, and once the resulting event is stored the order total is fixed.
+     */
+    private List<OrderLine> toOrderLines(List<OrderItemCommand> items) {
+        return items.stream()
+            .map(item -> new OrderLine(
+                item.dishId(),
+                loadDishPort.getDishName(item.dishId()),
+                loadDishPort.getDishPrice(item.dishId()),
+                item.quantity()
             ))
-            .collect(Collectors.toList());
+            .toList();
     }
 }
