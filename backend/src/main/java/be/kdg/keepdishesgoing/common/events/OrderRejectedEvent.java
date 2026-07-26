@@ -19,6 +19,6 @@ public record OrderRejectedEvent(
 
     @Override
     public LocalDateTime occurredAt() {
-        return null;
+        return occurredOn;
     }
 }

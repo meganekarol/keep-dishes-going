@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Scheduler that automatically rejects orders that haven't been accepted within 5 minutes
@@ -52,19 +51,21 @@ public class OrderAutoRejectionScheduler {
         log.debug("Checking for orders pending acceptance...");
         
         LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(ACCEPTANCE_TIMEOUT_MINUTES);
-        
-        // Find OrderPlacedEvents older than 5 minutes
-        List<OrderEventJpaEntity> oldPlacedEvents = eventRepository.findByOrderIdOrderBySequenceNumberAsc(null)
+
+        // Find orders placed more than 5 minutes ago; loading each order tells us
+        // whether it is still pending acceptance (rejected/accepted ones are skipped).
+        List<UUID> staleOrderIds = eventRepository
+            .findByEventTypeAndOccurredOnBefore("OrderPlacedEvent", cutoffTime)
             .stream()
-            .filter(event -> event.getEventType().equals("OrderPlacedEvent"))
-            .filter(event -> event.getOccurredOn().isBefore(cutoffTime))
+            .map(OrderEventJpaEntity::getOrderId)
+            .distinct()
             .toList();
-        
-        for (OrderEventJpaEntity event : oldPlacedEvents) {
+
+        for (UUID orderId : staleOrderIds) {
             try {
-                autoRejectOrder(event.getOrderId());
+                autoRejectOrder(orderId);
             } catch (Exception e) {
-                log.error("Error auto-rejecting order {}", event.getOrderId(), e);
+                log.error("Error auto-rejecting order {}", orderId, e);
             }
         }
     }

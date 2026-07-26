@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class Dish {
-    private DishId dishId;
-    private RestaurantId restaurantId;
+    private final DishId dishId;
+    private final RestaurantId restaurantId;
 
     private DishVersion publishedVersion; // Published (Live) State
     private DishVersion draftVersion;     // Draft State (nullable - only exists when there are pending changes)

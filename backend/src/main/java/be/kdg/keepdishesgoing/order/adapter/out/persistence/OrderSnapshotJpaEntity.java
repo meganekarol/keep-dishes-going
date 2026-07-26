@@ -19,18 +19,26 @@ public class OrderSnapshotJpaEntity {
     
     @Column(nullable = false)
     private Integer version;
-    
+
+    /**
+     * Sequence number of the last event included in this snapshot.
+     * Replay applies only events with a higher sequence number.
+     */
+    @Column(nullable = false)
+    private Integer lastSequenceNumber;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
-    
+
     protected OrderSnapshotJpaEntity() {
         // For JPA
     }
-    
-    public OrderSnapshotJpaEntity(UUID orderId, String snapshotData, Integer version) {
+
+    public OrderSnapshotJpaEntity(UUID orderId, String snapshotData, Integer version, Integer lastSequenceNumber) {
         this.orderId = orderId;
         this.snapshotData = snapshotData;
         this.version = version;
+        this.lastSequenceNumber = lastSequenceNumber;
         this.createdAt = LocalDateTime.now();
     }
     
@@ -46,18 +54,26 @@ public class OrderSnapshotJpaEntity {
     public Integer getVersion() {
         return version;
     }
-    
+
+    public Integer getLastSequenceNumber() {
+        return lastSequenceNumber;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-    
+
     // Setters for updates
     public void setSnapshotData(String snapshotData) {
         this.snapshotData = snapshotData;
     }
-    
+
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    public void setLastSequenceNumber(Integer lastSequenceNumber) {
+        this.lastSequenceNumber = lastSequenceNumber;
     }
     
     public void setCreatedAt(LocalDateTime createdAt) {

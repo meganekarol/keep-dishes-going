@@ -11,8 +11,19 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Order Aggregate Root - Event Sourced with Snapshot support
- * Manages the complete lifecycle of a customer order
+ * Order Aggregate Root - Event Sourced with Snapshot support.
+ * Manages the complete lifecycle of a customer order.
+ *
+ * <p>Event sourcing model:
+ * <ul>
+ *   <li>Business methods (accept, reject, ...) validate invariants, then
+ *       {@link #applyAndRecord(DomainEvent)} the resulting event: the event both
+ *       mutates state (via {@link #apply(DomainEvent)}) and is queued as
+ *       uncommitted so the persistence adapter can append it to the event store.</li>
+ *   <li>To rehydrate, the persistence adapter starts from {@link #blank()} (or a
+ *       snapshot) and replays historical events with {@link #apply(DomainEvent)},
+ *       which mutates state WITHOUT re-recording the events.</li>
+ * </ul>
  */
 public class Order {
     private OrderId orderId;
@@ -33,43 +44,47 @@ public class Order {
     // For event sourcing
     private final List<DomainEvent> uncommittedEvents = new ArrayList<>();
 
-    // Constructor for new orders
-    private Order(OrderId orderId, CustomerInfo customerInfo,RestaurantId restaurantId,
-                  DeliveryAddress deliveryAddress, List<OrderLine> orderLines, BigDecimal totalPrice) {
-        this.orderId = orderId;
-        this.customerInfo = customerInfo;
-        this.restaurantId = restaurantId;
-        this.deliveryAddress = deliveryAddress;
-        this.orderLines = new ArrayList<>(orderLines);
-        this.totalPrice = totalPrice;
-        this.status = OrderStatus.PENDING_ACCEPTANCE;
-        this.placedAt = LocalDateTime.now();
-        this.version = 0;
+    // Constructor for event sourcing reconstruction (blank aggregate)
+    private Order() {
+        this.orderLines = new ArrayList<>();
+    }
 
-        // Register domain event
-        registerEvent(new OrderPlacedEvent(
+    /**
+     * Blank aggregate used as the starting point for event replay.
+     */
+    public static Order blank() {
+        return new Order();
+    }
+
+    // Factory method for placing a new order
+    public static Order placeOrder(OrderId orderId, CustomerInfo customerInfo, RestaurantId restaurantId,
+                                   DeliveryAddress deliveryAddress,
+                                   List<OrderLine> orderLines) {
+        validateOrderLines(orderLines);
+        BigDecimal totalPrice = calculateTotalPrice(orderLines);
+
+        List<OrderPlacedEvent.LineItem> lineItems = orderLines.stream()
+                .map(ol -> new OrderPlacedEvent.LineItem(
+                        ol.dishId(), ol.dishName(), ol.unitPrice(), ol.quantity()))
+                .toList();
+
+        Order order = new Order();
+        order.applyAndRecord(new OrderPlacedEvent(
                 UUID.randomUUID(),
                 LocalDateTime.now(),
                 orderId.uuid(),
                 restaurantId.uuid(),
                 customerInfo.customerName(),
-                totalPrice,
-                deliveryAddress.getFullAddress()
+                customerInfo.contactEmail(),
+                deliveryAddress.street(),
+                deliveryAddress.number(),
+                deliveryAddress.postalCode(),
+                deliveryAddress.city(),
+                deliveryAddress.country(),
+                lineItems,
+                totalPrice
         ));
-    }
-
-    // Constructor for event sourcing reconstruction
-    private Order() {
-        this.orderLines = new ArrayList<>();
-    }
-
-    // Factory method for placing new order
-    public static Order placeOrder(OrderId orderId, CustomerInfo customerInfo,RestaurantId restaurantId,
-                                    DeliveryAddress deliveryAddress,
-                                   List<OrderLine> orderLines) {
-        validateOrderLines(orderLines);
-        BigDecimal totalPrice = calculateTotalPrice(orderLines);
-        return new Order(orderId, customerInfo, restaurantId,deliveryAddress, orderLines, totalPrice);
+        return order;
     }
 
     // Factory method for snapshot restoration
@@ -77,7 +92,7 @@ public class Order {
         Order order = new Order();
         order.orderId = new OrderId(snapshot.orderId());
         order.customerInfo = snapshot.customerInfo();
-        order.restaurantId= snapshot.restaurantId();
+        order.restaurantId = snapshot.restaurantId();
         order.deliveryAddress = snapshot.deliveryAddress();
         order.orderLines = new ArrayList<>(snapshot.orderLines());
         order.totalPrice = snapshot.totalPrice();
@@ -92,17 +107,13 @@ public class Order {
         return order;
     }
 
-    // Business methods
+    // ==================== Business methods (command side) ====================
+
     public void accept() {
         if (status != OrderStatus.PENDING_ACCEPTANCE) {
             throw new IllegalStateException("Order can only be accepted when pending acceptance");
         }
-
-        this.status = OrderStatus.ACCEPTED;
-        this.acceptedAt = LocalDateTime.now();
-        this.version++;
-
-        registerEvent(new OrderAcceptedEvent(
+        applyAndRecord(new OrderAcceptedEvent(
                 UUID.randomUUID(),
                 LocalDateTime.now(),
                 orderId.uuid(),
@@ -115,12 +126,7 @@ public class Order {
         if (status != OrderStatus.PENDING_ACCEPTANCE) {
             throw new IllegalStateException("Order can only be rejected when pending acceptance");
         }
-
-        this.status = OrderStatus.REJECTED;
-        this.rejectionReason = reason;
-        this.version++;
-
-        registerEvent(new OrderRejectedEvent(
+        applyAndRecord(new OrderRejectedEvent(
                 UUID.randomUUID(),
                 LocalDateTime.now(),
                 orderId.uuid(),
@@ -129,16 +135,24 @@ public class Order {
         ));
     }
 
+    public void autoReject() {
+        if (status != OrderStatus.PENDING_ACCEPTANCE) {
+            throw new IllegalStateException("Order can only be auto-rejected when pending acceptance");
+        }
+        applyAndRecord(new OrderRejectedEvent(
+                UUID.randomUUID(),
+                LocalDateTime.now(),
+                orderId.uuid(),
+                restaurantId.uuid(),
+                "Automatically rejected - no response within 5 minutes"
+        ));
+    }
+
     public void markReady() {
         if (status != OrderStatus.ACCEPTED) {
             throw new IllegalStateException("Order must be accepted before marking ready");
         }
-
-        this.status = OrderStatus.READY_FOR_PICKUP;
-        this.readyAt = LocalDateTime.now();
-        this.version++;
-
-        registerEvent(new OrderReadyEvent(
+        applyAndRecord(new OrderReadyEvent(
                 UUID.randomUUID(),
                 LocalDateTime.now(),
                 orderId.uuid(),
@@ -151,38 +165,64 @@ public class Order {
         if (status != OrderStatus.READY_FOR_PICKUP) {
             throw new IllegalStateException("Order must be ready before being picked up");
         }
-
-        this.status = OrderStatus.IN_DELIVERY;
-        this.pickedUpAt = LocalDateTime.now();
-        this.version++;
+        applyAndRecord(new OrderPickedUpEvent(orderId.uuid(), null, null));
     }
 
     public void markDelivered() {
         if (status != OrderStatus.IN_DELIVERY) {
             throw new IllegalStateException("Order must be in delivery before being delivered");
         }
-
-        this.status = OrderStatus.DELIVERED;
-        this.deliveredAt = LocalDateTime.now();
-        this.version++;
+        applyAndRecord(new OrderDeliveredEvent(orderId.uuid(), LocalDateTime.now()));
     }
 
-    public void autoReject() {
-        if (status != OrderStatus.PENDING_ACCEPTANCE) {
-            throw new IllegalStateException("Order can only be auto-rejected when pending acceptance");
+    // ==================== Event sourcing (state mutation) ====================
+
+    /**
+     * Applies an event to mutate aggregate state WITHOUT recording it.
+     * Used by the persistence adapter to replay historical events during rehydration.
+     */
+    public void apply(DomainEvent event) {
+        if (event instanceof OrderPlacedEvent e) {
+            this.orderId = OrderId.of(e.orderId());
+            this.restaurantId = RestaurantId.of(e.restaurantId());
+            this.customerInfo = new CustomerInfo(e.customerName(), e.contactEmail());
+            this.deliveryAddress = new DeliveryAddress(
+                    e.street(), e.number(), e.postalCode(), e.city(), e.country());
+            this.orderLines = new ArrayList<>(e.lines().stream()
+                    .map(li -> new OrderLine(li.dishId(), li.dishName(), li.unitPrice(), li.quantity()))
+                    .toList());
+            this.totalPrice = e.totalPrice();
+            this.status = OrderStatus.PENDING_ACCEPTANCE;
+            this.placedAt = e.occurredOn();
+            this.version = 0;
+        } else if (event instanceof OrderAcceptedEvent e) {
+            this.status = OrderStatus.ACCEPTED;
+            this.acceptedAt = e.occurredOn();
+            this.version++;
+        } else if (event instanceof OrderRejectedEvent e) {
+            this.status = OrderStatus.REJECTED;
+            this.rejectionReason = e.rejectionReason();
+            this.version++;
+        } else if (event instanceof OrderReadyEvent e) {
+            this.status = OrderStatus.READY_FOR_PICKUP;
+            this.readyAt = e.occurredOn();
+            this.version++;
+        } else if (event instanceof OrderPickedUpEvent e) {
+            this.status = OrderStatus.IN_DELIVERY;
+            this.pickedUpAt = e.occurredOn();
+            this.version++;
+        } else if (event instanceof OrderDeliveredEvent e) {
+            this.status = OrderStatus.DELIVERED;
+            this.deliveredAt = e.occurredOn();
+            this.version++;
+        } else {
+            throw new IllegalStateException("Unknown order event type: " + event.getClass().getName());
         }
+    }
 
-        this.status = OrderStatus.REJECTED;
-        this.rejectionReason = "No response from restaurant within time limit";
-        this.version++;
-
-        registerEvent(new OrderRejectedEvent(
-                UUID.randomUUID(),
-                LocalDateTime.now(),
-                orderId.uuid(),
-                restaurantId.uuid(),
-                "Automatically rejected - no response within 5 minutes"
-        ));
+    private void applyAndRecord(DomainEvent event) {
+        apply(event);
+        uncommittedEvents.add(event);
     }
 
     // Create snapshot for event sourcing
@@ -216,10 +256,6 @@ public class Order {
         return orderLines.stream()
                 .map(OrderLine::subtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private void registerEvent(DomainEvent event) {
-        uncommittedEvents.add(event);
     }
 
     // Event sourcing support
