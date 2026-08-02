@@ -33,12 +33,8 @@ public class RestaurantEntityMapper {
         entity.setPictureUrls(domain.getPictureUrls());
         entity.setStatus(domain.getStatus());
 
-        // ✅ Map RestaurantMenu to embeddable
-        if (domain.getMenu() != null) {
-            entity.setMenu(toRestaurantMenuEmbeddable(domain.getMenu()));
-        } else {
-            entity.setMenu(new RestaurantMenuEmbeddable(List.of()));
-        }
+        // ✅ Map RestaurantMenu to embeddable - never null, the aggregate guarantees one
+        entity.setMenu(toRestaurantMenuEmbeddable(domain.getMenu()));
 
         return entity;
     }
@@ -84,7 +80,7 @@ public class RestaurantEntityMapper {
         Address address = toAddress(entity.getAddress());
         OpeningHours openingHours = toOpeningHours(entity.getOpeningHours());
 
-        Restaurant restaurant = new Restaurant(
+        return new Restaurant(
                 restaurantId,
                 ownerId,
                 entity.getName(),
@@ -93,10 +89,12 @@ public class RestaurantEntityMapper {
                 entity.getCuisineType(),
                 entity.getDefaultPrepTime(),
                 openingHours,
-                entity.getPictureUrls()
-        ).withStatus(entity.getStatus());
-
-        return restaurant;
+                // Copy rather than hand over Hibernate's lazy collection: the domain
+                // object outlives the session and must not depend on it.
+                entity.getPictureUrls() == null ? List.of() : List.copyOf(entity.getPictureUrls())
+        )
+                .withStatus(entity.getStatus())
+                .withMenu(toRestaurantMenu(entity.getMenu(), restaurantId));
     }
 
     private Address toAddress(AddressEmbeddable emb) {
@@ -125,6 +123,11 @@ public class RestaurantEntityMapper {
 
     // ✅ New: map RestaurantMenuEmbeddable → Domain
     private RestaurantMenu toRestaurantMenu(RestaurantMenuEmbeddable emb, RestaurantId restaurantId) {
+        // Rows written before the menu was persisted have no embeddable at all,
+        // so fall back to an empty menu rather than handing back null.
+        if (emb == null || emb.getPublishedDishIds() == null) {
+            return RestaurantMenu.forRestaurant(restaurantId);
+        }
         return new RestaurantMenu(
                 restaurantId,
                 emb.getPublishedDishIds().stream()

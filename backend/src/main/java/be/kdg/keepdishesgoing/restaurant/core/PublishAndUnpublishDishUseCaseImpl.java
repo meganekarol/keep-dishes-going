@@ -7,8 +7,10 @@ import be.kdg.keepdishesgoing.restaurant.port.in.commands.PublishDishCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.UnpublishDishCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDishUseCase {
 
     private final LoadDishPort loadDishPort;

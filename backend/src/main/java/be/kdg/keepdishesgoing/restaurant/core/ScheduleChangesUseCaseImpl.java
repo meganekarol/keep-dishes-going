@@ -6,11 +6,13 @@ import be.kdg.keepdishesgoing.restaurant.port.in.commands.ScheduleDishChangesCom
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveDishPort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class ScheduleChangesUseCaseImpl implements ScheduleChangesUseCase {
 
     private final LoadDishPort loadDishPort;

@@ -9,8 +9,10 @@ import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveDishPort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfStockUseCase {
     private final SaveDishPort saveDishPort;
     private final LoadDishPort loadDishPort;

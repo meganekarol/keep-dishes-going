@@ -39,6 +39,9 @@ public class Restaurant {
         this.defaultPrepTime = defaultPrepTime;
         this.openingHours = openingHours;
         this.pictureUrls = pictureUrls;
+        // A restaurant always has a menu, empty to begin with. Without this the
+        // menu policy (max 10 published dishes) has nothing to run against.
+        this.menu = RestaurantMenu.forRestaurant(restaurantId);
     }
 
 
@@ -73,6 +76,15 @@ public class Restaurant {
 
     public Restaurant withStatus(RestaurantStatus status) {
         this.status = status;
+        return this;
+    }
+
+    /** Restore the previously published dishes when rehydrating from persistence. */
+    public Restaurant withMenu(RestaurantMenu menu) {
+        if (menu == null) {
+            throw new IllegalArgumentException("Menu cannot be null");
+        }
+        this.menu = menu;
         return this;
     }
 
