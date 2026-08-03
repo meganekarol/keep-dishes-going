@@ -102,8 +102,21 @@ public class Dish {
         ));
     }
 
+    /**
+     * Put a sold-out dish back on the menu.
+     *
+     * <p>Restores {@link DishState#PUBLISHED} rather than a separate "in stock"
+     * state: being in stock <em>is</em> being published. A distinct state would
+     * fail {@link #isPublished()} and so block the next
+     * {@link #markDishOutOfStock()}, making the toggle usable only once.
+     */
     public void markDishInStock() {
-        this.status = DishState.IN_STOCK;
+        if (status != DishState.OUT_OF_STOCK) {
+            throw new IllegalArgumentException(
+                    "Only out-of-stock dishes can be marked in stock. Current status: " + status
+            );
+        }
+        this.status = DishState.PUBLISHED;
         eventPublisher.register(new DishMarkedInStockEvent(
                 this.dishId.uuid(),
                 this.restaurantId.uuid()
