@@ -7,6 +7,7 @@ import be.kdg.keepdishesgoing.order.port.in.commands.RejectOrderCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +15,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 /**
- * REST Controller for restaurant owner order management operations
+ * REST Controller for restaurant owner order management operations.
+ *
+ * <p>Ownership is asserted at class level: every endpoint acts on one
+ * restaurant's orders, and the "owner" role alone would let any owner accept
+ * or reject another restaurant's orders.
  */
 @RestController
 @RequestMapping("/api/restaurants/{restaurantId}/orders")
+@PreAuthorize("@restaurantOwnership.isOwner(#restaurantId, authentication.name)")
 public class RestaurantOrderController {
     
     private static final Logger log = LoggerFactory.getLogger(RestaurantOrderController.class);
@@ -47,7 +53,6 @@ public class RestaurantOrderController {
         log.info("Restaurant {} accepting order {}", restaurantId, orderId);
         
         try {
-            // TODO: Validate JWT contains restaurantId ownership
             
             AcceptOrderCommand command = new AcceptOrderCommand(orderId, restaurantId);
             acceptOrderUseCase.acceptOrder(command);
@@ -86,7 +91,6 @@ public class RestaurantOrderController {
             restaurantId, orderId, request.reason);
         
         try {
-            // TODO: Validate JWT contains restaurantId ownership
             
             RejectOrderCommand command = new RejectOrderCommand(
                 orderId, 
@@ -127,7 +131,6 @@ public class RestaurantOrderController {
         log.info("Restaurant {} marking order {} as ready", restaurantId, orderId);
         
         try {
-            // TODO: Validate JWT contains restaurantId ownership
             
             MarkOrderReadyCommand command = new MarkOrderReadyCommand(orderId, restaurantId);
             markOrderReadyUseCase.markOrderReady(command);

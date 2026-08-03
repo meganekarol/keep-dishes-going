@@ -11,6 +11,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.*;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -18,8 +19,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Every endpoint here targets a specific restaurant, so ownership is asserted
+ * once at class level. The expression is evaluated per invocation, which is why
+ * {@code #restaurantId} resolves against each method's own arguments.
+ */
 @RestController
 @RequestMapping("/api/{restaurantId}/dishes")
+@PreAuthorize("@restaurantOwnership.isOwner(#restaurantId, authentication.name)")
 public class DishController {
 
     private final EditDishAsDraftUseCase editDishAsDraftUseCase;

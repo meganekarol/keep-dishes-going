@@ -3,6 +3,7 @@ package be.kdg.keepdishesgoing.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -32,11 +33,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // Public (no authentication required)
-                        .requestMatchers("/api/public/**").permitAll()
+                        // US-30: customers order as guests, so this must stay open.
+                        .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
 
-                        // Owner routes require Keycloak role "owner"
-                        .requestMatchers("/api/owner/**").hasRole("owner")
+                        // Owner routes. The role proves the caller is *an* owner;
+                        // proving they own *this* restaurant needs a lookup, so the
+                        // endpoints additionally carry @PreAuthorize on restaurantId.
+                        .requestMatchers(HttpMethod.POST, "/api/restaurants").hasRole("owner")
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants/me").hasRole("owner")
+                        .requestMatchers(HttpMethod.PATCH, "/api/restaurants/*/status").hasRole("owner")
+                        .requestMatchers("/api/restaurants/*/orders/**").hasRole("owner")
+                        .requestMatchers("/api/*/dishes/**").hasRole("owner")
 
                         // Everything else requires authentication
                         .anyRequest().authenticated()
@@ -53,7 +60,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173")); // React dev server
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // PATCH is used by the manual open/close toggle; without it the browser
+        // preflight fails before the request is ever sent.
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 

@@ -14,6 +14,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.GetOwnerRestaurantCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -61,6 +62,7 @@ public class RestaurantController {
     }
 
     @PatchMapping("/{restaurantId}/status")
+    @PreAuthorize("@restaurantOwnership.isOwner(#restaurantId, authentication.name)")
     public ResponseEntity<Void> changeStatus(@PathVariable UUID restaurantId,
                                              @RequestBody UpdateRestaurantStatusRequest request) {
         var status = request.status();
