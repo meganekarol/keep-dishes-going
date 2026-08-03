@@ -35,12 +35,13 @@ public class RestaurantProjectionListener {
     public void on(RestaurantCreatedEvent event) {
         log.info("Updating projection: Restaurant created - {}", event.restaurantId());
         
+        // The schedule travels with the event, so the projection can work out for
+        // itself when the restaurant is open instead of waiting for a manual toggle.
         RestaurantProjectionJpaEntity projection = new RestaurantProjectionJpaEntity(
             event.restaurantId(),
             event.name(),
             event.cuisineType(),
-            false // Initially closed
-
+            event.openingHours()
         );
         
         restaurantProjectionRepository.save(projection);
@@ -54,7 +55,7 @@ public class RestaurantProjectionListener {
         
         restaurantProjectionRepository.findById(event.restaurantId())
             .ifPresent(restaurant -> {
-                restaurant.open();
+                restaurant.forceOpen();
                 restaurantProjectionRepository.save(restaurant);
             });
     }
@@ -66,7 +67,7 @@ public class RestaurantProjectionListener {
         
         restaurantProjectionRepository.findById(event.restaurantId())
             .ifPresent(restaurant -> {
-                restaurant.close();
+                restaurant.forceClosed();
                 restaurantProjectionRepository.save(restaurant);
             });
     }

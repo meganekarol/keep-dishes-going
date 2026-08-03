@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -23,8 +24,10 @@ public class RestaurantProjectionJpaAdapter implements LoadRestaurantProjectionP
     
     @Override
     public boolean isRestaurantOpen(UUID restaurantId) {
+        // Evaluated against the clock on every call, so checkout sees the state
+        // as it is at that exact moment rather than a stale stored flag.
         return repository.findById(restaurantId)
-            .map(RestaurantProjectionJpaEntity::isOpen)
+            .map(restaurant -> restaurant.isOpenAt(LocalDateTime.now()))
             .orElseThrow(() -> new IllegalArgumentException("Restaurant not found: " + restaurantId));
     }
 
