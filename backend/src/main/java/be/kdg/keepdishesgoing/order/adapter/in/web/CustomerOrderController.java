@@ -36,31 +36,13 @@ public class CustomerOrderController {
     @PostMapping
     public ResponseEntity<PlaceOrderResponse> placeOrder(@RequestBody PlaceOrderRequest request) {
         log.info("Received order placement request for restaurant {}", request.restaurantId);
-        
-        try {
-            // Map request to command
-            PlaceOrderCommand command = mapToCommand(request);
-            
-            // Execute use case
-            OrderId orderId = placeOrderUseCase.placeOrder(command);
-            
-            log.info("Order placed successfully: {}", orderId);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new PlaceOrderResponse(orderId.uuid(), "Order placed successfully"));
-                
-        } catch (IllegalStateException e) {
-            log.warn("Order placement failed: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(new PlaceOrderResponse(null, e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid order request: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(new PlaceOrderResponse(null, e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error placing order", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new PlaceOrderResponse(null, "Failed to place order"));
-        }
+
+        PlaceOrderCommand command = mapToCommand(request);
+        OrderId orderId = placeOrderUseCase.placeOrder(command);
+
+        log.info("Order placed successfully: {}", orderId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(new PlaceOrderResponse(orderId.uuid(), "Order placed successfully"));
     }
     
     private PlaceOrderCommand mapToCommand(PlaceOrderRequest request) {

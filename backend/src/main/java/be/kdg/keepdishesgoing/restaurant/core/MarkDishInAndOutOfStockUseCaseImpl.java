@@ -1,5 +1,6 @@
 package be.kdg.keepdishesgoing.restaurant.core;
 
+import be.kdg.keepdishesgoing.common.exceptions.NotFoundException;
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishId;
 import be.kdg.keepdishesgoing.restaurant.port.in.MarkDishInAndOutOfStockUseCase;
@@ -30,12 +31,11 @@ public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfSto
         var dishId = DishId.of(command.dishId());
 
         Dish dish = loadDishPort.loadById(dishId)
-                .orElseThrow(() -> new IllegalArgumentException("Dish not found"));
-        try {
-            dish.markDishInStock();
-        } catch (Exception e) {
-            throw new RuntimeException("Could not mark Dish in stock", e);
-        }
+                .orElseThrow(() -> new NotFoundException("Dish", command.dishId()));
+
+        // Let the domain exception through: wrapping it in a RuntimeException
+        // hid the reason and made every rule violation look like a server fault.
+        dish.markDishInStock();
 
         saveDishPort.saveDish(dish);
         publishEventPort.publishAll(dish.getUncommittedEvents());
@@ -47,12 +47,9 @@ public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfSto
         var dishId = DishId.of(command.dishId());
 
         Dish dish = loadDishPort.loadById(dishId)
-                .orElseThrow(() -> new IllegalArgumentException("Dish not found"));
-        try {
-            dish.markDishOutOfStock();
-        } catch (Exception e) {
-            throw new RuntimeException("Could not mark Dish out of stock", e);
-        }
+                .orElseThrow(() -> new NotFoundException("Dish", command.dishId()));
+
+        dish.markDishOutOfStock();
 
         saveDishPort.saveDish(dish);
 

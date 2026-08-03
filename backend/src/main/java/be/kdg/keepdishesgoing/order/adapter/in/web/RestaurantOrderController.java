@@ -51,30 +51,14 @@ public class RestaurantOrderController {
             @AuthenticationPrincipal Jwt jwt) {
         
         log.info("Restaurant {} accepting order {}", restaurantId, orderId);
-        
-        try {
-            
-            AcceptOrderCommand command = new AcceptOrderCommand(orderId, restaurantId);
-            acceptOrderUseCase.acceptOrder(command);
-            
-            return ResponseEntity.ok(new OrderActionResponse(
-                orderId, 
-                "Order accepted successfully"
-            ));
-            
-        } catch (IllegalStateException e) {
-            log.warn("Failed to accept order: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(new OrderActionResponse(orderId, e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid accept request: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(new OrderActionResponse(orderId, e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error accepting order", e);
-            return ResponseEntity.internalServerError()
-                .body(new OrderActionResponse(orderId, "Failed to accept order"));
-        }
+
+        AcceptOrderCommand command = new AcceptOrderCommand(orderId, restaurantId);
+        acceptOrderUseCase.acceptOrder(command);
+
+        return ResponseEntity.ok(new OrderActionResponse(
+            orderId,
+            "Order accepted successfully"
+        ));
     }
     
     /**
@@ -90,33 +74,17 @@ public class RestaurantOrderController {
         log.info("Restaurant {} rejecting order {} with reason: {}", 
             restaurantId, orderId, request.reason);
         
-        try {
-            
-            RejectOrderCommand command = new RejectOrderCommand(
-                orderId, 
-                restaurantId, 
-                request.reason
-            );
-            rejectOrderUseCase.rejectOrder(command);
-            
-            return ResponseEntity.ok(new OrderActionResponse(
-                orderId, 
-                "Order rejected successfully"
-            ));
-            
-        } catch (IllegalStateException e) {
-            log.warn("Failed to reject order: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(new OrderActionResponse(orderId, e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid reject request: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(new OrderActionResponse(orderId, e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error rejecting order", e);
-            return ResponseEntity.internalServerError()
-                .body(new OrderActionResponse(orderId, "Failed to reject order"));
-        }
+        RejectOrderCommand command = new RejectOrderCommand(
+            orderId,
+            restaurantId,
+            request.reason
+        );
+        rejectOrderUseCase.rejectOrder(command);
+
+        return ResponseEntity.ok(new OrderActionResponse(
+            orderId,
+            "Order rejected successfully"
+        ));
     }
     
     /**
@@ -130,29 +98,13 @@ public class RestaurantOrderController {
         
         log.info("Restaurant {} marking order {} as ready", restaurantId, orderId);
         
-        try {
-            
-            MarkOrderReadyCommand command = new MarkOrderReadyCommand(orderId, restaurantId);
-            markOrderReadyUseCase.markOrderReady(command);
-            
-            return ResponseEntity.ok(new OrderActionResponse(
-                orderId, 
-                "Order marked as ready"
-            ));
-            
-        } catch (IllegalStateException e) {
-            log.warn("Failed to mark order ready: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(new OrderActionResponse(orderId, e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid ready request: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(new OrderActionResponse(orderId, e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error marking order ready", e);
-            return ResponseEntity.internalServerError()
-                .body(new OrderActionResponse(orderId, "Failed to mark order ready"));
-        }
+        MarkOrderReadyCommand command = new MarkOrderReadyCommand(orderId, restaurantId);
+        markOrderReadyUseCase.markOrderReady(command);
+
+        return ResponseEntity.ok(new OrderActionResponse(
+            orderId,
+            "Order marked as ready"
+        ));
     }
     
     // DTOs

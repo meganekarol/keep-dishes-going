@@ -36,7 +36,9 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
                 loadRestaurantPort.loadByOwnerId(ownerId);
 
         if (existingRestaurant.isPresent()) {
-            throw new RuntimeException("Restaurant with id " + ownerId + " already exists");
+            // One restaurant per owner. A conflict, not a server fault — a bare
+            // RuntimeException here surfaced as a 500 and read like a crash.
+            throw new IllegalStateException("This owner already has a restaurant");
         }
 
         Restaurant restaurant = Restaurant.createRestaurant(
