@@ -41,7 +41,7 @@ public class RestaurantJpaEntity {
     private OpeningHoursEmbeddable openingHours;
 
     @ElementCollection
-    @CollectionTable(name = "restaurant_pictures", joinColumns = @JoinColumn(name = "restaurant_id"))
+    @CollectionTable(name = "restaurant_pictures", schema = "kdg_restaurant", joinColumns = @JoinColumn(name = "restaurant_id"))
     @Column(name = "picture_url")
     private List<String> pictureUrls = new ArrayList<>();
 
