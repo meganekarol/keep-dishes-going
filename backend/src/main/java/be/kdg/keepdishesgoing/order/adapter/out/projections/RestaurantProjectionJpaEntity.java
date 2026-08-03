@@ -54,7 +54,6 @@ public class RestaurantProjectionJpaEntity {
         this.restaurantId = restaurantId;
         this.restaurantName = restaurantName;
         this.cuisineType = cuisineType;
-        this.manualOverride = ManualOverride.NONE;
         if (slots != null) {
             slots.stream()
                     .map(slot -> new OpeningHoursSlotEmbeddable(
