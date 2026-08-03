@@ -2,15 +2,14 @@ package be.kdg.keepdishesgoing.restaurant.domain;
 
 import be.kdg.keepdishesgoing.common.DomainEvent;
 import be.kdg.keepdishesgoing.common.EventPublisherHelper;
+import be.kdg.keepdishesgoing.common.events.OpeningHoursSlot;
 import be.kdg.keepdishesgoing.common.events.RestaurantCreatedEvent;
 import be.kdg.keepdishesgoing.common.events.RestaurantManuallyClosedEvent;
 import be.kdg.keepdishesgoing.common.events.RestaurantManuallyOpenedEvent;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 public class Restaurant {
     private RestaurantId restaurantId;
@@ -68,10 +67,28 @@ public class Restaurant {
                 restaurantId.uuid(),
                 ownerId.uuid(),
                 name,
-                cuisineType.toString()
+                cuisineType.toString(),
+                toSlots(openingHours)
         ));
 
         return restaurant;
+    }
+
+    /**
+     * Translates the weekly schedule into the shared-kernel representation, so
+     * other contexts can evaluate opening hours without reaching into this one.
+     */
+    private static List<OpeningHoursSlot> toSlots(OpeningHours openingHours) {
+        if (openingHours == null || openingHours.schedule() == null) {
+            return List.of();
+        }
+        return openingHours.schedule().entrySet().stream()
+                .map(entry -> new OpeningHoursSlot(
+                        entry.getKey(),
+                        entry.getValue().open(),
+                        entry.getValue().closed()
+                ))
+                .toList();
     }
 
     public Restaurant withStatus(RestaurantStatus status) {
@@ -86,14 +103,6 @@ public class Restaurant {
         }
         this.menu = menu;
         return this;
-    }
-
-    /** Define or update the weekly schedule */
-    public void defineOpeningHours(Map<DayOfWeek, TimeRange> schedule) {
-        if (schedule == null || schedule.isEmpty()) {
-            throw new IllegalArgumentException("Opening hours cannot be empty");
-        }
-        this.openingHours = new OpeningHours(schedule);
     }
 
     /** Manually open the restaurant (overrides schedule) */
@@ -117,7 +126,6 @@ public class Restaurant {
         return openingHours.isOpenAt(now.toLocalTime(), now.getDayOfWeek());
     }
 
-    // Event access methods
     // Event access methods
     public List<DomainEvent> getUncommittedEvents() {
         return eventPublisher.getEvents();
