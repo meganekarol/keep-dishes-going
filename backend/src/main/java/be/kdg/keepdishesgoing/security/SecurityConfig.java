@@ -36,6 +36,12 @@ public class SecurityConfig {
                         // US-30: customers order as guests, so this must stay open.
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
 
+                        // US-24/25: tracking is open for the same reason. A guest
+                        // order has no account to bind the check to, so the order's
+                        // random id is what proves the caller placed it — it is only
+                        // ever handed to whoever completed the checkout.
+                        .requestMatchers(HttpMethod.GET, "/api/orders/*").permitAll()
+
                         // Listed before the public catalogue below: "me" would
                         // otherwise be matched as a restaurant id and served to
                         // anyone.

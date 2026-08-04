@@ -6,6 +6,8 @@ import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.port.in.commands.OrderItemCommand;
 import be.kdg.keepdishesgoing.order.port.in.commands.PlaceOrderCommand;
 import be.kdg.keepdishesgoing.order.port.in.PlaceOrderUseCase;
+import be.kdg.keepdishesgoing.order.port.in.TrackOrderUseCase;
+import be.kdg.keepdishesgoing.order.port.in.queries.OrderTracking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,11 +27,13 @@ public class CustomerOrderController {
     private static final Logger log = LoggerFactory.getLogger(CustomerOrderController.class);
     
     private final PlaceOrderUseCase placeOrderUseCase;
-    
-    public CustomerOrderController(PlaceOrderUseCase placeOrderUseCase) {
+    private final TrackOrderUseCase trackOrderUseCase;
+
+    public CustomerOrderController(PlaceOrderUseCase placeOrderUseCase, TrackOrderUseCase trackOrderUseCase) {
         this.placeOrderUseCase = placeOrderUseCase;
+        this.trackOrderUseCase = trackOrderUseCase;
     }
-    
+
     /**
      * Place a new order
      */
@@ -45,6 +49,18 @@ public class CustomerOrderController {
             .body(new PlaceOrderResponse(orderId.uuid(), "Order placed successfully"));
     }
     
+    /**
+     * Follow an order from placement to delivery (US-24, US-25).
+     *
+     * <p>The returned id from {@code POST /api/orders} is what the customer
+     * tracks with — it is the confirmation and the tracking handle in one.
+     * Intended to be polled while the order is in progress.
+     */
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderTracking> trackOrder(@PathVariable UUID orderId) {
+        return ResponseEntity.ok(trackOrderUseCase.track(orderId));
+    }
+
     private PlaceOrderCommand mapToCommand(PlaceOrderRequest request) {
         CustomerInfo customerInfo = new CustomerInfo(
             request.customerName,
