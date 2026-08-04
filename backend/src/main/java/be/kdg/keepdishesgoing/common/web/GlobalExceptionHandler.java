@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
@@ -56,6 +57,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
         log.warn("Invalid request on {}: {}", request.getRequestURI(), e.getMessage());
         return build(HttpStatus.BAD_REQUEST, e.getMessage(), request);
+    }
+
+    /**
+     * A path variable or query parameter that will not convert — an id that is
+     * not a UUID, a cuisine that is not in the enum. Spring raises this before
+     * the controller runs, and it is the caller's mistake, not the server's.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e,
+                                                            HttpServletRequest request) {
+        String message = "Invalid value for '" + e.getName() + "': " + e.getValue();
+        log.warn("Type mismatch on {}: {}", request.getRequestURI(), message);
+        return build(HttpStatus.BAD_REQUEST, message, request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
