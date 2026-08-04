@@ -8,6 +8,7 @@ import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.port.out.LoadOrderPort;
 import be.kdg.keepdishesgoing.order.port.out.SaveOrderPort;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
@@ -44,6 +45,18 @@ public class OrderEventStoreJpaAdapter implements LoadOrderPort, SaveOrderPort {
         this.snapshotRepository = snapshotRepository;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
+        // An event store must read what it wrote years ago, so it reads
+        // leniently: a property the current class no longer declares is skipped
+        // rather than thrown on.
+        //
+        // It is also load-bearing today. Jackson sees DeliveryAddress's derived
+        // getFullAddress() as a property and writes it into every snapshot, but
+        // the record's constructor has no such component to read it back into.
+        // Marking up the value object with a Jackson annotation would drag
+        // serialisation concerns into the domain; keeping the leniency here
+        // leaves the domain technology-agnostic and repairs snapshots already
+        // written.
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
