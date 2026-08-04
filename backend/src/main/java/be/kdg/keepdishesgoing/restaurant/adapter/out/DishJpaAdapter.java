@@ -38,6 +38,13 @@ public class DishJpaAdapter implements LoadDishPort, SaveDishPort {
     }
 
     @Override
+    public List<Dish> loadByRestaurant(RestaurantId restaurant) {
+        return this.dishes.findAllByRestaurant(restaurant.uuid()).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<Dish> loadPendingDishesByRestaurant(RestaurantId restaurant) {
         return this.dishes.findPendingChangesByRestaurant(restaurant.uuid()).stream()
                 .map(mapper::toDomain)

@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface LoadDishPort {
     Optional<Dish> loadById(DishId dish);
     List<Dish> loadAll();
+    List<Dish> loadByRestaurant(RestaurantId restaurant);
     List<Dish> loadPendingDishesByRestaurant(RestaurantId restaurant);
     List<Dish> loadReadyForScheduledPublish(LocalDateTime time);
 }

@@ -36,11 +36,21 @@ public class SecurityConfig {
                         // US-30: customers order as guests, so this must stay open.
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
 
+                        // Listed before the public catalogue below: "me" would
+                        // otherwise be matched as a restaurant id and served to
+                        // anyone.
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants/me").hasRole("owner")
+
+                        // US-14…18: customers browse the catalogue before deciding
+                        // whether to order at all, so none of it can require a login.
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants/*/dishes").permitAll()
+
                         // Owner routes. The role proves the caller is *an* owner;
                         // proving they own *this* restaurant needs a lookup, so the
                         // endpoints additionally carry @PreAuthorize on restaurantId.
                         .requestMatchers(HttpMethod.POST, "/api/restaurants").hasRole("owner")
-                        .requestMatchers(HttpMethod.GET, "/api/restaurants/me").hasRole("owner")
                         .requestMatchers(HttpMethod.PATCH, "/api/restaurants/*/status").hasRole("owner")
                         .requestMatchers("/api/restaurants/*/orders/**").hasRole("owner")
                         .requestMatchers("/api/*/dishes/**").hasRole("owner")

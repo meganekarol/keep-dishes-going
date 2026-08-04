@@ -157,6 +157,19 @@ public class Dish {
         return status == DishState.PUBLISHED;
     }
 
+    /**
+     * Whether customers see this dish on the menu at all.
+     *
+     * <p>Sold-out dishes stay on it. Hiding them would make
+     * {@link DishState#OUT_OF_STOCK} indistinguishable from
+     * {@link DishState#UNPUBLISHED} from the customer's side, and the owner
+     * chose between those two deliberately: unpublished means gone, out of
+     * stock means back tomorrow.
+     */
+    public boolean isOnMenu() {
+        return status == DishState.PUBLISHED || status == DishState.OUT_OF_STOCK;
+    }
+
     // -- Getters ---
     public DishId getDishId() {
         return dishId;
