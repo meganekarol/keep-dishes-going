@@ -57,7 +57,8 @@ public class SecurityConfig {
                         // proving they own *this* restaurant needs a lookup, so the
                         // endpoints additionally carry @PreAuthorize on restaurantId.
                         .requestMatchers(HttpMethod.POST, "/api/restaurants").hasRole("owner")
-                        .requestMatchers(HttpMethod.PATCH, "/api/restaurants/*/status").hasRole("owner")
+                        // PATCH sets a manual override, DELETE removes it again.
+                        .requestMatchers("/api/restaurants/*/status").hasRole("owner")
                         .requestMatchers("/api/restaurants/*/orders/**").hasRole("owner")
                         .requestMatchers("/api/*/dishes/**").hasRole("owner")
 

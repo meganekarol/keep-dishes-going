@@ -61,6 +61,10 @@ public class RestaurantController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Open or close the doors by hand (US-09). Only the two manual states are
+     * accepted; OPEN and CLOSED are worked out from the schedule, not set.
+     */
     @PatchMapping("/{restaurantId}/status")
     @PreAuthorize("@restaurantOwnership.isOwner(#restaurantId, authentication.name)")
     public ResponseEntity<Void> changeStatus(@PathVariable UUID restaurantId,
@@ -68,6 +72,20 @@ public class RestaurantController {
         var status = request.status();
         changeRestaurantStatusUseCase.changeRestaurantStatus(new ChangeRestaurantStatusCommand(restaurantId, status));
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Remove the manual override, so the weekly schedule decides again (US-09).
+     *
+     * <p>Modelled as deleting the override rather than as another status value:
+     * an owner resuming their hours is not choosing to be open or closed, they
+     * are giving up the choice.
+     */
+    @DeleteMapping("/{restaurantId}/status")
+    @PreAuthorize("@restaurantOwnership.isOwner(#restaurantId, authentication.name)")
+    public ResponseEntity<Void> followSchedule(@PathVariable UUID restaurantId) {
+        changeRestaurantStatusUseCase.followSchedule(restaurantId);
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -72,6 +72,18 @@ public class RestaurantProjectionListener {
             });
     }
     
+    @EventListener
+    @Transactional
+    public void on(RestaurantScheduleResumedEvent event) {
+        log.info("Updating projection: Restaurant back on its schedule - {}", event.restaurantId());
+
+        restaurantProjectionRepository.findById(event.restaurantId())
+            .ifPresent(restaurant -> {
+                restaurant.followSchedule();
+                restaurantProjectionRepository.save(restaurant);
+            });
+    }
+
     // ==================== Dish Events ====================
     
     @EventListener

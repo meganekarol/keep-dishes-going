@@ -11,6 +11,9 @@ import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Service
 @Transactional
 public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatusUseCase {
@@ -44,6 +47,18 @@ public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatus
         publishEventPort.publishAll(restaurant.getUncommittedEvents());
 
         // Clear events
+        restaurant.markEventAsCommitted();
+    }
+
+    @Override
+    public void followSchedule(UUID restaurantId) {
+        Restaurant restaurant = loadRestaurantPort.loadById(RestaurantId.of(restaurantId))
+                .orElseThrow(() -> new IllegalArgumentException("Restaurant not found"));
+
+        restaurant.followSchedule(LocalDateTime.now());
+
+        saveRestaurantPort.saveRestaurant(restaurant);
+        publishEventPort.publishAll(restaurant.getUncommittedEvents());
         restaurant.markEventAsCommitted();
     }
 

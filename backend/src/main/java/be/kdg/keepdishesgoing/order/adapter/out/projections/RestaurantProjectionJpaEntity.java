@@ -92,6 +92,12 @@ public class RestaurantProjectionJpaEntity {
         touch();
     }
 
+    /** The owner gave up their override, so the schedule decides again. */
+    public void followSchedule() {
+        this.manualOverride = ManualOverride.NONE;
+        touch();
+    }
+
     private void touch() {
         this.lastUpdated = LocalDateTime.now();
     }

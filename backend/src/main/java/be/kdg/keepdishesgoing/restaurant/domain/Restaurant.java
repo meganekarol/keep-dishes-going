@@ -6,6 +6,7 @@ import be.kdg.keepdishesgoing.common.events.OpeningHoursSlot;
 import be.kdg.keepdishesgoing.common.events.RestaurantCreatedEvent;
 import be.kdg.keepdishesgoing.common.events.RestaurantManuallyClosedEvent;
 import be.kdg.keepdishesgoing.common.events.RestaurantManuallyOpenedEvent;
+import be.kdg.keepdishesgoing.common.events.RestaurantScheduleResumedEvent;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 
 import java.time.LocalDateTime;
@@ -117,6 +118,25 @@ public class Restaurant {
         if (status == RestaurantStatus.MANUALLY_CLOSED) return;
         this.status = RestaurantStatus.MANUALLY_CLOSED;
         eventPublisher.register(new RestaurantManuallyClosedEvent(this.restaurantId.uuid()));
+    }
+
+    /**
+     * Drop any manual override and let the weekly schedule decide again.
+     *
+     * <p>An override has no expiry of its own, so without this an owner who
+     * closes early is closed for good: {@link #isOpen} short-circuits on both
+     * manual states and never reaches the schedule again.
+     *
+     * @param now used to work out which schedule-driven state applies right now
+     */
+    public void followSchedule(LocalDateTime now) {
+        if (status != RestaurantStatus.MANUALLY_OPENED && status != RestaurantStatus.MANUALLY_CLOSED) {
+            return;
+        }
+        this.status = openingHours.isOpenAt(now.toLocalTime(), now.getDayOfWeek())
+                ? RestaurantStatus.OPEN
+                : RestaurantStatus.CLOSED;
+        eventPublisher.register(new RestaurantScheduleResumedEvent(this.restaurantId.uuid()));
     }
 
     /** Evaluate whether the restaurant is open based on schedule and manual overrides */
