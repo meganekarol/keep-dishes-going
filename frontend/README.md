@@ -22,7 +22,7 @@ npm run dev      # http://localhost:5173
 
 ## Configuration
 
-`.env` holds the local addresses — the API, and the Keycloak realm the owner
+`.env` holds the local addresses the API, and the Keycloak realm the owner
 login goes through. It is committed because none of it is secret: the Keycloak
 client is public, so it has no secret to keep. Put local overrides in
 `.env.local`, which git ignores.
@@ -69,5 +69,5 @@ every five seconds and stops once the order is delivered or rejected.
 
 **Filtering and sorting happen server-side.** The price filter means "has at
 least one dish in this range", which the client cannot work out from a summary,
-and the dish sort orders are defined by the backend's `DishSortOrder` — keeping
+and the dish sort orders are defined by the backend's `DishSortOrder` keeping
 both there avoids a second, drifting copy of the rules.
