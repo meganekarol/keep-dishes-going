@@ -1,5 +1,5 @@
 import { ApiError, api } from './apiClient';
-import type { OwnerRestaurant } from '../types/api';
+import type { CreateRestaurantRequest, OwnerRestaurant } from '../types/api';
 
 export const ownerService = {
   /**
@@ -18,4 +18,8 @@ export const ownerService = {
       throw error;
     }
   },
+
+  /** Create the owner's one restaurant (US-02). */
+  createRestaurant: (request: CreateRestaurantRequest) =>
+    api.post<OwnerRestaurant>('/api/restaurants', request),
 };

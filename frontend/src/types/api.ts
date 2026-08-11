@@ -104,6 +104,22 @@ export interface RestaurantDetail {
 export type RestaurantStatus = 'OPEN' | 'CLOSED' | 'MANUALLY_OPENED' | 'MANUALLY_CLOSED';
 
 /**
+ * The body of POST /api/restaurants (US-02).
+ *
+ * There is no owner id: the backend takes it from the subject of the bearer
+ * token, so the client cannot create a restaurant for somebody else.
+ */
+export interface CreateRestaurantRequest {
+  name: string;
+  address: Address;
+  contactEmail: string;
+  cuisineType: CuisineType;
+  defaultPreparationTime: number;
+  openingHours: WeeklyOpeningHours;
+  pictureUrls: string[];
+}
+
+/**
  * The owner's own restaurant, as returned by GET /api/restaurants/me and
  * POST /api/restaurants.
  *
