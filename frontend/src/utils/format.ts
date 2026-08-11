@@ -11,7 +11,7 @@ export function formatPriceRange(lowest: number | null, highest: number | null):
   return lowest === highest ? formatPrice(lowest) : `${formatPrice(lowest)} – ${formatPrice(highest)}`;
 }
 
-/** The backend sends `LocalDateTime`, i.e. no zone — it is already local time. */
+/** The backend sends `LocalDateTime`, i.e. no zone: it is already local time. */
 export function formatDateTime(value: string | null | undefined): string {
   return value ? dateTime.format(new Date(value)) : '—';
 }

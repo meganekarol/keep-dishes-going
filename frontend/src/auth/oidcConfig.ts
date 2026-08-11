@@ -7,7 +7,7 @@ const authority = `${import.meta.env.VITE_KEYCLOAK_URL}/realms/${import.meta.env
  * Authorization Code flow with PKCE against Keycloak.
  *
  * A browser app cannot keep a client secret, so the Keycloak client is public
- * and PKCE is what proves the code was redeemed by whoever asked for it —
+ * and PKCE is what proves the code was redeemed by whoever asked for it:
  * `oidc-client-ts` enables it by default for public clients.
  *
  * Only restaurant owners ever log in. Customers order as guests (US-30), which

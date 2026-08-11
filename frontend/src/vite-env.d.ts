@@ -6,7 +6,7 @@ interface ImportMetaEnv {
   /** Keycloak's base URL, e.g. `http://localhost:8180`. */
   readonly VITE_KEYCLOAK_URL: string;
   readonly VITE_KEYCLOAK_REALM: string;
-  /** A public client — no secret, so PKCE is what secures the flow. */
+  /** A public client, so it has no secret and PKCE is what secures the flow. */
   readonly VITE_KEYCLOAK_CLIENT_ID: string;
 }
 

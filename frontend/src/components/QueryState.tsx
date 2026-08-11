@@ -12,8 +12,8 @@ interface QueryStateProps {
 /**
  * The loading spinner and error banner every page would otherwise repeat.
  *
- * Errors from the API already carry a message written to be shown to a user —
- * the backend's `GlobalExceptionHandler` guarantees that — so it is displayed as
+ * Errors from the API already carry a message written to be shown to a user,
+ * guaranteed by the backend's `GlobalExceptionHandler`, so it is displayed as
  * given rather than replaced with something vaguer.
  */
 export function QueryState({ isLoading, error, children }: QueryStateProps) {
