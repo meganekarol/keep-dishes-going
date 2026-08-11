@@ -1,7 +1,7 @@
 /**
  * The backend's read models, mirrored in TypeScript.
  *
- * These are hand-kept copies of the records in `port.in.queries` — the API is
+ * These are hand-kept copies of the records in `port.in.queries`. The API is
  * the contract between the two repositories, so it is written down here once and
  * the rest of the app depends on this file rather than on inline shapes.
  *
@@ -96,6 +96,29 @@ export interface RestaurantDetail {
   open: boolean;
   openingHours: Partial<Record<DayOfWeek, TimeRange>>;
   menu: MenuItem[];
+}
+
+export type RestaurantStatus = 'OPEN' | 'CLOSED' | 'MANUALLY_OPENED' | 'MANUALLY_CLOSED';
+
+/**
+ * The owner's own restaurant, as returned by GET /api/restaurants/me and
+ * POST /api/restaurants.
+ *
+ * Unlike the customer-facing read models this one carries the stored `status`
+ * rather than a computed `open` flag, and it includes drafts' worth of detail
+ * the catalogue hides. The backend declares `cuisineType` and `status` as plain
+ * Strings, but the values are always enum names.
+ */
+export interface OwnerRestaurant {
+  restaurantId: string;
+  name: string;
+  address: Address;
+  contactEmail: string;
+  cuisineType: CuisineType;
+  defaultPreparationTime: number;
+  openingHours: Partial<Record<DayOfWeek, TimeRange>>;
+  pictureUrls: string[];
+  status: RestaurantStatus;
 }
 
 export interface DeliveryAddress {
