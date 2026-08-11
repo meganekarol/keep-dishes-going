@@ -150,8 +150,12 @@ export function RestaurantDetailPage() {
   );
 }
 
+interface openingHoursProps {
+  hours: RestaurantDetail['openingHours']
+}
+
 /** A closed restaurant is only useful if the customer can see when to come back. */
-function OpeningHours({ hours }: { hours: RestaurantDetail['openingHours'] }) {
+function OpeningHours({ hours }: openingHoursProps) {
   return (
     <Paper variant="outlined" elevation={0} sx={{ p: 2, mt: 2, maxWidth: 360 }}>
       <Typography variant="subtitle2" gutterBottom>
