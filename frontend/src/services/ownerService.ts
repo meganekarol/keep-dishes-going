@@ -1,5 +1,5 @@
 import { ApiError, api } from './apiClient';
-import type { CreateRestaurantRequest, OwnerRestaurant } from '../types/api';
+import type { CreateRestaurantRequest, OwnerRestaurant, RestaurantStatus } from '../types/api';
 
 export const ownerService = {
   /**
@@ -22,4 +22,19 @@ export const ownerService = {
   /** Create the owner's one restaurant (US-02). */
   createRestaurant: (request: CreateRestaurantRequest) =>
     api.post<OwnerRestaurant>('/api/restaurants', request),
+
+  /**
+   * Open or close the doors by hand (US-09).
+   *
+   * Only the two manual states are accepted; the backend rejects OPEN and
+   * CLOSED, which it works out from the schedule itself.
+   */
+  changeStatus: (restaurantId: string, status: ManualRestaurantStatus) =>
+    api.patch<void>(`/api/restaurants/${restaurantId}/status`, { status }),
 };
+
+/** The subset of statuses an owner is allowed to set. */
+export type ManualRestaurantStatus = Extract<
+  RestaurantStatus,
+  'MANUALLY_OPENED' | 'MANUALLY_CLOSED'
+>;

@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 
 import { QueryState } from '../../components/shared/QueryState';
+import { RestaurantStatusToggle } from '../../components/owner/RestaurantStatusToggle';
 import { RestaurantSummaryCard } from '../../components/owner/RestaurantSummaryCard';
 import { useMyRestaurant } from '../../hooks/useMyRestaurant';
 
@@ -23,6 +24,10 @@ export function OwnerDashboardPage() {
       {restaurant && (
         <Stack spacing={3}>
           <Typography variant="h1">My restaurant</Typography>
+          <RestaurantStatusToggle
+            restaurantId={restaurant.restaurantId}
+            status={restaurant.status}
+          />
           <RestaurantSummaryCard restaurant={restaurant} />
         </Stack>
       )}

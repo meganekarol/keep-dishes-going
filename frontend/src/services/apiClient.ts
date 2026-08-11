@@ -58,9 +58,11 @@ async function request<T>(path: string, init: RequestInit = {}, params?: QueryPa
   });
 
   if (!response.ok) throw await toApiError(response);
-  if (response.status === 204) return undefined as T;
 
-  return (await response.json()) as T;
+  // Not every success carries a body. The status endpoint answers 200 with
+  // nothing in it, and response.json() cannot parse an empty string.
+  const body = await response.text();
+  return (body ? JSON.parse(body) : undefined) as T;
 }
 
 export const api = {
