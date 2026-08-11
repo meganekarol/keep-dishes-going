@@ -58,6 +58,16 @@ export default function SecurityContextProvider({ children }: PropsWithChildren)
     keycloak.login();
   }
 
+  /**
+   * Opens Keycloak's registration page (US-01).
+   *
+   * Only owners ever sign up, so the realm gives every new account the owner
+   * role by default. Customers order as guests and never register.
+   */
+  function register() {
+    keycloak.register({ redirectUri: `${window.location.origin}/owner` });
+  }
+
   function logout() {
     keycloak.logout({ redirectUri: window.location.origin });
   }
@@ -86,6 +96,7 @@ export default function SecurityContextProvider({ children }: PropsWithChildren)
         isAuthenticated,
         loggedInUser,
         login,
+        register,
         logout,
       }}
     >

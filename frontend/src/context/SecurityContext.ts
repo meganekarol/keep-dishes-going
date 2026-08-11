@@ -7,6 +7,7 @@ export type SecurityContext = {
   isAuthenticated: () => boolean;
   loggedInUser: User | undefined;
   login: () => void;
+  register: () => void;
   logout: () => void;
 };
 
@@ -15,5 +16,6 @@ export default createContext<SecurityContext>({
   isAuthenticated: () => false,
   loggedInUser: undefined,
   login: () => {},
+  register: () => {},
   logout: () => {},
 });

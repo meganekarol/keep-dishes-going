@@ -2,7 +2,9 @@ import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { Link } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
+
+import SecurityContext from '../context/SecurityContext';
 
 interface ChoiceCardProps {
   icon: ReactNode;
@@ -10,9 +12,10 @@ interface ChoiceCardProps {
   description: string;
   actionLabel: string;
   to: string;
+  secondaryAction?: ReactNode;
 }
 
-function ChoiceCard({ icon, title, description, actionLabel, to }: ChoiceCardProps) {
+function ChoiceCard({ icon, title, description, actionLabel, to, secondaryAction }: ChoiceCardProps) {
   return (
     <Card variant="outlined" sx={{ flex: 1, display: 'flex' }}>
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, p: 3, flex: 1 }}>
@@ -21,11 +24,12 @@ function ChoiceCard({ icon, title, description, actionLabel, to }: ChoiceCardPro
         <Typography color="text.secondary" sx={{ flexGrow: 1 }}>
           {description}
         </Typography>
-        <Box>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Button variant="contained" size="large" component={Link} to={to}>
             {actionLabel}
           </Button>
-        </Box>
+          {secondaryAction}
+        </Stack>
       </CardContent>
     </Card>
   );
@@ -39,6 +43,9 @@ function ChoiceCard({ icon, title, description, actionLabel, to }: ChoiceCardPro
  * there start the sign-in.
  */
 export function LandingPage() {
+  const { isAuthenticated, register } = useContext(SecurityContext);
+  const signedIn = isAuthenticated();
+
   return (
     <Stack spacing={4} sx={{ py: 4 }}>
       <Box>
@@ -61,9 +68,12 @@ export function LandingPage() {
         <ChoiceCard
           icon={<StorefrontIcon color="secondary" fontSize="large" />}
           title="I run a restaurant"
-          description="Sign in to set up your restaurant, manage your menu and decide on incoming orders."
-          actionLabel="Continue as owner"
+          description="Set up your restaurant, manage your menu and decide on incoming orders."
+          actionLabel={signedIn ? 'Go to my restaurant' : 'Sign in as owner'}
           to="/owner"
+          secondaryAction={
+            signedIn ? undefined : <Button onClick={register}>Create an account</Button>
+          }
         />
       </Stack>
     </Stack>
