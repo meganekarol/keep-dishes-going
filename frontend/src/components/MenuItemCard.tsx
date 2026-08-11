@@ -5,7 +5,7 @@ import { formatPrice, humanise } from '../utils/format';
 
 /**
  * Out-of-stock dishes stay on the menu with `available: false` rather than
- * disappearing — a customer who came for one deserves to see it is temporarily
+ * disappearing a customer who came for one deserves to see it is temporarily
  * off, not to wonder whether they misremembered.
  */
 export function MenuItemCard({ item }: { item: MenuItem }) {

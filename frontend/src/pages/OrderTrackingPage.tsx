@@ -35,7 +35,7 @@ const STATUS_COLOURS: Record<OrderStatus, 'default' | 'info' | 'success' | 'erro
  *
  * The order id doubles as the link: a guest has no account to bind the order to,
  * so the id they got at checkout is what proves it is theirs. The page polls
- * while the order is in progress — see `useOrderTracking`.
+ * while the order is in progress see `useOrderTracking`.
  */
 export function OrderTrackingPage() {
   const { orderId = '' } = useParams();
@@ -114,7 +114,7 @@ export function OrderTrackingPage() {
 
 /**
  * Built from the timestamps rather than from `status`, because `status` only
- * says where the order is now — the timestamps are what say how it got there,
+ * says where the order is now the timestamps are what say how it got there,
  * and a rejected order simply never gains the later ones.
  */
 function Timeline({ order }: { order: OrderTracking }) {

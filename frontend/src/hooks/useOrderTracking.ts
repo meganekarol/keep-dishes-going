@@ -18,7 +18,7 @@ const TERMINAL_STATUSES: OrderStatus[] = ['REJECTED', 'DELIVERED'];
  *
  * The restaurant accepts, prepares and hands over the order in its own time and
  * has no way to push that to the browser, so the page polls. Polling stops once
- * the order reaches a terminal state — nothing can change after that, and a
+ * the order reaches a terminal state nothing can change after that, and a
  * tracking page left open overnight should not keep hitting the API.
  */
 export function useOrderTracking(orderId: string) {
@@ -40,7 +40,7 @@ export function useOrderTracking(orderId: string) {
   });
 }
 
-/** Checkout (US-20, US-21, US-30 — guests order without an account). */
+/** Checkout (US-20, US-21, US-30 guests order without an account). */
 export function usePlaceOrder() {
   return useMutation({
     mutationFn: (request: PlaceOrderRequest) => orderService.place(request),

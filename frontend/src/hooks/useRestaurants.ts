@@ -31,7 +31,7 @@ export function useRestaurant(restaurantId: string) {
  * The same menu, filtered and sorted server-side (US-17, US-18).
  *
  * Sorting stays on the server rather than in the component so the list the
- * customer sees is the list the backend defined — the price comparators live in
+ * customer sees is the list the backend defined the price comparators live in
  * `DishSortOrder` and there is no second copy of them here.
  */
 export function useMenu(restaurantId: string, filters: MenuFilters = {}) {

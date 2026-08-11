@@ -31,7 +31,7 @@ export function NavBar() {
             </Button>
           </>
         ) : (
-          // Customers never need this — ordering and tracking are open (US-30).
+          // Customers never need this ordering and tracking are open (US-30).
           // It is here for restaurant owners.
           <Button color="inherit" onClick={() => void auth.signinRedirect()}>
             Owner log in

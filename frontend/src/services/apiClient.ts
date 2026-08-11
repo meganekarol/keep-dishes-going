@@ -3,7 +3,7 @@ import type { ErrorResponse } from '../types/api';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /**
- * A failed request, carrying the status so callers can branch on it — a 404 on a
+ * A failed request, carrying the status so callers can branch on it a 404 on a
  * tracking page means "no such order", not "the server is broken".
  */
 export class ApiError extends Error {
@@ -25,7 +25,7 @@ export function setAccessTokenProvider(provider: () => string | undefined): void
 
 /**
  * Query parameters, with `undefined`, `null` and `''` dropped rather than sent
- * as empty strings — the backend would try to convert those and answer 400.
+ * as empty strings the backend would try to convert those and answer 400.
  */
 export type QueryParams = Record<string, string | number | boolean | string[] | undefined | null>;
 
@@ -47,7 +47,7 @@ async function toApiError(response: Response): Promise<ApiError> {
     const body = (await response.json()) as ErrorResponse;
     if (body?.message) return new ApiError(response.status, body.message);
   } catch {
-    // Not every failure has a JSON body — a 500 from outside the handler, or a
+    // Not every failure has a JSON body a 500 from outside the handler, or a
     // network-level rejection. Fall through to the status text.
   }
   return new ApiError(response.status, response.statusText || 'Request failed');

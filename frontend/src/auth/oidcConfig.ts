@@ -4,7 +4,7 @@ import type { AuthProviderProps } from 'react-oidc-context';
 const authority = `${import.meta.env.VITE_KEYCLOAK_URL}/realms/${import.meta.env.VITE_KEYCLOAK_REALM}`;
 
 /**
- * Authorization Code flow with PKCE against Keycloak (T-14).
+ * Authorization Code flow with PKCE against Keycloak.
  *
  * A browser app cannot keep a client secret, so the Keycloak client is public
  * and PKCE is what proves the code was redeemed by whoever asked for it —
