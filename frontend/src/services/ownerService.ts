@@ -31,6 +31,15 @@ export const ownerService = {
    */
   changeStatus: (restaurantId: string, status: ManualRestaurantStatus) =>
     api.patch<void>(`/api/restaurants/${restaurantId}/status`, { status }),
+
+  /**
+   * Drop the manual override so the opening hours decide again (US-09).
+   *
+   * A delete rather than another status: the owner is not choosing to be open
+   * or closed, they are giving the choice back to their schedule.
+   */
+  followSchedule: (restaurantId: string) =>
+    api.delete<void>(`/api/restaurants/${restaurantId}/status`),
 };
 
 /** The subset of statuses an owner is allowed to set. */

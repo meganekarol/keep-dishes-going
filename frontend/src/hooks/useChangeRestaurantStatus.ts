@@ -27,3 +27,15 @@ export function useChangeRestaurantStatus() {
     },
   });
 }
+
+/** Hands the door back to the opening hours (US-09). */
+export function useFollowSchedule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (restaurantId: string) => ownerService.followSchedule(restaurantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: restaurantKeys.all });
+    },
+  });
+}
