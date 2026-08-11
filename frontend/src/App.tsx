@@ -1,7 +1,8 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 import { Layout } from './components/Layout';
 import { useApiToken } from './auth/useApiToken';
+import { LandingPage } from './pages/LandingPage';
 import { RestaurantListPage } from './pages/RestaurantListPage';
 import { RestaurantDetailPage } from './pages/RestaurantDetailPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
@@ -13,7 +14,7 @@ export default function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/restaurants" replace />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/restaurants" element={<RestaurantListPage />} />
         <Route path="/restaurants/:restaurantId" element={<RestaurantDetailPage />} />
         <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
