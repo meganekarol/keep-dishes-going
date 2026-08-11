@@ -1,6 +1,6 @@
 import { Box, Card, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
 
-import { OpeningHoursTable } from '../OpeningHoursTable';
+import { OpeningHoursTable } from '../shared/OpeningHoursTable';
 import type { OwnerRestaurant, RestaurantStatus } from '../../types/api';
 import { humanise } from '../../utils/format';
 

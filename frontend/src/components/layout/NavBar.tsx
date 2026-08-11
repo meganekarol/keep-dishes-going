@@ -3,7 +3,7 @@ import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { Link } from 'react-router-dom';
 
-import SecurityContext from '../context/SecurityContext';
+import SecurityContext from '../../context/SecurityContext';
 
 export function NavBar() {
   const { isAuthenticated, loggedInUser, login, logout } = useContext(SecurityContext);

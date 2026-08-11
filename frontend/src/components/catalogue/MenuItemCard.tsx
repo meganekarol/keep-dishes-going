@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
 
-import type { MenuItem } from '../types/api';
-import { formatPrice, humanise } from '../utils/format';
+import type { MenuItem } from '../../types/api';
+import { formatPrice, humanise } from '../../utils/format';
 
 /**
  * Out-of-stock dishes stay on the menu with `available: false` rather than

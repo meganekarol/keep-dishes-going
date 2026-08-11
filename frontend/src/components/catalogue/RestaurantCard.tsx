@@ -1,8 +1,8 @@
 import { Box, Card, CardActionArea, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 
-import type { RestaurantSummary } from '../types/api';
-import { formatPriceRange, humanise } from '../utils/format';
+import type { RestaurantSummary } from '../../types/api';
+import { formatPriceRange, humanise } from '../../utils/format';
 
 export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }) {
   return (

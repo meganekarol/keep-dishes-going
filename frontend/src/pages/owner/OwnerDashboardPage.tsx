@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { Stack, Typography } from '@mui/material';
 
-import { QueryState } from '../../components/QueryState';
+import { QueryState } from '../../components/shared/QueryState';
 import { RestaurantSummaryCard } from '../../components/owner/RestaurantSummaryCard';
 import { useMyRestaurant } from '../../hooks/useMyRestaurant';
 

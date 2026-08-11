@@ -10,9 +10,9 @@ import {
 } from '@mui/material';
 import { Controller, useForm } from 'react-hook-form';
 
-import type { CuisineType } from '../types/api';
-import type { RestaurantFilters } from '../services/restaurantService';
-import { humanise } from '../utils/format';
+import type { CuisineType } from '../../types/api';
+import type { RestaurantFilters } from '../../services/restaurantService';
+import { humanise } from '../../utils/format';
 
 const CUISINE_TYPES: CuisineType[] = [
   'FUSION',

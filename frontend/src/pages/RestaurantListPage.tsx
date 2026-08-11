@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Alert, Box, Typography } from '@mui/material';
 
-import { QueryState } from '../components/QueryState';
-import { RestaurantCard } from '../components/RestaurantCard';
-import { RestaurantFilterForm } from '../components/RestaurantFilterForm';
+import { QueryState } from '../components/shared/QueryState';
+import { RestaurantCard } from '../components/catalogue/RestaurantCard';
+import { RestaurantFilterForm } from '../components/catalogue/RestaurantFilterForm';
 import { useRestaurants } from '../hooks/useRestaurants';
 import type { RestaurantFilters } from '../services/restaurantService';
 

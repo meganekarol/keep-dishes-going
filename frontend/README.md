@@ -34,7 +34,13 @@ has to stay on its default port.
 
 ```
 src/
-  components/  Reusable pieces: cards, filters, the layout shell, the route guard
+  components/
+    auth/      the route guard
+    catalogue/ the customer-facing cards and filters
+    form/      React Hook Form bindings for MUI inputs
+    layout/    the app shell and nav bar
+    owner/     the management area's pieces
+    shared/    used by more than one area
   context/     Keycloak setup, exposed to the app as a security context
   hooks/       React Query hooks; the rest of the app calls these, not the services
   pages/       One component per route

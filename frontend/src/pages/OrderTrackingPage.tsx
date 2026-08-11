@@ -16,7 +16,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 
-import { QueryState } from '../components/QueryState';
+import { QueryState } from '../components/shared/QueryState';
 import { useOrderTracking } from '../hooks/useOrderTracking';
 import type { OrderStatus, OrderTracking } from '../types/api';
 import { formatDateTime, formatPrice, humanise } from '../utils/format';

@@ -1,7 +1,7 @@
 import { Paper, Stack, Typography } from '@mui/material';
 
-import type { DayOfWeek, WeeklyOpeningHours } from '../types/api';
-import { formatTime, humanise } from '../utils/format';
+import type { DayOfWeek, WeeklyOpeningHours } from '../../types/api';
+import { formatTime, humanise } from '../../utils/format';
 
 const WEEK: DayOfWeek[] = [
   'MONDAY',

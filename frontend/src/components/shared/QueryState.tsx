@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Alert, Box, CircularProgress } from '@mui/material';
 
-import { ApiError } from '../services/apiClient';
+import { ApiError } from '../../services/apiClient';
 
 interface QueryStateProps {
   isLoading: boolean;

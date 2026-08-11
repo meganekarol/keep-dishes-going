@@ -13,9 +13,9 @@ import {
   Typography,
 } from '@mui/material';
 
-import { MenuItemCard } from '../components/MenuItemCard';
-import { OpeningHoursTable } from '../components/OpeningHoursTable';
-import { QueryState } from '../components/QueryState';
+import { MenuItemCard } from '../components/catalogue/MenuItemCard';
+import { OpeningHoursTable } from '../components/shared/OpeningHoursTable';
+import { QueryState } from '../components/shared/QueryState';
 import { useMenu, useRestaurant } from '../hooks/useRestaurants';
 import type { DishSortOrder, DishType, FoodTag } from '../types/api';
 import { humanise } from '../utils/format';
