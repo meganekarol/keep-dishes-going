@@ -1,3 +1,4 @@
+import { authHeader } from './auth';
 import type { ErrorResponse } from '../types/api';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -14,13 +15,6 @@ export class ApiError extends Error {
     this.name = 'ApiError';
     this.status = status;
   }
-}
-
-/** Supplied by the auth layer so this module stays unaware of how tokens are obtained. */
-let accessTokenProvider: () => string | undefined = () => undefined;
-
-export function setAccessTokenProvider(provider: () => string | undefined): void {
-  accessTokenProvider = provider;
 }
 
 /**
@@ -54,13 +48,11 @@ async function toApiError(response: Response): Promise<ApiError> {
 }
 
 async function request<T>(path: string, init: RequestInit = {}, params?: QueryParams): Promise<T> {
-  const token = accessTokenProvider();
-
   const response = await fetch(`${BASE_URL}${path}${buildQuery(params)}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...authHeader(),
       ...init.headers,
     },
   });

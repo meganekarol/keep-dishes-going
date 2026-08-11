@@ -1,7 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 
 import { Layout } from './components/Layout';
-import { useApiToken } from './auth/useApiToken';
 import { LandingPage } from './pages/LandingPage';
 import { RestaurantListPage } from './pages/RestaurantListPage';
 import { RestaurantDetailPage } from './pages/RestaurantDetailPage';
@@ -9,8 +8,6 @@ import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export default function App() {
-  useApiToken();
-
   return (
     <Layout>
       <Routes>

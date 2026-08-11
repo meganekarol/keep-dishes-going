@@ -1,10 +1,12 @@
+import { useContext } from 'react';
 import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { Link } from 'react-router-dom';
-import { useAuth } from 'react-oidc-context';
+
+import SecurityContext from '../context/SecurityContext';
 
 export function NavBar() {
-  const auth = useAuth();
+  const { isAuthenticated, loggedInUser, login, logout } = useContext(SecurityContext);
 
   return (
     <AppBar position="static" color="primary" elevation={0}>
@@ -13,7 +15,7 @@ export function NavBar() {
         <Typography
           variant="h6"
           component={Link}
-          to="/restaurants"
+          to="/"
           sx={{ color: 'inherit', textDecoration: 'none', fontWeight: 700 }}
         >
           Keep Dishes Going
@@ -21,19 +23,22 @@ export function NavBar() {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        {auth.isAuthenticated ? (
+        {isAuthenticated() ? (
           <>
-            <Typography variant="body2" sx={{ mr: 2 }}>
-              {auth.user?.profile.preferred_username ?? auth.user?.profile.email}
+            <Button color="inherit" component={Link} to="/owner">
+              My restaurant
+            </Button>
+            <Typography variant="body2" sx={{ mx: 2 }}>
+              {loggedInUser?.name}
             </Typography>
-            <Button color="inherit" onClick={() => void auth.signoutRedirect()}>
+            <Button color="inherit" onClick={logout}>
               Log out
             </Button>
           </>
         ) : (
-          // Customers never need this ordering and tracking are open (US-30).
+          // Customers never need this: ordering and tracking are open (US-30).
           // It is here for restaurant owners.
-          <Button color="inherit" onClick={() => void auth.signinRedirect()}>
+          <Button color="inherit" onClick={login}>
             Owner log in
           </Button>
         )}

@@ -1,25 +1,28 @@
-import type { ReactNode } from 'react';
-import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-import { useAutoSignin } from 'react-oidc-context';
+import { type PropsWithChildren, useContext, useEffect } from 'react';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
-export function RequireOwner({ children }: { children: ReactNode }) {
-  const { isLoading, isAuthenticated, error } = useAutoSignin({
-    signinArgs: { redirect_uri: window.location.origin + window.location.pathname },
-  });
+import SecurityContext from '../../context/SecurityContext';
 
-  if (error) {
-    return (
-      <Alert severity="error">
-        Signing in failed: {error.message}
-      </Alert>
-    );
-  }
+/**
+ * Gates the owner's management area behind a Keycloak sign-in (US-01).
+ *
+ * It decides what to show, not what is allowed. The backend re-checks the token
+ * and the owner role on every request, which is what actually protects the data.
+ */
+export function RequireOwner({ children }: PropsWithChildren) {
+  const { isInitialised, isAuthenticated, login } = useContext(SecurityContext);
 
-  if (isLoading || !isAuthenticated) {
+  useEffect(() => {
+    if (isInitialised && !isAuthenticated()) {
+      login();
+    }
+  }, [isInitialised, isAuthenticated, login]);
+
+  if (!isAuthenticated()) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 8 }}>
         <CircularProgress />
-        <Typography color="text.secondary">Taking you to the sign-in page…</Typography>
+        <Typography color="text.secondary">Signing you in</Typography>
       </Box>
     );
   }

@@ -34,11 +34,11 @@ has to stay on its default port.
 
 ```
 src/
-  auth/        Keycloak/OIDC setup and the bridge that gives the API client a token
-  components/  Reusable pieces — cards, filters, the layout shell
+  components/  Reusable pieces: cards, filters, the layout shell, the route guard
+  context/     Keycloak setup, exposed to the app as a security context
   hooks/       React Query hooks; the rest of the app calls these, not the services
   pages/       One component per route
-  services/    The HTTP layer: one module per backend context
+  services/    The HTTP layer: one module per backend context, plus the bearer token
   types/       The backend's read models, mirrored in TypeScript
   utils/       Formatting
 ```
@@ -49,8 +49,19 @@ fetch, and nothing outside `services/` builds a URL.
 ## Notes
 
 **Customers are not logged in.** Browsing, ordering and tracking are all open
-(US-30), so the login button is there for restaurant owners only. The API client
-attaches a token when one exists and sends the request without it otherwise.
+(US-30), so the login button is there for restaurant owners only. Keycloak is
+therefore initialised with `check-sso`, which reports whether someone is signed
+in without forcing a login; `RequireOwner` is what starts one, and only for the
+owner area. The API client attaches a token when one exists and sends the
+request without it otherwise.
+
+**Tokens are never written to storage.** They stay in memory in
+`services/auth.ts`, so an injected script cannot read them back. Nothing is lost
+by that: Keycloak keeps its own httpOnly SSO cookie, so a page reload gets a
+fresh token through `check-sso` rather than by reading a stored one.
+
+**No `StrictMode`.** It renders everything twice, and Keycloak's `init` cannot
+survive being called twice.
 
 **Tracking polls.** The restaurant accepts and prepares the order on its own
 schedule with no way to push that to the browser, so the tracking page refetches
