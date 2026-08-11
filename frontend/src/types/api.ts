@@ -58,6 +58,9 @@ export interface TimeRange {
   closed: string;
 }
 
+/** A weekly schedule. Days the restaurant never opens are simply absent. */
+export type WeeklyOpeningHours = Partial<Record<DayOfWeek, TimeRange>>;
+
 export interface MenuItem {
   dishId: string;
   restaurantId: string;
@@ -94,7 +97,7 @@ export interface RestaurantDetail {
   pictureUrls: string[];
   defaultPreparationTime: number;
   open: boolean;
-  openingHours: Partial<Record<DayOfWeek, TimeRange>>;
+  openingHours: WeeklyOpeningHours;
   menu: MenuItem[];
 }
 
@@ -104,10 +107,6 @@ export type RestaurantStatus = 'OPEN' | 'CLOSED' | 'MANUALLY_OPENED' | 'MANUALLY
  * The owner's own restaurant, as returned by GET /api/restaurants/me and
  * POST /api/restaurants.
  *
- * Unlike the customer-facing read models this one carries the stored `status`
- * rather than a computed `open` flag, and it includes drafts' worth of detail
- * the catalogue hides. The backend declares `cuisineType` and `status` as plain
- * Strings, but the values are always enum names.
  */
 export interface OwnerRestaurant {
   restaurantId: string;
@@ -116,7 +115,7 @@ export interface OwnerRestaurant {
   contactEmail: string;
   cuisineType: CuisineType;
   defaultPreparationTime: number;
-  openingHours: Partial<Record<DayOfWeek, TimeRange>>;
+  openingHours: WeeklyOpeningHours;
   pictureUrls: string[];
   status: RestaurantStatus;
 }

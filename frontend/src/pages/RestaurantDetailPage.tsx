@@ -6,7 +6,6 @@ import {
   Chip,
   Divider,
   MenuItem as SelectItem,
-  Paper,
   Stack,
   TextField,
   ToggleButton,
@@ -15,10 +14,11 @@ import {
 } from '@mui/material';
 
 import { MenuItemCard } from '../components/MenuItemCard';
+import { OpeningHoursTable } from '../components/OpeningHoursTable';
 import { QueryState } from '../components/QueryState';
 import { useMenu, useRestaurant } from '../hooks/useRestaurants';
-import type { DayOfWeek, DishSortOrder, DishType, FoodTag, RestaurantDetail } from '../types/api';
-import { formatTime, humanise } from '../utils/format';
+import type { DishSortOrder, DishType, FoodTag } from '../types/api';
+import { humanise } from '../utils/format';
 
 const DISH_TYPES: DishType[] = ['STARTER', 'MAIN', 'DESSERT'];
 const FOOD_TAGS: FoodTag[] = ['GLUTEN_FREE', 'LACTOSE_FREE', 'VEGAN', 'SPICY'];
@@ -28,16 +28,6 @@ const SORT_LABELS: Record<DishSortOrder, string> = {
   PRICE_ASC: 'Price, low to high',
   PRICE_DESC: 'Price, high to low',
 };
-
-const WEEK: DayOfWeek[] = [
-  'MONDAY',
-  'TUESDAY',
-  'WEDNESDAY',
-  'THURSDAY',
-  'FRIDAY',
-  'SATURDAY',
-  'SUNDAY',
-];
 
 /**
  * One restaurant and its menu (US-15), with the dish filters and sort of
@@ -74,7 +64,9 @@ export function RestaurantDetailPage() {
             {restaurantQuery.data.address.city}
           </Typography>
 
-          <OpeningHours hours={restaurantQuery.data.openingHours} />
+          <Box sx={{ mt: 2 }}>
+            <OpeningHoursTable hours={restaurantQuery.data.openingHours} />
+          </Box>
 
           <Divider sx={{ my: 3 }} />
 
@@ -147,33 +139,5 @@ export function RestaurantDetailPage() {
         </>
       )}
     </QueryState>
-  );
-}
-
-interface openingHoursProps {
-  hours: RestaurantDetail['openingHours']
-}
-
-/** A closed restaurant is only useful if the customer can see when to come back. */
-function OpeningHours({ hours }: openingHoursProps) {
-  return (
-    <Paper variant="outlined" elevation={0} sx={{ p: 2, mt: 2, maxWidth: 360 }}>
-      <Typography variant="subtitle2" gutterBottom>
-        Opening hours
-      </Typography>
-      <Stack spacing={0.5}>
-        {WEEK.map((day) => {
-          const range = hours[day];
-          return (
-            <Stack key={day} direction="row" sx={{ justifyContent: 'space-between' }}>
-              <Typography variant="body2">{humanise(day)}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {range ? `${formatTime(range.open)} – ${formatTime(range.closed)}` : 'Closed'}
-              </Typography>
-            </Stack>
-          );
-        })}
-      </Stack>
-    </Paper>
   );
 }
