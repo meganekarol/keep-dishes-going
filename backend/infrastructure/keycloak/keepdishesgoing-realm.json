@@ -415,6 +415,50 @@
     }
   },
   "groups": [],
+  "users": [
+    {
+      "id": "55801495-2bf9-4059-aa86-c524559409b9",
+      "username": "owner",
+      "firstName": "owner",
+      "lastName": "owner",
+      "email": "owner@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "owner",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-keepdishesgoing",
+        "owner"
+      ]
+    },
+    {
+      "id": "4124c01a-d21c-46f5-8451-f5b0403cb6d2",
+      "username": "owner2",
+      "firstName": "Owner",
+      "lastName": "Two",
+      "email": "owner2@test.local",
+      "emailVerified": true,
+      "enabled": true,
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "owner2",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-keepdishesgoing",
+        "owner"
+      ]
+    }
+  ],
   "defaultRole": {
     "id": "14aec5d5-0145-45b8-a9f4-393bf16182bb",
     "name": "default-roles-keepdishesgoing",
