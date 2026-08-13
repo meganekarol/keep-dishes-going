@@ -5,6 +5,6 @@ import be.kdg.keepdishesgoing.restaurant.port.in.commands.GetOwnerRestaurantComm
 
 import java.util.Optional;
 
-public interface GetOwnerRestaurant {
+public interface GetOwnerRestaurantQuery {
     Optional<Restaurant> getOwnerRestaurant(GetOwnerRestaurantCommand command);
 }

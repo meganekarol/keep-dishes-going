@@ -4,7 +4,7 @@ import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.CreateRestaurant
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.UpdateRestaurantStatusRequest;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.CreateRestaurantResponse;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.mappers.RestaurantDtoMapper;
-import be.kdg.keepdishesgoing.restaurant.core.GetOwnerRestaurantUseCaseImpl;
+import be.kdg.keepdishesgoing.restaurant.core.GetOwnerRestaurantQueryImpl;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OwnerId;
 import be.kdg.keepdishesgoing.restaurant.port.in.ChangeRestaurantStatusUseCase;
@@ -27,13 +27,13 @@ public class RestaurantController {
 
     private final CreateRestaurantUseCase createRestaurantUseCase;
     private final ChangeRestaurantStatusUseCase changeRestaurantStatusUseCase;
-    private final GetOwnerRestaurantUseCaseImpl getOwnerRestaurantUseCase;
+    private final GetOwnerRestaurantQueryImpl getOwnerRestaurantQuery;
     private final RestaurantDtoMapper mapper;
 
-    public RestaurantController(CreateRestaurantUseCase createRestaurantUseCase, ChangeRestaurantStatusUseCase changeRestaurantStatusUseCase, GetOwnerRestaurantUseCaseImpl getOwnerRestaurantUseCase, RestaurantDtoMapper mapper) {
+    public RestaurantController(CreateRestaurantUseCase createRestaurantUseCase, ChangeRestaurantStatusUseCase changeRestaurantStatusUseCase, GetOwnerRestaurantQueryImpl getOwnerRestaurantQuery, RestaurantDtoMapper mapper) {
         this.createRestaurantUseCase = createRestaurantUseCase;
         this.changeRestaurantStatusUseCase = changeRestaurantStatusUseCase;
-        this.getOwnerRestaurantUseCase = getOwnerRestaurantUseCase;
+        this.getOwnerRestaurantQuery = getOwnerRestaurantQuery;
         this.mapper = mapper;
     }
 
@@ -55,7 +55,7 @@ public class RestaurantController {
 
         GetOwnerRestaurantCommand cmd = new GetOwnerRestaurantCommand(ownerId);
 
-        return getOwnerRestaurantUseCase.getOwnerRestaurant(cmd)
+        return getOwnerRestaurantQuery.getOwnerRestaurant(cmd)
                 .map(mapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

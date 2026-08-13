@@ -2,7 +2,7 @@ package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
-import be.kdg.keepdishesgoing.restaurant.port.in.CheckRestaurantOwnershipUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.CheckRestaurantOwnershipQuery;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,11 +15,11 @@ import java.util.UUID;
  */
 @Service("restaurantOwnership")
 @Transactional(readOnly = true)
-public class CheckRestaurantOwnershipUseCaseImpl implements CheckRestaurantOwnershipUseCase {
+public class CheckRestaurantOwnershipQueryImpl implements CheckRestaurantOwnershipQuery {
 
     private final LoadRestaurantPort loadRestaurantPort;
 
-    public CheckRestaurantOwnershipUseCaseImpl(LoadRestaurantPort loadRestaurantPort) {
+    public CheckRestaurantOwnershipQueryImpl(LoadRestaurantPort loadRestaurantPort) {
         this.loadRestaurantPort = loadRestaurantPort;
     }
 

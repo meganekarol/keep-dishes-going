@@ -3,8 +3,8 @@ package be.kdg.keepdishesgoing.restaurant.adapter.in;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.CuisineType;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishType;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.FoodTag;
-import be.kdg.keepdishesgoing.restaurant.port.in.BrowseRestaurantsUseCase;
-import be.kdg.keepdishesgoing.restaurant.port.in.ViewRestaurantMenuUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.BrowseRestaurantsQuery;
+import be.kdg.keepdishesgoing.restaurant.port.in.ViewRestaurantMenuQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,13 +32,13 @@ import java.util.UUID;
 @RequestMapping("/api/restaurants")
 public class RestaurantCatalogController {
 
-    private final BrowseRestaurantsUseCase browseRestaurantsUseCase;
-    private final ViewRestaurantMenuUseCase viewRestaurantMenuUseCase;
+    private final BrowseRestaurantsQuery browseRestaurantsQuery;
+    private final ViewRestaurantMenuQuery viewRestaurantMenuQuery;
 
-    public RestaurantCatalogController(BrowseRestaurantsUseCase browseRestaurantsUseCase,
-                                       ViewRestaurantMenuUseCase viewRestaurantMenuUseCase) {
-        this.browseRestaurantsUseCase = browseRestaurantsUseCase;
-        this.viewRestaurantMenuUseCase = viewRestaurantMenuUseCase;
+    public RestaurantCatalogController(BrowseRestaurantsQuery browseRestaurantsQuery,
+                                       ViewRestaurantMenuQuery viewRestaurantMenuQuery) {
+        this.browseRestaurantsQuery = browseRestaurantsQuery;
+        this.viewRestaurantMenuQuery = viewRestaurantMenuQuery;
     }
 
     /**
@@ -53,7 +53,7 @@ public class RestaurantCatalogController {
             @RequestParam(required = false) BigDecimal maxPrice) {
 
         RestaurantSearchQuery query = new RestaurantSearchQuery(cuisineType, openNow, minPrice, maxPrice);
-        return ResponseEntity.ok(browseRestaurantsUseCase.browse(query));
+        return ResponseEntity.ok(browseRestaurantsQuery.browse(query));
     }
 
     /**
@@ -61,7 +61,7 @@ public class RestaurantCatalogController {
      */
     @GetMapping("/{restaurantId}")
     public ResponseEntity<RestaurantDetail> viewRestaurant(@PathVariable UUID restaurantId) {
-        return ResponseEntity.ok(viewRestaurantMenuUseCase.viewRestaurant(restaurantId));
+        return ResponseEntity.ok(viewRestaurantMenuQuery.viewRestaurant(restaurantId));
     }
 
     /**
@@ -79,6 +79,6 @@ public class RestaurantCatalogController {
             @RequestParam(required = false) DishSortOrder sort) {
 
         DishSearchQuery query = new DishSearchQuery(restaurantId, type, foodTags, sort);
-        return ResponseEntity.ok(viewRestaurantMenuUseCase.browseMenu(query));
+        return ResponseEntity.ok(viewRestaurantMenuQuery.browseMenu(query));
     }
 }

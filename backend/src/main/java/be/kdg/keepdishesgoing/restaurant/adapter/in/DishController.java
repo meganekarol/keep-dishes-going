@@ -36,17 +36,17 @@ public class DishController {
     private final MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase;
     private final ApplyPendingChangesUseCase applyPendingChangesUseCase;
     private final ScheduleChangesUseCase scheduleChangesUseCase;
-    private final ViewOwnerMenuUseCase viewOwnerMenuUseCase;
+    private final ViewOwnerMenuQuery viewOwnerMenuQuery;
     private final DishDtoMapper mapper;
 
-    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase, ApplyPendingChangesUseCase applyPendingChangesUseCase, ScheduleChangesUseCase scheduleChangesUseCase, ViewOwnerMenuUseCase viewOwnerMenuUseCase, DishDtoMapper mapper) {
+    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase, ApplyPendingChangesUseCase applyPendingChangesUseCase, ScheduleChangesUseCase scheduleChangesUseCase, ViewOwnerMenuQuery viewOwnerMenuQuery, DishDtoMapper mapper) {
         this.editDishAsDraftUseCase = editDishAsDraftUseCase;
         this.publishAndUnpublishDishUseCase = publishAndUnpublishDishUseCase;
         this.createDishUseCase = createDishUseCase;
         this.markDishInAndOutOfStockUseCase = markDishInAndOutOfStockUseCase;
         this.applyPendingChangesUseCase = applyPendingChangesUseCase;
         this.scheduleChangesUseCase = scheduleChangesUseCase;
-        this.viewOwnerMenuUseCase = viewOwnerMenuUseCase;
+        this.viewOwnerMenuQuery = viewOwnerMenuQuery;
         this.mapper = mapper;
     }
 
@@ -62,7 +62,7 @@ public class DishController {
      */
     @GetMapping
     public ResponseEntity<OwnerMenu> viewMenu(@PathVariable UUID restaurantId) {
-        return ResponseEntity.ok(viewOwnerMenuUseCase.viewOwnerMenu(restaurantId));
+        return ResponseEntity.ok(viewOwnerMenuQuery.viewOwnerMenu(restaurantId));
     }
 
     @PostMapping("/new")

@@ -2,7 +2,7 @@ package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.CuisineType;
-import be.kdg.keepdishesgoing.restaurant.port.in.BrowseRestaurantsUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.BrowseRestaurantsQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.MenuItem;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.RestaurantSearchQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.RestaurantSummary;
@@ -35,12 +35,12 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional(readOnly = true)
-public class BrowseRestaurantsUseCaseImpl implements BrowseRestaurantsUseCase {
+public class BrowseRestaurantsQueryImpl implements BrowseRestaurantsQuery {
 
     private final LoadRestaurantPort loadRestaurantPort;
     private final LoadDishPort loadDishPort;
 
-    public BrowseRestaurantsUseCaseImpl(LoadRestaurantPort loadRestaurantPort, LoadDishPort loadDishPort) {
+    public BrowseRestaurantsQueryImpl(LoadRestaurantPort loadRestaurantPort, LoadDishPort loadDishPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.loadDishPort = loadDishPort;
     }

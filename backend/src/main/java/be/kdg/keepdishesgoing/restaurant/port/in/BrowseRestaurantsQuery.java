@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * The customer's entry point into the catalogue (US-14, US-16).
  */
-public interface BrowseRestaurantsUseCase {
+public interface BrowseRestaurantsQuery {
 
     /**
      * @return every restaurant matching the query, ordered by name so the list

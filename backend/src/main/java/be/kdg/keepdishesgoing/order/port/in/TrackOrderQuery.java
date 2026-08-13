@@ -7,7 +7,7 @@ import java.util.UUID;
 /**
  * Follows one order from placement to delivery (US-24, US-25).
  */
-public interface TrackOrderUseCase {
+public interface TrackOrderQuery {
 
     /**
      * @throws be.kdg.keepdishesgoing.common.exceptions.NotFoundException

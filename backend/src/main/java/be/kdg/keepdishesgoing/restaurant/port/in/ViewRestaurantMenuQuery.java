@@ -11,7 +11,7 @@ import java.util.UUID;
  * One restaurant's page and its menu, as a customer sees them
  * (US-15, US-17, US-18).
  */
-public interface ViewRestaurantMenuUseCase {
+public interface ViewRestaurantMenuQuery {
 
     /**
      * @throws be.kdg.keepdishesgoing.common.exceptions.NotFoundException

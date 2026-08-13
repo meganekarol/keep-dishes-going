@@ -4,7 +4,7 @@ import be.kdg.keepdishesgoing.common.exceptions.NotFoundException;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.RestaurantMenu;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
-import be.kdg.keepdishesgoing.restaurant.port.in.ViewOwnerMenuUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.ViewOwnerMenuQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.OwnerDishView;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.OwnerMenu;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
@@ -26,12 +26,12 @@ import java.util.UUID;
  */
 @Service
 @Transactional(readOnly = true)
-public class ViewOwnerMenuUseCaseImpl implements ViewOwnerMenuUseCase {
+public class ViewOwnerMenuQueryImpl implements ViewOwnerMenuQuery {
 
     private final LoadRestaurantPort loadRestaurantPort;
     private final LoadDishPort loadDishPort;
 
-    public ViewOwnerMenuUseCaseImpl(LoadRestaurantPort loadRestaurantPort, LoadDishPort loadDishPort) {
+    public ViewOwnerMenuQueryImpl(LoadRestaurantPort loadRestaurantPort, LoadDishPort loadDishPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.loadDishPort = loadDishPort;
     }
@@ -44,7 +44,7 @@ public class ViewOwnerMenuUseCaseImpl implements ViewOwnerMenuUseCase {
 
         List<OwnerDishView> dishes = loadDishPort.loadByRestaurant(id).stream()
                 .map(OwnerDishView::from)
-                .sorted(Comparator.comparing(ViewOwnerMenuUseCaseImpl::displayName, String.CASE_INSENSITIVE_ORDER))
+                .sorted(Comparator.comparing(ViewOwnerMenuQueryImpl::displayName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
 
         long pending = dishes.stream().filter(OwnerDishView::pendingChanges).count();

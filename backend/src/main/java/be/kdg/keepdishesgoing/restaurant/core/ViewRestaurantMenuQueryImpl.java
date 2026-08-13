@@ -4,7 +4,7 @@ import be.kdg.keepdishesgoing.common.exceptions.NotFoundException;
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
-import be.kdg.keepdishesgoing.restaurant.port.in.ViewRestaurantMenuUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.ViewRestaurantMenuQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.DishSearchQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.MenuItem;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.RestaurantDetail;
@@ -26,12 +26,12 @@ import java.util.UUID;
  */
 @Service
 @Transactional(readOnly = true)
-public class ViewRestaurantMenuUseCaseImpl implements ViewRestaurantMenuUseCase {
+public class ViewRestaurantMenuQueryImpl implements ViewRestaurantMenuQuery {
 
     private final LoadRestaurantPort loadRestaurantPort;
     private final LoadDishPort loadDishPort;
 
-    public ViewRestaurantMenuUseCaseImpl(LoadRestaurantPort loadRestaurantPort, LoadDishPort loadDishPort) {
+    public ViewRestaurantMenuQueryImpl(LoadRestaurantPort loadRestaurantPort, LoadDishPort loadDishPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.loadDishPort = loadDishPort;
     }

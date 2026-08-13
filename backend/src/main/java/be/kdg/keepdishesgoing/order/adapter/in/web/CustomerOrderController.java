@@ -6,7 +6,7 @@ import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.port.in.commands.OrderItemCommand;
 import be.kdg.keepdishesgoing.order.port.in.commands.PlaceOrderCommand;
 import be.kdg.keepdishesgoing.order.port.in.PlaceOrderUseCase;
-import be.kdg.keepdishesgoing.order.port.in.TrackOrderUseCase;
+import be.kdg.keepdishesgoing.order.port.in.TrackOrderQuery;
 import be.kdg.keepdishesgoing.order.port.in.queries.OrderTracking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +27,11 @@ public class CustomerOrderController {
     private static final Logger log = LoggerFactory.getLogger(CustomerOrderController.class);
     
     private final PlaceOrderUseCase placeOrderUseCase;
-    private final TrackOrderUseCase trackOrderUseCase;
+    private final TrackOrderQuery trackOrderQuery;
 
-    public CustomerOrderController(PlaceOrderUseCase placeOrderUseCase, TrackOrderUseCase trackOrderUseCase) {
+    public CustomerOrderController(PlaceOrderUseCase placeOrderUseCase, TrackOrderQuery trackOrderQuery) {
         this.placeOrderUseCase = placeOrderUseCase;
-        this.trackOrderUseCase = trackOrderUseCase;
+        this.trackOrderQuery = trackOrderQuery;
     }
 
     /**
@@ -58,7 +58,7 @@ public class CustomerOrderController {
      */
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderTracking> trackOrder(@PathVariable UUID orderId) {
-        return ResponseEntity.ok(trackOrderUseCase.track(orderId));
+        return ResponseEntity.ok(trackOrderQuery.track(orderId));
     }
 
     private PlaceOrderCommand mapToCommand(PlaceOrderRequest request) {

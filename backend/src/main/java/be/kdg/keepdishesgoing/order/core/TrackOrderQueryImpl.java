@@ -3,7 +3,7 @@ package be.kdg.keepdishesgoing.order.core;
 import be.kdg.keepdishesgoing.common.exceptions.NotFoundException;
 import be.kdg.keepdishesgoing.order.domain.Order;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
-import be.kdg.keepdishesgoing.order.port.in.TrackOrderUseCase;
+import be.kdg.keepdishesgoing.order.port.in.TrackOrderQuery;
 import be.kdg.keepdishesgoing.order.port.in.queries.OrderTracking;
 import be.kdg.keepdishesgoing.order.port.out.LoadOrderPort;
 import be.kdg.keepdishesgoing.order.port.out.LoadRestaurantProjectionPort;
@@ -28,12 +28,12 @@ import java.util.UUID;
  */
 @Service
 @Transactional(readOnly = true)
-public class TrackOrderUseCaseImpl implements TrackOrderUseCase {
+public class TrackOrderQueryImpl implements TrackOrderQuery {
 
     private final LoadOrderPort loadOrderPort;
     private final LoadRestaurantProjectionPort loadRestaurantProjectionPort;
 
-    public TrackOrderUseCaseImpl(LoadOrderPort loadOrderPort,
+    public TrackOrderQueryImpl(LoadOrderPort loadOrderPort,
                                  LoadRestaurantProjectionPort loadRestaurantProjectionPort) {
         this.loadOrderPort = loadOrderPort;
         this.loadRestaurantProjectionPort = loadRestaurantProjectionPort;
