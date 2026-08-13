@@ -8,6 +8,7 @@ import { RestaurantDetailPage } from './pages/RestaurantDetailPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { OwnerDashboardPage } from './pages/owner/OwnerDashboardPage';
 import { CreateRestaurantPage } from './pages/owner/CreateRestaurantPage';
+import { MenuPage } from './pages/owner/MenuPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export default function App() {
@@ -34,6 +35,14 @@ export default function App() {
           element={
             <RequireOwner>
               <CreateRestaurantPage />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="/owner/menu"
+          element={
+            <RequireOwner>
+              <MenuPage />
             </RequireOwner>
           }
         />

@@ -1,5 +1,5 @@
-import { Navigate } from 'react-router-dom';
-import { Stack, Typography } from '@mui/material';
+import { Link, Navigate } from 'react-router-dom';
+import { Button, Stack, Typography } from '@mui/material';
 
 import { QueryState } from '../../components/shared/QueryState';
 import { RestaurantStatusToggle } from '../../components/owner/RestaurantStatusToggle';
@@ -23,7 +23,16 @@ export function OwnerDashboardPage() {
     <QueryState isLoading={isLoading} error={error}>
       {restaurant && (
         <Stack spacing={3}>
-          <Typography variant="h1">My restaurant</Typography>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}
+          >
+            <Typography variant="h1">My restaurant</Typography>
+            <Button variant="contained" component={Link} to="/owner/menu">
+              Manage my menu
+            </Button>
+          </Stack>
           <RestaurantStatusToggle
             restaurantId={restaurant.restaurantId}
             status={restaurant.status}
