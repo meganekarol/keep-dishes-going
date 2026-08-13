@@ -136,6 +136,69 @@ export interface OwnerRestaurant {
   status: RestaurantStatus;
 }
 
+export type DishState = 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED' | 'OUT_OF_STOCK';
+
+/** One version of a dish, live or still a draft. */
+export interface DishVersion {
+  name: string;
+  type: DishType;
+  foodTags: FoodTag[];
+  description: string;
+  price: number;
+  pictureUrl: string | null;
+}
+
+/**
+ * One dish as its owner sees it (US-03), from GET /api/{restaurantId}/dishes.
+ *
+ * `published` is null for a dish that has never gone live, `draft` for one with
+ * no unsaved edits. At least one of the two is always set.
+ */
+export interface OwnerDishView {
+  dishId: string;
+  status: DishState;
+  published: DishVersion | null;
+  draft: DishVersion | null;
+  /** The draft differs from what customers can order right now. */
+  pendingChanges: boolean;
+  scheduledPublishAt: string | null;
+  lastPublishedAt: string | null;
+}
+
+export interface OwnerMenu {
+  restaurantId: string;
+  dishes: OwnerDishView[];
+  pendingChangesCount: number;
+  /** Counted from the menu itself, which is what the cap is enforced against. */
+  publishedCount: number;
+  maxPublishedDishes: number;
+}
+
+/** The body of POST /api/{restaurantId}/dishes/new (US-03). */
+export interface CreateDishRequest {
+  name: string;
+  type: DishType;
+  foodTags: FoodTag[];
+  description: string;
+  price: number;
+  pictureUrl: string | null;
+}
+
+/**
+ * The body of PUT /api/{restaurantId}/dishes/{dishId}/draft (US-03).
+ *
+ * Identical to creating one: an edit replaces the draft wholesale rather than
+ * patching single fields.
+ */
+export type EditDishRequest = CreateDishRequest;
+
+export interface CreateDishResponse extends DishVersion {
+  restaurantId: string;
+  dishId: string;
+}
+
+export type EditDishResponse = DishVersion;
+
 export interface DeliveryAddress {
   street: string;
   number: string;

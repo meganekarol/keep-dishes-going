@@ -68,8 +68,14 @@ async function request<T>(path: string, init: RequestInit = {}, params?: QueryPa
 export const api = {
   get: <T>(path: string, params?: QueryParams) => request<T>(path, { method: 'GET' }, params),
 
-  post: <T>(path: string, body: unknown) =>
-    request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  post: <T>(path: string, body?: unknown) =>
+    request<T>(path, {
+      method: 'POST',
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    }),
+
+  put: <T>(path: string, body: unknown) =>
+    request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
 
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, {
