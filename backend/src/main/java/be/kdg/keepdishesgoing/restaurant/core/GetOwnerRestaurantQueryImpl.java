@@ -3,12 +3,12 @@ package be.kdg.keepdishesgoing.restaurant.core;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OwnerId;
 import be.kdg.keepdishesgoing.restaurant.port.in.GetOwnerRestaurantQuery;
-import be.kdg.keepdishesgoing.restaurant.port.in.commands.GetOwnerRestaurantCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -21,9 +21,7 @@ public class GetOwnerRestaurantQueryImpl implements GetOwnerRestaurantQuery {
     }
 
     @Override
-    public Optional<Restaurant> getOwnerRestaurant(GetOwnerRestaurantCommand command) {
-
-        var ownerId = OwnerId.of(command.ownerId());
-        return loadRestaurantPort.loadByOwnerId(ownerId);
+    public Optional<Restaurant> getOwnerRestaurant(UUID ownerId) {
+        return loadRestaurantPort.loadByOwnerId(OwnerId.of(ownerId));
     }
 }

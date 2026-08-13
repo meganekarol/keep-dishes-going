@@ -4,14 +4,12 @@ import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.CreateRestaurant
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.request.UpdateRestaurantStatusRequest;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.dto.response.CreateRestaurantResponse;
 import be.kdg.keepdishesgoing.restaurant.adapter.in.mappers.RestaurantDtoMapper;
-import be.kdg.keepdishesgoing.restaurant.core.GetOwnerRestaurantQueryImpl;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
-import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OwnerId;
 import be.kdg.keepdishesgoing.restaurant.port.in.ChangeRestaurantStatusUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.GetOwnerRestaurantQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.ChangeRestaurantStatusCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
-import be.kdg.keepdishesgoing.restaurant.port.in.commands.GetOwnerRestaurantCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,10 +25,10 @@ public class RestaurantController {
 
     private final CreateRestaurantUseCase createRestaurantUseCase;
     private final ChangeRestaurantStatusUseCase changeRestaurantStatusUseCase;
-    private final GetOwnerRestaurantQueryImpl getOwnerRestaurantQuery;
+    private final GetOwnerRestaurantQuery getOwnerRestaurantQuery;
     private final RestaurantDtoMapper mapper;
 
-    public RestaurantController(CreateRestaurantUseCase createRestaurantUseCase, ChangeRestaurantStatusUseCase changeRestaurantStatusUseCase, GetOwnerRestaurantQueryImpl getOwnerRestaurantQuery, RestaurantDtoMapper mapper) {
+    public RestaurantController(CreateRestaurantUseCase createRestaurantUseCase, ChangeRestaurantStatusUseCase changeRestaurantStatusUseCase, GetOwnerRestaurantQuery getOwnerRestaurantQuery, RestaurantDtoMapper mapper) {
         this.createRestaurantUseCase = createRestaurantUseCase;
         this.changeRestaurantStatusUseCase = changeRestaurantStatusUseCase;
         this.getOwnerRestaurantQuery = getOwnerRestaurantQuery;
@@ -53,9 +51,7 @@ public class RestaurantController {
     public ResponseEntity<?> getMyRestaurant(@AuthenticationPrincipal Jwt jwt) {
         UUID ownerId = UUID.fromString(jwt.getSubject());
 
-        GetOwnerRestaurantCommand cmd = new GetOwnerRestaurantCommand(ownerId);
-
-        return getOwnerRestaurantQuery.getOwnerRestaurant(cmd)
+        return getOwnerRestaurantQuery.getOwnerRestaurant(ownerId)
                 .map(mapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
