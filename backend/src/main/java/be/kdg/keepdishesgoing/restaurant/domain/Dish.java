@@ -53,7 +53,6 @@ public class Dish {
 
     public void editDraft(DishVersion newDraft) {
         this.draftVersion = newDraft;
-        this.hasPendingChanges();
     }
 
     public void publishDish()  {
