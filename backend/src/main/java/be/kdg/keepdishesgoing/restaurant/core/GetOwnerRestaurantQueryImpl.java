@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class GetOwnerRestaurantQueryImpl implements GetOwnerRestaurantQuery {
 
     private final LoadRestaurantPort loadRestaurantPort;
