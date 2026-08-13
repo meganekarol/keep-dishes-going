@@ -22,6 +22,10 @@ public class RestaurantMenu {
         return new RestaurantMenu(restaurantId);
     }
 
+    public static int maxPublishedDishes() {
+        return MAX_PUBLISHED_DISHES;
+    }
+
     // Restore from persistence
     public RestaurantMenu(RestaurantId restaurantId, List<DishId> publishedDishes) {
         this.restaurantId = restaurantId;

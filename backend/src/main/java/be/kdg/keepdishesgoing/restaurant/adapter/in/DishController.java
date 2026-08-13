@@ -9,6 +9,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.Dish;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.FoodTag;
 import be.kdg.keepdishesgoing.restaurant.port.in.*;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.*;
+import be.kdg.keepdishesgoing.restaurant.port.in.queries.OwnerMenu;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,16 +36,33 @@ public class DishController {
     private final MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase;
     private final ApplyPendingChangesUseCase applyPendingChangesUseCase;
     private final ScheduleChangesUseCase scheduleChangesUseCase;
+    private final ViewOwnerMenuUseCase viewOwnerMenuUseCase;
     private final DishDtoMapper mapper;
 
-    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase, ApplyPendingChangesUseCase applyPendingChangesUseCase, ScheduleChangesUseCase scheduleChangesUseCase, DishDtoMapper mapper) {
+    public DishController(EditDishAsDraftUseCase editDishAsDraftUseCase, PublishAndUnpublishDishUseCase publishAndUnpublishDishUseCase, CreateDishUseCase createDishUseCase, MarkDishInAndOutOfStockUseCase markDishInAndOutOfStockUseCase, ApplyPendingChangesUseCase applyPendingChangesUseCase, ScheduleChangesUseCase scheduleChangesUseCase, ViewOwnerMenuUseCase viewOwnerMenuUseCase, DishDtoMapper mapper) {
         this.editDishAsDraftUseCase = editDishAsDraftUseCase;
         this.publishAndUnpublishDishUseCase = publishAndUnpublishDishUseCase;
         this.createDishUseCase = createDishUseCase;
         this.markDishInAndOutOfStockUseCase = markDishInAndOutOfStockUseCase;
         this.applyPendingChangesUseCase = applyPendingChangesUseCase;
         this.scheduleChangesUseCase = scheduleChangesUseCase;
+        this.viewOwnerMenuUseCase = viewOwnerMenuUseCase;
         this.mapper = mapper;
+    }
+
+    /**
+     * The owner's own menu (US-03).
+     *
+     * <p>Not the same as the public {@code /api/restaurants/{id}/dishes}, which
+     * shows the published version only. This one carries drafts and unpublished
+     * dishes too, because an owner cannot manage what they cannot see.
+     *
+     * <p>Returns the read model unchanged: it is already shaped for this screen,
+     * so a response DTO would only copy it field for field.
+     */
+    @GetMapping
+    public ResponseEntity<OwnerMenu> viewMenu(@PathVariable UUID restaurantId) {
+        return ResponseEntity.ok(viewOwnerMenuUseCase.viewOwnerMenu(restaurantId));
     }
 
     @PostMapping("/new")
