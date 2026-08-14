@@ -19,16 +19,19 @@ public class ApplyPendingChangesUseCaseImpl implements ApplyPendingChangesUseCas
     private final SaveDishPort saveDishPort;
     private final LoadRestaurantPort loadRestaurantPort;
     private final SaveRestaurantPort saveRestaurantPort;
+    private final PublishEventPort publishEventPort;
 
     public ApplyPendingChangesUseCaseImpl(
             LoadDishPort loadDishPort,
             SaveDishPort saveDishPort,
             LoadRestaurantPort loadRestaurantPort,
-            SaveRestaurantPort saveRestaurantPort) {
+            SaveRestaurantPort saveRestaurantPort,
+            PublishEventPort publishEventPort) {
         this.loadDishPort = loadDishPort;
         this.saveDishPort = saveDishPort;
         this.loadRestaurantPort = loadRestaurantPort;
         this.saveRestaurantPort = saveRestaurantPort;
+        this.publishEventPort = publishEventPort;
     }
 
     @Override
@@ -49,9 +52,16 @@ public class ApplyPendingChangesUseCaseImpl implements ApplyPendingChangesUseCas
             restaurant.getMenu().publishDish(dish.getDishId()); // enforce "max 10"
             dish.publishDish();
             saveDishPort.saveDish(dish);
+
+            // Without this the order module never hears about the dish, so
+            // customers cannot order what the owner just put on the menu.
+            publishEventPort.publishAll(dish.getUncommittedEvents());
+            dish.markEventAsCommitted();
         }
 
         // Persist the updated restaurant (menu state updated)
         saveRestaurantPort.saveRestaurant(restaurant);
+        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurant.markEventAsCommitted();
     }
 }
