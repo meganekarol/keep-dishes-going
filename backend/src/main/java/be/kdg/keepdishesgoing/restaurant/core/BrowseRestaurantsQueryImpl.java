@@ -76,7 +76,7 @@ public class BrowseRestaurantsQueryImpl implements BrowseRestaurantsQuery {
 
     /**
      * A price filter asks "can I eat here for that?", so one dish inside the
-     * range is enough — requiring the whole menu to fit would exclude any
+     * range is enough: requiring the whole menu to fit would exclude any
      * restaurant that also sells a lobster.
      */
     private boolean matchesPrice(RestaurantSummary summary,

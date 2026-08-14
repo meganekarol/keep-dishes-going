@@ -20,7 +20,7 @@ import java.util.UUID;
  *
  * <p>Deliberately separate from {@link RestaurantController}, which is the
  * owner's side of the same aggregate. The two have different audiences,
- * different security, and different shapes — an owner sees drafts and a stored
+ * different security, and different shapes: an owner sees drafts and a stored
  * status, a customer sees a published menu and whether the door is open.
  *
  * <p>These endpoints return the read models from {@code port.in.queries}

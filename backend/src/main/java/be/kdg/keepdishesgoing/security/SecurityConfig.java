@@ -38,7 +38,7 @@ public class SecurityConfig {
 
                         // US-24/25: tracking is open for the same reason. A guest
                         // order has no account to bind the check to, so the order's
-                        // random id is what proves the caller placed it — it is only
+                        // random id is what proves the caller placed it, and it is only
                         // ever handed to whoever completed the checkout.
                         .requestMatchers(HttpMethod.GET, "/api/orders/*").permitAll()
 

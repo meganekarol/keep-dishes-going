@@ -17,7 +17,7 @@ import java.util.UUID;
  * customers prices they cannot order at.
  *
  * @param available {@code false} means the dish is on the menu but temporarily
- *                  sold out — it is still shown, greyed out, which is the whole
+ *                  sold out. It is still shown, greyed out, which is the whole
  *                  point of out-of-stock being a different state from unpublished.
  */
 public record MenuItem(

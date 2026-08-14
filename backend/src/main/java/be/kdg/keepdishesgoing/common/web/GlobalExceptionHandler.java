@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * A path variable or query parameter that will not convert — an id that is
+     * A path variable or query parameter that will not convert: an id that is
      * not a UUID, a cuisine that is not in the enum. Spring raises this before
      * the controller runs, and it is the caller's mistake, not the server's.
      */
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Business rules that are neither "bad input" nor "not found" — a violated
+     * Business rules that are neither "bad input" nor "not found": a violated
      * invariant such as publishing an eleventh dish.
      */
     @ExceptionHandler(DomainException.class)

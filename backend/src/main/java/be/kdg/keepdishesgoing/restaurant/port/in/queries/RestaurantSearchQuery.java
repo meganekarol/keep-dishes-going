@@ -9,7 +9,7 @@ import java.math.BigDecimal;
  *
  * <p>Every field is optional; a query with nothing set returns the whole
  * catalogue. Distance and estimated delivery time are the two filters US-16 also
- * names — they need geocoordinates on {@code Address}, which do not exist yet,
+ * names. They need geocoordinates on {@code Address}, which do not exist yet,
  * so they are not offered rather than silently ignored.
  *
  * @param cuisineType only this cuisine, {@code null} for all

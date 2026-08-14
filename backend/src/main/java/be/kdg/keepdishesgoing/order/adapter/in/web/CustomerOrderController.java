@@ -53,7 +53,7 @@ public class CustomerOrderController {
      * Follow an order from placement to delivery (US-24, US-25).
      *
      * <p>The returned id from {@code POST /api/orders} is what the customer
-     * tracks with — it is the confirmation and the tracking handle in one.
+     * tracks with: it is the confirmation and the tracking handle in one.
      * Intended to be polled while the order is in progress.
      */
     @GetMapping("/{orderId}")

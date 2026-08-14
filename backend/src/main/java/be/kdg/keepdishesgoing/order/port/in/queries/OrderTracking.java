@@ -15,7 +15,7 @@ import java.util.UUID;
  *
  * <p>The five timestamps are the progress bar. Each one is {@code null} until
  * the matching step happens, so the client renders the timeline by reading them
- * rather than by interpreting {@code status} — which only ever tells it where
+ * rather than by interpreting {@code status}, which only ever tells it where
  * the order is now, not how it got there.
  *
  * @param rejectionReason set only when {@code status} is

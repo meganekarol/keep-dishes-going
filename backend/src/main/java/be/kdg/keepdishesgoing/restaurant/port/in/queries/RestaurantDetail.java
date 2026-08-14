@@ -13,7 +13,7 @@ import java.util.UUID;
 
 /**
  * One restaurant's page: everything US-15 asks a customer to see before
- * ordering — where it is, when it opens, and what is on the menu.
+ * ordering: where it is, when it opens, and what is on the menu.
  *
  * <p>The weekly schedule is included on purpose: a customer looking at a closed
  * restaurant needs to know when to come back, and the {@code open} flag alone
