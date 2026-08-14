@@ -1,37 +1,31 @@
 package be.kdg.keepdishesgoing.restaurant.adapter.in;
 
-import be.kdg.keepdishesgoing.restaurant.domain.Dish;
-import be.kdg.keepdishesgoing.restaurant.port.in.ApplyPendingChangesUseCase;
-import be.kdg.keepdishesgoing.restaurant.port.in.commands.ApplyPendingChangesCommand;
-import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
+import be.kdg.keepdishesgoing.restaurant.port.in.PublishScheduledChangesUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.in.commands.PublishScheduledChangesCommand;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.stream.Collectors;
 
+/**
+ * The clock as an inbound adapter: it decides when, the use case decides what.
+ *
+ * <p>Reading the due dishes here and handing the whole restaurant to the
+ * apply-everything use case published drafts that were not due yet, and drafts
+ * the owner had never scheduled at all.
+ */
 @Component
 public class ScheduledDishPublisher {
 
-    private final ApplyPendingChangesUseCase applyPendingChangesUseCase;
-    private final LoadDishPort loadDishPort;
+    private final PublishScheduledChangesUseCase publishScheduledChangesUseCase;
 
-    public ScheduledDishPublisher(ApplyPendingChangesUseCase applyPendingChangesUseCase, LoadDishPort loadDishPort) {
-        this.applyPendingChangesUseCase = applyPendingChangesUseCase;
-        this.loadDishPort = loadDishPort;
+    public ScheduledDishPublisher(PublishScheduledChangesUseCase publishScheduledChangesUseCase) {
+        this.publishScheduledChangesUseCase = publishScheduledChangesUseCase;
     }
 
     @Scheduled(fixedRate = 60000)
     public void applyScheduledChanges() {
-        LocalDateTime now = LocalDateTime.now();
-
-        loadDishPort.loadReadyForScheduledPublish(now)
-                .stream()
-                .collect(Collectors.groupingBy(Dish::getRestaurantId))
-                .forEach((restaurantId, dishes) -> {
-                    ApplyPendingChangesCommand command =
-                            new ApplyPendingChangesCommand(restaurantId.uuid());
-                    applyPendingChangesUseCase.applyPendingChanges(command);
-                });
+        publishScheduledChangesUseCase.publishScheduledChanges(
+                new PublishScheduledChangesCommand(LocalDateTime.now()));
     }
 }
