@@ -1,100 +1,405 @@
-### GET request to example server
-GET https://examples.http-client.intellij.net/get
-    ?generated-in=IntelliJ IDEA
 
+# Connection info
+@keycloak = http://localhost:8180
+@realm = keepdishesgoing
+@api = http://localhost:8080
 
-### Create a restaurant
-POST http://localhost:8080/api/restaurants
+# Change this to register a different owner. Keycloak answers 409 if the
+# username is already taken, which is the signal to bump it.
+@ownerUser = chef-marie
+@ownerPass = chef-marie
+
+### 1. Admin token, for the two lookups and the user creation below
+POST {{keycloak}}/realms/master/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type = password &
+client_id = admin-cli &
+username = admin &
+password = admin
+
+> {%
+    client.test("admin signed in", () => client.assert(response.status === 200));
+    client.global.set("adminToken", response.body.access_token);
+%}
+
+### 2. backend-client's internal id
+# Looked up rather than written down: it is generated at import time.
+GET {{keycloak}}/admin/realms/{{realm}}/clients?clientId=backend-client
+Authorization: Bearer {{adminToken}}
+
+> {%
+    client.global.set("backendClientUuid", response.body[0].id);
+%}
+
+### 3. backend-client's secret
+# Fetched instead of hardcoded so this file keeps working after the realm is
+# reimported, which issues a new secret.
+GET {{keycloak}}/admin/realms/{{realm}}/clients/{{backendClientUuid}}/client-secret
+Authorization: Bearer {{adminToken}}
+
+> {%
+    client.global.set("backendSecret", response.body.value);
+%}
+
+### 4. Register the owner
+POST {{keycloak}}/admin/realms/{{realm}}/users
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "ownerId": "8c8c87c1-9b5f-4f73-9fa7-7f9b5c7f2296",
+  "username": "{{ownerUser}}",
+  "enabled": true,
+  "emailVerified": true,
+  "firstName": "Marie",
+  "lastName": "Dubois",
+  "email": "{{ownerUser}}@example.com",
+  "credentials": [
+    { "type": "password", "value": "{{ownerPass}}", "temporary": false }
+  ]
+}
+
+> {%
+    client.test("owner created", () => client.assert(response.status === 201,
+        "expected 201, got " + response.status + ". A 409 means the username is taken."));
+%}
+
+### 5. Sign in as the new owner
+# Through backend-client: frontend-client is public and PKCE-only, so it refuses
+# the password grant on purpose.
+POST {{keycloak}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type = password &
+client_id = backend-client &
+client_secret = {{backendSecret}} &
+username = {{ownerUser}} &
+password = {{ownerPass}}
+
+> {%
+    client.test("owner signed in", () => client.assert(response.status === 200));
+    client.global.set("ownerToken", response.body.access_token);
+%}
+
+### 6. No restaurant yet, so this is a 404
+# What the frontend turns into "you have none yet" rather than an error.
+GET {{api}}/api/restaurants/me
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("nothing yet", () => client.assert(response.status === 404));
+%}
+
+### 7. Create the restaurant
+# No ownerId in the body: the backend reads it from the token's subject, so an
+# owner cannot create a restaurant in somebody else's name.
+POST {{api}}/api/restaurants
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
   "name": "La Petite Maison",
   "address": {
-    "street": "Main Street",
+    "street": "Nationalestraat",
     "number": 42,
-    "postalCode": "1000",
-    "city": "Brussels",
+    "postalCode": "2000",
+    "city": "Antwerpen",
     "country": "Belgium"
   },
   "contactEmail": "contact@lapetitemaison.be",
   "cuisineType": "FRENCH",
   "defaultPreparationTime": 30,
   "openingHours": {
-    "MONDAY": { "open": "09:00:00", "closed": "17:00:00" },
-    "SATURDAY": { "open": "10:00:00", "closed": "22:00:00" }
+    "MONDAY":    { "open": "09:00:00", "closed": "22:00:00" },
+    "TUESDAY":   { "open": "09:00:00", "closed": "22:00:00" },
+    "WEDNESDAY": { "open": "09:00:00", "closed": "22:00:00" },
+    "THURSDAY":  { "open": "09:00:00", "closed": "22:00:00" },
+    "FRIDAY":    { "open": "09:00:00", "closed": "23:00:00" },
+    "SATURDAY":  { "open": "10:00:00", "closed": "23:00:00" },
+    "SUNDAY":    { "open": "10:00:00", "closed": "21:00:00" }
   },
   "pictureUrls": [
-    "https://example.com/pictures/restaurant-front.jpg",
-    "https://example.com/pictures/restaurant-inside.jpg"
+    "https://picsum.photos/seed/petite-maison/600/400"
   ]
 }
 
-### Set Opening Hours
-PATCH http://localhost:8080/api/restaurants/{{restaurantId}}/opening-hours
+> {%
+    client.test("restaurant created", () => client.assert(response.status === 201));
+    client.global.set("restaurantId", response.body.restaurantId);
+%}
+
+### 8. Now it answers
+GET {{api}}/api/restaurants/me
+Authorization: Bearer {{ownerToken}}
+
+### 9. Dish A, which will go live and stay clean
+# The path: /api/{restaurantId}/dishes, with no "restaurants" segment. The
+# public menu is the one under /api/restaurants/{id}/dishes.
+POST {{api}}/api/{{restaurantId}}/dishes/new
+Authorization: Bearer {{ownerToken}}
 Content-Type: application/json
 
 {
-  "schedule": {
-    "WEDNESDAY": { "open": "09:00:00", "closed": "22:00:00"},
-    "SATURDAY": { "open": "09:00:00", "closed": "19:00:00" }
-  }
-
+  "name": "Waterzooi",
+  "type": "MAIN",
+  "foodTags": ["GLUTEN_FREE"],
+  "description": "Creamy chicken stew, the way Ghent makes it.",
+  "price": 19.50,
+  "pictureUrl": "https://images.pexels.com/photos/16357831/pexels-photo-16357831.jpeg"
 }
 
+> {%
+    client.global.set("dishA", response.body.dishId);
+%}
 
+### 10. Put dish A live
+POST {{api}}/api/{{restaurantId}}/dishes/{{dishA}}/publish
+Authorization: Bearer {{ownerToken}}
 
-### Change Restaurant Status (Open/Closed)
-PATCH http://localhost:8080/api/restaurants/{{restaurantId}}/status
+### 11. Dish B, which will end up with an edit waiting
+POST {{api}}/api/{{restaurantId}}/dishes/new
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "name": "Stoofvlees",
+  "type": "MAIN",
+  "foodTags": [],
+  "description": "Beef braised in brown ale.",
+  "price": 21.00,
+  "pictureUrl": "https://images.pexels.com/photos/3981486/pexels-photo-3981486.jpeg"
+}
+
+> {%
+    client.global.set("dishB", response.body.dishId);
+%}
+
+### 12. Put dish B live
+POST {{api}}/api/{{restaurantId}}/dishes/{{dishB}}/publish
+Authorization: Bearer {{ownerToken}}
+
+### 13. Edit dish B, which parks a draft over the live version
+# Customers keep ordering the 21.00 version until this draft is published.
+PUT {{api}}/api/{{restaurantId}}/dishes/{{dishB}}/draft
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "name": "Stoofvlees met frieten",
+  "type": "MAIN",
+  "foodTags": ["SPICY"],
+  "description": "Beef braised in brown ale, now served with fries.",
+  "price": 23.50,
+  "pictureUrl": "https://images.pexels.com/photos/38750885/pexels-photo-38750885.jpeg"
+}
+
+### 14. Dish C, left as a draft on purpose
+POST {{api}}/api/{{restaurantId}}/dishes/new
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "name": "Dame Blanche",
+  "type": "DESSERT",
+  "foodTags": ["VEGAN"],
+  "description": "Vanilla ice cream under warm chocolate.",
+  "price": 7.50,
+  "pictureUrl": "https://images.pexels.com/photos/10187177/pexels-photo-10187177.jpeg"
+}
+
+### 15. Dish D, which will sell out
+POST {{api}}/api/{{restaurantId}}/dishes/new
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "name": "Garnaalkroketten",
+  "type": "STARTER",
+  "foodTags": [],
+  "description": "Grey shrimp croquettes, fried to order.",
+  "price": 14.00,
+  "pictureUrl": "https://images.pexels.com/photos/14883839/pexels-photo-14883839.jpeg"
+}
+
+> {%
+    client.global.set("dishD", response.body.dishId);
+%}
+
+### 16. Put dish D live
+POST {{api}}/api/{{restaurantId}}/dishes/{{dishD}}/publish
+Authorization: Bearer {{ownerToken}}
+
+### 17. Sell dish D out
+# It stays on the menu, greyed out. Only a published dish can go out of stock.
+POST {{api}}/api/{{restaurantId}}/dishes/{{dishD}}/mark-out-of-stock
+Authorization: Bearer {{ownerToken}}
+
+### 18. Dish E, which will be pulled from the menu again
+POST {{api}}/api/{{restaurantId}}/dishes/new
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "name": "Paling in het groen",
+  "type": "MAIN",
+  "foodTags": [],
+  "description": "Eel in a green herb sauce.",
+  "price": 26.00,
+  "pictureUrl": "https://images.pexels.com/photos/10038682/pexels-photo-10038682.jpeg"
+}
+
+> {%
+    client.global.set("dishE", response.body.dishId);
+%}
+
+### 19. Put dish E live
+POST {{api}}/api/{{restaurantId}}/dishes/{{dishE}}/publish
+Authorization: Bearer {{ownerToken}}
+
+### 20. Pull dish E off the menu
+# Unpublishing is refused while a dish has a draft, which is why this one was
+# never edited.
+POST {{api}}/api/{{restaurantId}}/dishes/{{dishE}}/unpublish
+Authorization: Bearer {{ownerToken}}
+
+### 21. The owner's menu: five dishes, three live, one edit waiting
+GET {{api}}/api/{{restaurantId}}/dishes
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("counts add up", () => {
+        client.assert(response.body.dishes.length === 5, "expected 5 dishes");
+        client.assert(response.body.pendingChangesCount === 2,
+            "expected 2 pending: dish B's edit and dish C's unpublished draft");
+        client.assert(response.body.publishedCount === 3,
+            "expected 3 on the menu: A, B and D, with E pulled again");
+    });
+%}
+
+### 22. The same menu as a customer sees it, with no token at all
+# Drafts are absent and the sold-out dish comes back as available: false.
+GET {{api}}/api/restaurants/{{restaurantId}}/dishes
+
+> {%
+    client.test("customers see three dishes", () => {
+        client.assert(response.body.length === 3, "expected A, B and D");
+        const names = response.body.map(item => item.name);
+        client.assert(names.includes("Stoofvlees"),
+            "dish B should still read as the version customers can order");
+        client.assert(!names.includes("Dame Blanche"), "dish C is a draft and must stay hidden");
+    });
+%}
+
+### 23. Take dish A off the menu again (US-05)
+POST {{api}}/api/{{restaurantId}}/dishes/{{dishA}}/unpublish
+Authorization: Bearer {{ownerToken}}
+
+### 24. Two left on the menu
+GET {{api}}/api/{{restaurantId}}/dishes
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("dish A is off the menu", () => {
+        const dishA = response.body.dishes.find(d => d.dishId === client.global.get("dishA"));
+        client.assert(dishA.status === "UNPUBLISHED", "expected UNPUBLISHED, got " + dishA.status);
+        client.assert(response.body.publishedCount === 2, "expected B and D only");
+    });
+%}
+
+### 25. Put dish A straight back, without editing it first (US-04)
+# A dish with no draft republishes the version it already had. Requiring a draft
+# here left an unpublished dish with no way back except a pointless edit.
+POST {{api}}/api/{{restaurantId}}/dishes/{{dishA}}/publish
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("back on the menu in one call", () => client.assert(response.status === 200));
+%}
+
+### 26. Three again, and dish A is live
+GET {{api}}/api/{{restaurantId}}/dishes
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("dish A returned", () => {
+        const dishA = response.body.dishes.find(d => d.dishId === client.global.get("dishA"));
+        client.assert(dishA.status === "PUBLISHED", "expected PUBLISHED, got " + dishA.status);
+        client.assert(response.body.publishedCount === 3, "expected A, B and D");
+    });
+
+    // A local wall-clock time, which is what LocalDateTime reads. Three hours
+    // out, so it stays in the future even when the server runs on UTC.
+    const later = new Date(Date.now() + 3 * 60 * 60 * 1000);
+    const local = new Date(later.getTime() - later.getTimezoneOffset() * 60000);
+    client.global.set("scheduledTime", local.toISOString().slice(0, 19));
+%}
+
+### 27. Line the waiting changes up for later (US-07)
+# Dishes B and C are the ones holding drafts. Nothing goes live yet: the
+# background job publishes them once the moment passes.
+POST {{api}}/api/{{restaurantId}}/dishes/schedule-changes?scheduledTime={{scheduledTime}}
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("changes scheduled", () => client.assert(response.status === 200));
+%}
+
+### 28. Both waiting dishes now carry a time
+GET {{api}}/api/{{restaurantId}}/dishes
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("two dishes are booked in", () => {
+        const booked = response.body.dishes.filter(d => d.scheduledPublishAt !== null);
+        client.assert(booked.length === 2, "expected B and C, got " + booked.length);
+        client.assert(response.body.pendingChangesCount === 2,
+            "scheduling must not publish anything on its own");
+    });
+%}
+
+### 29. Change your mind and publish the lot now (US-06)
+POST {{api}}/api/{{restaurantId}}/dishes/apply-changes
+Authorization: Bearer {{ownerToken}}
+
+### 30. Nothing waiting, and the menu grew by one
+GET {{api}}/api/{{restaurantId}}/dishes
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("the batch went through", () => {
+        client.assert(response.body.pendingChangesCount === 0, "expected nothing left waiting");
+        client.assert(response.body.publishedCount === 4,
+            "expected A, B, C and D, with C added by the batch");
+        const booked = response.body.dishes.filter(d => d.scheduledPublishAt !== null);
+        client.assert(booked.length === 0, "publishing should clear the scheduled time");
+    });
+%}
+
+### 31. What customers can order now
+# The real check on US-06: a dish published as a batch has to reach the order
+# side too, not just the owner's own screen.
+GET {{api}}/api/restaurants/{{restaurantId}}/dishes
+
+> {%
+    client.test("the batch reached customers", () => {
+        client.assert(response.body.length === 4, "expected A, B, C and D");
+        const names = response.body.map(item => item.name);
+        client.assert(names.includes("Stoofvlees met frieten"), "dish B kept its old version");
+        client.assert(names.includes("Dame Blanche"), "dish C never reached the menu");
+        const soldOut = response.body.find(item => item.name === "Garnaalkroketten");
+        client.assert(soldOut.available === false, "dish D is on the menu but sold out");
+    });
+%}
+
+### 32. Close the doors early (US-09)
+PATCH {{api}}/api/restaurants/{{restaurantId}}/status
+Authorization: Bearer {{ownerToken}}
 Content-Type: application/json
 
 {
   "status": "MANUALLY_CLOSED"
 }
 
-### Create a Dish
-@restaurantId =e8b6df9e-0a3c-420c-881f-3daca0970aea
-POST http://localhost:8080/api/{{restaurantId}}/dishes/new
-Content-Type: application/json
-
-{
-  "name": "Poulet-DG",
-  "type": "MAIN",
-  "foodTags":  ["SPICY"],
-  "description": "Fried chicken + fried plantians and veggies",
-  "price":  20.0,
-  "pictureUrl": "https://example.com/pictures/dish.jpg"
-
-}
-
-### Publish Dish
-@dishId = 1363fa19-0055-487d-9766-6f177c30922e
-POST http://localhost:8080/api/{{restaurantId}}/dishes/{{dishId}}/publish
-Content-Type: application/json
-Accept: application/json
-
-###
-# curl -X POST http://localhost:8180/realms/keepdishesgoing/protocol/openid-connect/token
-#  -H "Content-Type: application/x-www-form-urlencoded"
-#  -d "grant_type=password"
-#  -d "client_id=backend-client"
-#  -d "client_secret=YOUR_CLIENT_SECRET"
-#  -d "username=owner"
-#  -d "password=owner"
-POST http://localhost:8180/realms/keepdishesgoing/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type = password &
-client_id = backend-client &
-client_secret = REMOVED-SECRET &
-username = owner &
-password = owner
-
-###
-# curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-#  http://localhost:8080/api/owner/restaurants/me
-GET http://localhost:8080/api/restaurants/me
-Authorization: Bearer REMOVED-SECRET",
-
-
-
+### 33. Hand the doors back to the opening hours (US-09)
+DELETE {{api}}/api/restaurants/{{restaurantId}}/status
+Authorization: Bearer {{ownerToken}}
