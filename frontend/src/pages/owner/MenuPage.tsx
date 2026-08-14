@@ -1,5 +1,6 @@
-import { Navigate } from 'react-router-dom';
-import { Alert, Stack, Typography } from '@mui/material';
+import { Link, Navigate } from 'react-router-dom';
+import { Alert, Button, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 
 import { MenuSummaryBar } from '../../components/owner/MenuSummaryBar';
 import { OwnerDishCard } from '../../components/owner/OwnerDishCard';
@@ -26,7 +27,18 @@ export function MenuPage() {
     <QueryState isLoading={isLoading} error={error}>
       {restaurant && (
         <Stack spacing={3}>
-          <Typography variant="h1">My menu</Typography>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}
+          >
+            <Typography variant="h1">My menu</Typography>
+            {/* Always available, however full the menu is: the cap is on
+                publishing a dish, not on writing one down. */}
+            <Button variant="contained" startIcon={<AddIcon />} component={Link} to="/owner/menu/new">
+              Add a dish
+            </Button>
+          </Stack>
 
           <QueryState isLoading={menuQuery.isLoading} error={menuQuery.error}>
             {menuQuery.data && (

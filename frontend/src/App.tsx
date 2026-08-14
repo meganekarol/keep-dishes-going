@@ -9,6 +9,8 @@ import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { OwnerDashboardPage } from './pages/owner/OwnerDashboardPage';
 import { CreateRestaurantPage } from './pages/owner/CreateRestaurantPage';
 import { MenuPage } from './pages/owner/MenuPage';
+import { NewDishPage } from './pages/owner/NewDishPage';
+import { EditDishPage } from './pages/owner/EditDishPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export default function App() {
@@ -43,6 +45,22 @@ export default function App() {
           element={
             <RequireOwner>
               <MenuPage />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="/owner/menu/new"
+          element={
+            <RequireOwner>
+              <NewDishPage />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="/owner/menu/:dishId/edit"
+          element={
+            <RequireOwner>
+              <EditDishPage />
             </RequireOwner>
           }
         />

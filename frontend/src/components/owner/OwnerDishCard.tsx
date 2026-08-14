@@ -1,4 +1,6 @@
-import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Link } from 'react-router-dom';
+import { Box, Button, Card, CardActions, CardContent, Chip, Stack, Typography } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 
 import type { DishState, DishVersion, OwnerDishView } from '../../types/api';
@@ -79,6 +81,19 @@ export function OwnerDishCard({ dish }: OwnerDishCardProps) {
           </Typography>
         )}
       </CardContent>
+
+      <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
+        {/* Editing a live dish is allowed: the change is parked as a draft, so
+            customers keep ordering what is on the menu until it is published. */}
+        <Button
+          size="small"
+          startIcon={<EditIcon />}
+          component={Link}
+          to={`/owner/menu/${dish.dishId}/edit`}
+        >
+          Edit
+        </Button>
+      </CardActions>
     </Card>
   );
 }
