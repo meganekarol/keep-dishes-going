@@ -52,7 +52,12 @@ export function MenuPage() {
                 ) : (
                   <Stack spacing={2}>
                     {menuQuery.data.dishes.map((dish) => (
-                      <OwnerDishCard key={dish.dishId} dish={dish} />
+                      <OwnerDishCard
+                        key={dish.dishId}
+                        dish={dish}
+                        restaurantId={restaurant.restaurantId}
+                        menuIsFull={menuQuery.data.publishedCount >= menuQuery.data.maxPublishedDishes}
+                      />
                     ))}
                   </Stack>
                 )}

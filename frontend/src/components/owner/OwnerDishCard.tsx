@@ -1,8 +1,7 @@
-import { Link } from 'react-router-dom';
-import { Box, Button, Card, CardActions, CardContent, Chip, Stack, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import { Box, Card, CardActions, CardContent, Chip, Stack, Typography } from '@mui/material';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 
+import { DishActions } from './DishActions';
 import type { DishState, DishVersion, OwnerDishView } from '../../types/api';
 import { formatDateTime, formatPrice, humanise } from '../../utils/format';
 
@@ -22,6 +21,8 @@ const STATUS_COLOURS: Record<DishState, 'default' | 'success' | 'warning'> = {
 
 interface OwnerDishCardProps {
   dish: OwnerDishView;
+  restaurantId: string;
+  menuIsFull: boolean;
 }
 
 /**
@@ -31,7 +32,7 @@ interface OwnerDishCardProps {
  * the point of the screen: the owner has to be able to see what customers can
  * order right now next to what they have changed but not published.
  */
-export function OwnerDishCard({ dish }: OwnerDishCardProps) {
+export function OwnerDishCard({ dish, restaurantId, menuIsFull }: OwnerDishCardProps) {
   const name = dish.published?.name ?? dish.draft?.name ?? 'Untitled dish';
 
   return (
@@ -83,16 +84,7 @@ export function OwnerDishCard({ dish }: OwnerDishCardProps) {
       </CardContent>
 
       <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
-        {/* Editing a live dish is allowed: the change is parked as a draft, so
-            customers keep ordering what is on the menu until it is published. */}
-        <Button
-          size="small"
-          startIcon={<EditIcon />}
-          component={Link}
-          to={`/owner/menu/${dish.dishId}/edit`}
-        >
-          Edit
-        </Button>
+        <DishActions dish={dish} restaurantId={restaurantId} menuIsFull={menuIsFull} />
       </CardActions>
     </Card>
   );
