@@ -44,7 +44,9 @@ public class ApplyPendingChangesUseCaseImpl implements ApplyPendingChangesUseCas
 
         List<Dish> pendingDishes = loadDishPort.loadPendingDishesByRestaurant(restaurantId);
         if (pendingDishes.isEmpty()) {
-            return;
+            // Returning quietly here answered 200 to an owner whose changes had
+            // in fact not gone live, usually because another tab published them.
+            throw new IllegalStateException("There are no changes waiting to be published");
         }
 
         // Publish each pending dish and enforce menu policy
