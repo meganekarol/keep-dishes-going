@@ -67,8 +67,8 @@ export function DishActions({ dish, restaurantId, menuIsFull }: DishActionsProps
             busy={busy}
             onClick={() => publish.mutate(dish.dishId)}
             disabledReason={
-              !hasDraft
-                ? 'There is nothing waiting to publish. Edit the dish first.'
+              !hasDraft && !dish.published
+                ? 'There is nothing to publish yet.'
                 : !onMenu && menuIsFull
                   ? 'Your menu is full. Take another dish off it first.'
                   : undefined
@@ -83,7 +83,7 @@ export function DishActions({ dish, restaurantId, menuIsFull }: DishActionsProps
             busy={busy}
             onClick={() => unpublish.mutate(dish.dishId)}
             disabledReason={hasDraft ? 'Publish the waiting changes first.' : undefined}
-            enabledHint="Customers stop seeing it. Putting it back needs an edit, because publishing works off a draft."
+            enabledHint="Customers stop seeing it. You can put it back whenever you like."
           />
         )}
 
