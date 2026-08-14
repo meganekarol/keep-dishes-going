@@ -4,6 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 
 import { MenuSummaryBar } from '../../components/owner/MenuSummaryBar';
 import { OwnerDishCard } from '../../components/owner/OwnerDishCard';
+import { PendingChangesActions } from '../../components/owner/PendingChangesActions';
 import { QueryState } from '../../components/shared/QueryState';
 import { useMyRestaurant } from '../../hooks/useMyRestaurant';
 import { useOwnerMenu } from '../../hooks/useOwnerMenu';
@@ -44,6 +45,10 @@ export function MenuPage() {
             {menuQuery.data && (
               <Stack spacing={3}>
                 <MenuSummaryBar menu={menuQuery.data} />
+                <PendingChangesActions
+                  restaurantId={restaurant.restaurantId}
+                  menu={menuQuery.data}
+                />
 
                 {menuQuery.data.dishes.length === 0 ? (
                   <Alert severity="info">

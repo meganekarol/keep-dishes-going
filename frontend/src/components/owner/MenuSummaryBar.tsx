@@ -14,7 +14,6 @@ interface MenuSummaryBarProps {
  */
 export function MenuSummaryBar({ menu }: MenuSummaryBarProps) {
   const full = menu.publishedCount >= menu.maxPublishedDishes;
-  const pending = menu.pendingChangesCount;
 
   return (
     <Stack spacing={2}>
@@ -34,13 +33,6 @@ export function MenuSummaryBar({ menu }: MenuSummaryBarProps) {
       {full && (
         <Alert severity="info">
           Your menu is full. Take a dish off the menu before putting another one live.
-        </Alert>
-      )}
-
-      {pending > 0 && (
-        <Alert severity="warning">
-          {pending === 1 ? '1 dish has' : `${pending} dishes have`} changes that customers cannot
-          see yet.
         </Alert>
       )}
     </Stack>
