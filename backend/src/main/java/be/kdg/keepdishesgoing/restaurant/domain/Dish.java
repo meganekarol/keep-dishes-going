@@ -55,13 +55,22 @@ public class Dish {
         this.draftVersion = newDraft;
     }
 
+    /**
+     * Put this dish on the menu (US-04).
+     *
+     * <p>The draft goes live when there is one. Without a draft the dish keeps
+     * the version it had, which is what puts an unpublished dish back on the
+     * menu (US-05): requiring a draft there left a dish that had been taken off
+     * with no way back except a pointless edit.
+     */
     public void publishDish()  {
-        // Ensure that a draft version actually exists before trying to publish it
-        if (!hasDraft()) {
-            throw new IllegalStateException("No draft version to publish");
+        if (!hasDraft() && publishedVersion == null) {
+            throw new IllegalStateException("No version to publish");
         }
-        this.publishedVersion = draftVersion;
-        this.draftVersion = null;
+        if (hasDraft()) {
+            this.publishedVersion = draftVersion;
+            this.draftVersion = null;
+        }
         this.status = DishState.PUBLISHED;
         this.lastPublishedAt = LocalDateTime.now();
         this.scheduledPublishAt = null;
