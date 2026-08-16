@@ -3,6 +3,7 @@ package be.kdg.keepdishesgoing.order.adapter.out.projections;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderStatus;
 import be.kdg.keepdishesgoing.order.port.out.LoadOrderSummaryPort;
 import be.kdg.keepdishesgoing.order.port.out.OrderSummaryData;
+import be.kdg.keepdishesgoing.order.port.out.SaveOrderSummaryPort;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ import java.util.UUID;
  * Reads the order read model and maps the rows onto the outbound port's record.
  */
 @Component
-public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort {
+public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort, SaveOrderSummaryPort {
 
     private final OrderSummaryJpaRepository summaryRepository;
 
@@ -34,9 +35,31 @@ public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort {
         return summaryRepository.findIdsByStatusPlacedBefore(OrderStatus.PENDING_ACCEPTANCE, cutoff);
     }
 
+    @Override
+    public void replaceAll(List<OrderSummaryData> summaries) {
+        summaryRepository.deleteAllInBatch();
+        summaryRepository.saveAll(summaries.stream().map(OrderSummaryJpaAdapter::toEntity).toList());
+    }
+
+    private static OrderSummaryJpaEntity toEntity(OrderSummaryData data) {
+        OrderSummaryJpaEntity entity = new OrderSummaryJpaEntity(
+                data.orderId(),
+                data.restaurantId(),
+                data.customerName(),
+                data.deliveryAddress(),
+                data.itemSummary(),
+                data.itemCount(),
+                data.totalPrice(),
+                data.placedAt()
+        );
+        entity.restoreProgress(data.status(), data.acceptedAt(), data.readyAt(), data.rejectionReason());
+        return entity;
+    }
+
     private static OrderSummaryData toData(OrderSummaryJpaEntity entity) {
         return new OrderSummaryData(
                 entity.getOrderId(),
+                entity.getRestaurantId(),
                 entity.getStatus(),
                 entity.getCustomerName(),
                 entity.getDeliveryAddress(),

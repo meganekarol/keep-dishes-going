@@ -1,6 +1,7 @@
 package be.kdg.keepdishesgoing.order.adapter.out.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,4 +28,15 @@ public interface OrderEventJpaRepository extends JpaRepository<OrderEventJpaEnti
      * Count events for an order
      */
     long countByOrderId(UUID orderId);
+
+    /**
+     * Every distinct order in the store, oldest first, for rebuilding the read
+     * model.
+     */
+    @Query("""
+            SELECT event.orderId FROM OrderEventJpaEntity event
+            GROUP BY event.orderId
+            ORDER BY MIN(event.occurredOn)
+            """)
+    List<UUID> findAllOrderIds();
 }

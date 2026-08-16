@@ -3,15 +3,16 @@ package be.kdg.keepdishesgoing.order.adapter.in;
 import be.kdg.keepdishesgoing.common.events.*;
 import be.kdg.keepdishesgoing.order.adapter.out.projections.OrderSummaryJpaEntity;
 import be.kdg.keepdishesgoing.order.adapter.out.projections.OrderSummaryJpaRepository;
+import be.kdg.keepdishesgoing.order.port.out.OrderSummaryData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Keeps the per-restaurant order read model in step with the order lifecycle.
@@ -38,24 +39,18 @@ public class OrderSummaryProjectionListener {
         log.info("Updating projection: order {} placed at restaurant {}",
                 event.orderId(), event.restaurantId());
 
-        String items = event.lines().stream()
-                .map(line -> line.quantity() + "x " + line.dishName())
-                .collect(Collectors.joining(", "));
-
-        int itemCount = event.lines().stream()
-                .mapToInt(OrderPlacedEvent.LineItem::quantity)
-                .sum();
-
-        String address = "%s %s, %s %s".formatted(
-                event.street(), event.number(), event.postalCode(), event.city());
+        List<OrderSummaryData.ItemLine> lines = event.lines().stream()
+                .map(line -> new OrderSummaryData.ItemLine(line.dishName(), line.quantity()))
+                .toList();
 
         summaryRepository.save(new OrderSummaryJpaEntity(
                 event.orderId(),
                 event.restaurantId(),
                 event.customerName(),
-                address,
-                items,
-                itemCount,
+                OrderSummaryData.describeAddress(
+                        event.street(), event.number(), event.postalCode(), event.city()),
+                OrderSummaryData.describeItems(lines),
+                OrderSummaryData.countItems(lines),
                 event.totalPrice(),
                 event.occurredOn()
         ));

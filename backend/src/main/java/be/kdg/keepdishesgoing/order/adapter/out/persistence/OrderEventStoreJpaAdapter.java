@@ -92,6 +92,11 @@ public class OrderEventStoreJpaAdapter implements LoadOrderPort, SaveOrderPort {
         return Optional.of(order);
     }
 
+    @Override
+    public List<UUID> findAllOrderIds() {
+        return eventRepository.findAllOrderIds();
+    }
+
     private void replayInto(Order order, List<OrderEventJpaEntity> events) {
         for (OrderEventJpaEntity entity : events) {
             order.apply(deserializeEvent(entity));

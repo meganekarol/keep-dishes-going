@@ -78,6 +78,18 @@ public class OrderSummaryJpaEntity {
         this.placedAt = placedAt;
     }
 
+    /**
+     * Sets the lifecycle fields outright, for rebuilding a row from an order
+     * that has already run its course.
+     */
+    public void restoreProgress(OrderStatus status, LocalDateTime acceptedAt,
+                                LocalDateTime readyAt, String rejectionReason) {
+        this.status = status;
+        this.acceptedAt = acceptedAt;
+        this.readyAt = readyAt;
+        this.rejectionReason = rejectionReason;
+    }
+
     public void markAccepted(LocalDateTime acceptedAt) {
         this.status = OrderStatus.ACCEPTED;
         this.acceptedAt = acceptedAt;
