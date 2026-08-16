@@ -4,6 +4,7 @@ import be.kdg.keepdishesgoing.order.port.in.*;
 import be.kdg.keepdishesgoing.order.port.in.commands.AcceptOrderCommand;
 import be.kdg.keepdishesgoing.order.port.in.commands.MarkOrderReadyCommand;
 import be.kdg.keepdishesgoing.order.port.in.commands.RejectOrderCommand;
+import be.kdg.keepdishesgoing.order.port.in.queries.RestaurantOrderSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,16 +33,30 @@ public class RestaurantOrderController {
     private final AcceptOrderUseCase acceptOrderUseCase;
     private final RejectOrderUseCase rejectOrderUseCase;
     private final MarkOrderReadyUseCase markOrderReadyUseCase;
-    
+    private final ListRestaurantOrdersQuery listRestaurantOrdersQuery;
+
     public RestaurantOrderController(
             AcceptOrderUseCase acceptOrderUseCase,
             RejectOrderUseCase rejectOrderUseCase,
-            MarkOrderReadyUseCase markOrderReadyUseCase) {
+            MarkOrderReadyUseCase markOrderReadyUseCase,
+            ListRestaurantOrdersQuery listRestaurantOrdersQuery) {
         this.acceptOrderUseCase = acceptOrderUseCase;
         this.rejectOrderUseCase = rejectOrderUseCase;
         this.markOrderReadyUseCase = markOrderReadyUseCase;
+        this.listRestaurantOrdersQuery = listRestaurantOrdersQuery;
     }
-    
+
+    /**
+     * The orders placed at this restaurant, newest first (US-10).
+     *
+     * <p>Intended to be polled: an order arrives when a customer checks out,
+     * which the kitchen has no other way of hearing about.
+     */
+    @GetMapping
+    public ResponseEntity<List<RestaurantOrderSummary>> listOrders(@PathVariable UUID restaurantId) {
+        return ResponseEntity.ok(listRestaurantOrdersQuery.listOrders(restaurantId));
+    }
+
     /**
      * Accept an order
      */
