@@ -18,7 +18,9 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "order_summaries", schema = "kdg_order", indexes = {
-    @Index(name = "idx_summary_restaurant", columnList = "restaurantId")
+    @Index(name = "idx_summary_restaurant", columnList = "restaurantId"),
+    // The auto-rejection run asks for these two every minute.
+    @Index(name = "idx_summary_status_placed", columnList = "status, placedAt")
 })
 public class OrderSummaryJpaEntity {
 

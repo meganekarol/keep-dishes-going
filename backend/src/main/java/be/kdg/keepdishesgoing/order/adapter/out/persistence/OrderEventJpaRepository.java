@@ -3,7 +3,6 @@ package be.kdg.keepdishesgoing.order.adapter.out.persistence;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,10 +27,4 @@ public interface OrderEventJpaRepository extends JpaRepository<OrderEventJpaEnti
      * Count events for an order
      */
     long countByOrderId(UUID orderId);
-
-    /**
-     * Find all events of a given type that occurred before a cut-off time.
-     * Used by the auto-rejection scheduler to locate stale placed orders.
-     */
-    List<OrderEventJpaEntity> findByEventTypeAndOccurredOnBefore(String eventType, LocalDateTime cutoff);
 }

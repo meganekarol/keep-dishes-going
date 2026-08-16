@@ -1,9 +1,11 @@
 package be.kdg.keepdishesgoing.order.adapter.out.projections;
 
+import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderStatus;
 import be.kdg.keepdishesgoing.order.port.out.LoadOrderSummaryPort;
 import be.kdg.keepdishesgoing.order.port.out.OrderSummaryData;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +27,11 @@ public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort {
                 .stream()
                 .map(OrderSummaryJpaAdapter::toData)
                 .toList();
+    }
+
+    @Override
+    public List<UUID> findPendingAcceptanceBefore(LocalDateTime cutoff) {
+        return summaryRepository.findIdsByStatusPlacedBefore(OrderStatus.PENDING_ACCEPTANCE, cutoff);
     }
 
     private static OrderSummaryData toData(OrderSummaryJpaEntity entity) {
