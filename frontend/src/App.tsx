@@ -5,6 +5,7 @@ import { RequireOwner } from './components/auth/RequireOwner';
 import { LandingPage } from './pages/LandingPage';
 import { RestaurantListPage } from './pages/RestaurantListPage';
 import { RestaurantDetailPage } from './pages/RestaurantDetailPage';
+import { BasketPage } from './pages/BasketPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { OwnerDashboardPage } from './pages/owner/OwnerDashboardPage';
 import { CreateRestaurantPage } from './pages/owner/CreateRestaurantPage';
@@ -22,6 +23,7 @@ export default function App() {
         {/* Open to everyone: customers order without an account (US-30). */}
         <Route path="/restaurants" element={<RestaurantListPage />} />
         <Route path="/restaurants/:restaurantId" element={<RestaurantDetailPage />} />
+        <Route path="/basket" element={<BasketPage />} />
         <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
 
         <Route
