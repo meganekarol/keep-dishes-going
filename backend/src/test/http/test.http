@@ -403,3 +403,233 @@ Content-Type: application/json
 ### 33. Hand the doors back to the opening hours (US-09)
 DELETE {{api}}/api/restaurants/{{restaurantId}}/status
 Authorization: Bearer {{ownerToken}}
+
+### 34. Keep the doors open for the order steps below
+PATCH {{api}}/api/restaurants/{{restaurantId}}/status
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "status": "MANUALLY_OPENED"
+}
+
+### 35. The owner has no orders yet (US-10)
+GET {{api}}/api/restaurants/{{restaurantId}}/orders
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("the list starts empty", () => {
+        client.assert(response.status === 200);
+        client.assert(response.body.length === 0, "expected no orders, got " + response.body.length);
+    });
+%}
+
+### 36. What a customer can order, and at what price
+# Read from the public menu so the order below is built the way a customer
+# would build it, out of what they were actually shown.
+GET {{api}}/api/restaurants/{{restaurantId}}/dishes
+
+> {%
+    const dessert = response.body.find(item => item.name === "Dame Blanche");
+    const main = response.body.find(item => item.name === "Stoofvlees met frieten");
+
+    client.test("both dishes are orderable", () => {
+        client.assert(dessert && dessert.available, "Dame Blanche should be on the menu");
+        client.assert(main && main.available, "Stoofvlees met frieten should be on the menu");
+    });
+
+    client.global.set("dessertId", dessert.dishId);
+    client.global.set("mainId", main.dishId);
+    // Two desserts and one main, priced off the menu the customer just read.
+    client.global.set("expectedTotal", dessert.price * 2 + main.price);
+%}
+
+### 37. Place an order as a guest, with no token at all (US-30)
+POST {{api}}/api/orders
+Content-Type: application/json
+
+{
+  "restaurantId": "{{restaurantId}}",
+  "customerName": "Jonas Peeters",
+  "customerEmail": "jonas@example.com",
+  "deliveryStreet": "Meir",
+  "deliveryNumber": "12",
+  "deliveryPostalCode": "2000",
+  "deliveryCity": "Antwerpen",
+  "deliveryCountry": "Belgium",
+  "items": [
+    { "dishId": "{{dessertId}}", "quantity": 2 },
+    { "dishId": "{{mainId}}", "quantity": 1 }
+  ]
+}
+
+> {%
+    client.test("a guest could order", () => client.assert(response.status === 201));
+    client.global.set("orderId", response.body.orderId);
+%}
+
+### 38. The customer is charged what the menu advertised
+#The order module prices an
+# order from its own copy of the dishes, and that copy used to keep whatever a
+# dish was first published as: dish B was edited from 21.00 to 23.50 in step 13
+# and published in step 29, and the customer was still billed 21.00 under the
+# old name "Stoofvlees".
+GET {{api}}/api/orders/{{orderId}}
+
+> {%
+    client.test("priced off the published version", () => {
+        const main = response.body.lines.find(line => line.dishId === client.global.get("mainId"));
+        client.assert(main.dishName === "Stoofvlees met frieten",
+            "expected the published name, got " + main.dishName);
+        client.assert(response.body.totalPrice === client.global.get("expectedTotal"),
+            "expected " + client.global.get("expectedTotal") + ", got " + response.body.totalPrice);
+    });
+%}
+
+### 39. The order reaches the owner's screen (US-10)
+GET {{api}}/api/restaurants/{{restaurantId}}/orders
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("the kitchen can see it", () => {
+        client.assert(response.body.length === 1, "expected 1 order, got " + response.body.length);
+        const order = response.body[0];
+        client.assert(order.status === "PENDING_ACCEPTANCE", "status was " + order.status);
+        client.assert(order.customerName === "Jonas Peeters");
+        client.assert(order.itemCount === 3, "expected 3 dishes, got " + order.itemCount);
+        client.assert(order.deliveryAddress === "Meir 12, 2000 Antwerpen",
+            "address read " + order.deliveryAddress);
+        client.assert(order.itemSummary.includes("2x Dame Blanche"),
+            "itemSummary read " + order.itemSummary);
+    });
+%}
+
+### 40. A restaurant's order book is nobody else's business
+# No token at all. Tracking one order by its id is open (step 38), listing
+# every order a restaurant has taken is not.
+GET {{api}}/api/restaurants/{{restaurantId}}/orders
+
+> {%
+    client.test("the list needs a token", () => client.assert(response.status === 401,
+        "expected 401, got " + response.status));
+%}
+
+### 41. Take the order on (US-10)
+POST {{api}}/api/restaurants/{{restaurantId}}/orders/{{orderId}}/accept
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("accepted", () => client.assert(response.status === 200));
+%}
+
+### 42. Accepting it twice is refused
+# The read model lists the order, but the aggregate is what decides: it has
+# already left PENDING_ACCEPTANCE and will not go back.
+POST {{api}}/api/restaurants/{{restaurantId}}/orders/{{orderId}}/accept
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("a second accept is turned down", () => client.assert(response.status === 409,
+        "expected 409, got " + response.status));
+%}
+
+### 43. Cooked and waiting for a courier (US-12)
+POST {{api}}/api/restaurants/{{restaurantId}}/orders/{{orderId}}/ready
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("marked ready", () => client.assert(response.status === 200));
+%}
+
+### 44. The owner's list followed both steps
+# Proves the read model is fed by the order's own events rather than written
+# once at checkout and left behind.
+GET {{api}}/api/restaurants/{{restaurantId}}/orders
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("the projection kept up", () => {
+        const order = response.body.find(o => o.orderId === client.global.get("orderId"));
+        client.assert(order.status === "READY_FOR_PICKUP", "status was " + order.status);
+        client.assert(order.acceptedAt !== null, "acceptedAt was never filled in");
+        client.assert(order.readyAt !== null, "readyAt was never filled in");
+    });
+%}
+
+### 45. The customer sees the same progress (US-24, US-25)
+GET {{api}}/api/orders/{{orderId}}
+
+> {%
+    client.test("tracking agrees with the kitchen", () => {
+        client.assert(response.body.status === "READY_FOR_PICKUP");
+        client.assert(response.body.lines.length === 2, "expected both lines");
+        client.assert(response.body.acceptedAt !== null && response.body.readyAt !== null);
+    });
+%}
+
+### 46. A second order, this one to be turned away
+POST {{api}}/api/orders
+Content-Type: application/json
+
+{
+  "restaurantId": "{{restaurantId}}",
+  "customerName": "Ella Janssens",
+  "customerEmail": "ella@example.com",
+  "deliveryStreet": "Kammenstraat",
+  "deliveryNumber": "7",
+  "deliveryPostalCode": "2000",
+  "deliveryCity": "Antwerpen",
+  "deliveryCountry": "Belgium",
+  "items": [
+    { "dishId": "{{dessertId}}", "quantity": 1 }
+  ]
+}
+
+> {%
+    client.global.set("secondOrderId", response.body.orderId);
+%}
+
+### 47. Turn it away with a reason (US-10)
+POST {{api}}/api/restaurants/{{restaurantId}}/orders/{{secondOrderId}}/reject
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{
+  "reason": "The kitchen is closing early tonight."
+}
+
+> {%
+    client.test("rejected", () => client.assert(response.status === 200));
+%}
+
+### 48. The reason is kept, and the newest order is listed first
+GET {{api}}/api/restaurants/{{restaurantId}}/orders
+Authorization: Bearer {{ownerToken}}
+
+> {%
+    client.test("both orders read correctly", () => {
+        client.assert(response.body.length === 2, "expected 2 orders, got " + response.body.length);
+        client.assert(response.body[0].orderId === client.global.get("secondOrderId"),
+            "newest order should come first");
+
+        const turnedAway = response.body[0];
+        client.assert(turnedAway.status === "REJECTED", "status was " + turnedAway.status);
+        client.assert(turnedAway.rejectionReason === "The kitchen is closing early tonight.",
+            "reason read " + turnedAway.rejectionReason);
+    });
+%}
+
+### 49. The customer is told why (US-24)
+GET {{api}}/api/orders/{{secondOrderId}}
+
+> {%
+    client.test("the reason reaches the customer", () => {
+        client.assert(response.body.status === "REJECTED");
+        client.assert(response.body.rejectionReason === "The kitchen is closing early tonight.");
+    });
+%}
+
+### 50. Hand the doors back to the opening hours (US-09)
+# Undoes step 34, so the restaurant is left following its own schedule.
+DELETE {{api}}/api/restaurants/{{restaurantId}}/status
+Authorization: Bearer {{ownerToken}}
