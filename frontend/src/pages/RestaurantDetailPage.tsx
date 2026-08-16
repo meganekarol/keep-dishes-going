@@ -1,11 +1,18 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Alert,
   Box,
+  Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   MenuItem as SelectItem,
+  Snackbar,
   Stack,
   TextField,
   ToggleButton,
@@ -16,8 +23,9 @@ import {
 import { MenuItemCard } from '../components/catalogue/MenuItemCard';
 import { OpeningHoursTable } from '../components/shared/OpeningHoursTable';
 import { QueryState } from '../components/shared/QueryState';
+import BasketContext from '../context/BasketContext';
 import { useMenu, useRestaurant } from '../hooks/useRestaurants';
-import type { DishSortOrder, DishType, FoodTag } from '../types/api';
+import type { DishSortOrder, DishType, FoodTag, MenuItem } from '../types/api';
 import { humanise } from '../utils/format';
 
 const DISH_TYPES: DishType[] = ['STARTER', 'MAIN', 'DESSERT'];
@@ -45,6 +53,35 @@ export function RestaurantDetailPage() {
 
   const restaurantQuery = useRestaurant(restaurantId);
   const menuQuery = useMenu(restaurantId, { type, foodTags, sort });
+
+  const { basket, addItem } = useContext(BasketContext);
+  const [dishFromElsewhere, setDishFromElsewhere] = useState<MenuItem | null>(null);
+  const [justAdded, setJustAdded] = useState('');
+
+  const basketIsForThisRestaurant = basket?.restaurantId === restaurantId;
+
+  function putInBasket(item: MenuItem) {
+    addItem(
+      { restaurantId, restaurantName: restaurantQuery.data?.name ?? '' },
+      { dishId: item.dishId, name: item.name, unitPrice: item.price, quantity: 1 },
+    );
+    setJustAdded(item.name);
+  }
+
+  function handleAdd(item: MenuItem) {
+    // One order goes to one kitchen, so this dish and a basket from another
+    // restaurant cannot travel together. Ask before emptying that basket.
+    if (basket && !basketIsForThisRestaurant) {
+      setDishFromElsewhere(item);
+      return;
+    }
+    putInBasket(item);
+  }
+
+  function quantityInBasket(dishId: string) {
+    if (!basketIsForThisRestaurant) return 0;
+    return basket?.lines.find((line) => line.dishId === dishId)?.quantity ?? 0;
+  }
 
   return (
     <QueryState isLoading={restaurantQuery.isLoading} error={restaurantQuery.error}>
@@ -132,10 +169,47 @@ export function RestaurantDetailPage() {
                   gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
                 }}
               >
-                {menuQuery.data?.map((item) => <MenuItemCard key={item.dishId} item={item} />)}
+                {menuQuery.data?.map((item) => (
+                  <MenuItemCard
+                    key={item.dishId}
+                    item={item}
+                    onAdd={handleAdd}
+                    inBasket={quantityInBasket(item.dishId)}
+                  />
+                ))}
               </Box>
             )}
           </QueryState>
+
+          <Dialog open={dishFromElsewhere !== null} onClose={() => setDishFromElsewhere(null)}>
+            <DialogTitle>Start a new basket?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Your basket still holds dishes from {basket?.restaurantName}. Adding{' '}
+                {dishFromElsewhere?.name} empties it and starts over at{' '}
+                {restaurantQuery.data.name}.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDishFromElsewhere(null)}>Keep my basket</Button>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  if (dishFromElsewhere) putInBasket(dishFromElsewhere);
+                  setDishFromElsewhere(null);
+                }}
+              >
+                Start a new basket
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Snackbar
+            open={justAdded !== ''}
+            autoHideDuration={3000}
+            onClose={() => setJustAdded('')}
+            message={`${justAdded} added to your basket`}
+          />
         </>
       )}
     </QueryState>

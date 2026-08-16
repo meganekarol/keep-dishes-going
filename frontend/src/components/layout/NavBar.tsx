@@ -1,12 +1,15 @@
 import { useContext } from 'react';
-import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
+import { AppBar, Badge, Box, Button, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 import { Link } from 'react-router-dom';
 
+import BasketContext from '../../context/BasketContext';
 import SecurityContext from '../../context/SecurityContext';
 
 export function NavBar() {
   const { isAuthenticated, loggedInUser, login, logout } = useContext(SecurityContext);
+  const { itemCount } = useContext(BasketContext);
 
   return (
     <AppBar position="static" color="primary" elevation={0}>
@@ -22,6 +25,18 @@ export function NavBar() {
         </Typography>
 
         <Box sx={{ flexGrow: 1 }} />
+
+        {/* Hidden while empty: an owner working on their menu has no basket,
+            and an empty one is nothing to click. */}
+        {itemCount > 0 && (
+          <Tooltip title="Your basket">
+            <IconButton color="inherit" component={Link} to="/basket" sx={{ mr: 1 }}>
+              <Badge badgeContent={itemCount} color="secondary">
+                <ShoppingBasketIcon />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+        )}
 
         {isAuthenticated() ? (
           <>

@@ -1,18 +1,44 @@
-import { Box, Card, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Chip,
+  Stack,
+  Typography,
+} from '@mui/material';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 
 import type { MenuItem } from '../../types/api';
 import { formatPrice, humanise } from '../../utils/format';
+
+interface MenuItemCardProps {
+  item: MenuItem;
+  /** Left out on a menu that is only being read, which then shows no button. */
+  onAdd?: (item: MenuItem) => void;
+  /** How many of this dish are in the basket already. */
+  inBasket?: number;
+}
 
 /**
  * Out-of-stock dishes stay on the menu with `available: false` rather than
  * disappearing a customer who came for one deserves to see it is temporarily
  * off, not to wonder whether they misremembered.
  */
-export function MenuItemCard({ item }: { item: MenuItem }) {
+export function MenuItemCard({ item, onAdd, inBasket = 0 }: MenuItemCardProps) {
   return (
-    <Card sx={{ height: '100%', opacity: item.available ? 1 : 0.6 }}>
+    <Card
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        opacity: item.available ? 1 : 0.6,
+      }}
+    >
       {item.pictureUrl && <CardMedia component="img" height="140" image={item.pictureUrl} alt="" />}
-      <CardContent>
+      <CardContent sx={{ flexGrow: 1 }}>
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
             {item.name}
@@ -34,6 +60,22 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
           {!item.available && <Chip size="small" color="warning" label="Out of stock" />}
         </Box>
       </CardContent>
+
+      {onAdd && (
+        <CardActions sx={{ justifyContent: 'space-between' }}>
+          <Button
+            size="small"
+            startIcon={<AddShoppingCartIcon />}
+            // The backend refuses an order holding a sold-out dish, so offering
+            // it here would only produce a rejection at checkout.
+            disabled={!item.available}
+            onClick={() => onAdd(item)}
+          >
+            Add to basket
+          </Button>
+          {inBasket > 0 && <Chip size="small" color="primary" label={`${inBasket} in basket`} />}
+        </CardActions>
+      )}
     </Card>
   );
 }
