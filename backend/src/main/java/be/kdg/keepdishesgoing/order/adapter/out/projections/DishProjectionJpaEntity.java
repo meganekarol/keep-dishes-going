@@ -99,6 +99,21 @@ public class DishProjectionJpaEntity {
         return lastUpdated;
     }
     
+    /**
+     * Copies the newly published version over this projection.
+     *
+     * <p>Without this a republished dish kept whatever it was first created
+     * with, so a customer was charged the old price under the old name while
+     * the menu advertised the new one.
+     */
+    public void updateDetails(String dishName, String dishType, BigDecimal price, String description) {
+        this.dishName = dishName;
+        this.dishType = dishType;
+        this.price = price;
+        this.description = description;
+        this.lastUpdated = LocalDateTime.now();
+    }
+
     public void markAsUnpublished() {
         this.status = DishProjectionStatus.UNPUBLISHED;
         this.lastUpdated = LocalDateTime.now();

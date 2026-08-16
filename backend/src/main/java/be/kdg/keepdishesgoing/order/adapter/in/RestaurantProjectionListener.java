@@ -104,12 +104,17 @@ public class RestaurantProjectionListener {
                 event.description(),
                 DishProjectionStatus.AVAILABLE
             ));
-        
-        // If it was unpublished before, mark as available again
-        if (projection.getStatus() == DishProjectionStatus.UNPUBLISHED) {
-            projection.markAsAvailable();
-        }
-        
+
+        // Overwrite the details every time, not only on the first publish. This
+        // event carries the version that just went live, and it is what
+        // customers are about to be charged.
+        projection.updateDetails(event.dishName(), event.dishType(), event.price(), event.description());
+
+        // Publishing puts a dish on the menu whatever it was before, so the
+        // projection follows: an out-of-stock dish that is published again is
+        // back on sale, not still sold out.
+        projection.markAsAvailable();
+
         dishProjectionRepository.save(projection);
         log.debug("Dish projection updated for: {}", event.dishId());
     }
