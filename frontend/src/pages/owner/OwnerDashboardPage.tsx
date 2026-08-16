@@ -29,9 +29,14 @@ export function OwnerDashboardPage() {
             sx={{ alignItems: { sm: 'center' }, justifyContent: 'space-between' }}
           >
             <Typography variant="h1">My restaurant</Typography>
-            <Button variant="contained" component={Link} to="/owner/menu">
-              Manage my menu
-            </Button>
+            <Stack direction="row" spacing={2}>
+              <Button variant="contained" component={Link} to="/owner/orders">
+                Orders
+              </Button>
+              <Button variant="contained" component={Link} to="/owner/menu">
+                Manage my menu
+              </Button>
+            </Stack>
           </Stack>
           <RestaurantStatusToggle
             restaurantId={restaurant.restaurantId}

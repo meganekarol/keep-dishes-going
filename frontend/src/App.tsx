@@ -11,6 +11,7 @@ import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { OwnerDashboardPage } from './pages/owner/OwnerDashboardPage';
 import { CreateRestaurantPage } from './pages/owner/CreateRestaurantPage';
 import { MenuPage } from './pages/owner/MenuPage';
+import { OwnerOrdersPage } from './pages/owner/OwnerOrdersPage';
 import { NewDishPage } from './pages/owner/NewDishPage';
 import { EditDishPage } from './pages/owner/EditDishPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -41,6 +42,14 @@ export default function App() {
           element={
             <RequireOwner>
               <CreateRestaurantPage />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="/owner/orders"
+          element={
+            <RequireOwner>
+              <OwnerOrdersPage />
             </RequireOwner>
           }
         />
