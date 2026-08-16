@@ -6,6 +6,7 @@ import { LandingPage } from './pages/LandingPage';
 import { RestaurantListPage } from './pages/RestaurantListPage';
 import { RestaurantDetailPage } from './pages/RestaurantDetailPage';
 import { BasketPage } from './pages/BasketPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { OwnerDashboardPage } from './pages/owner/OwnerDashboardPage';
 import { CreateRestaurantPage } from './pages/owner/CreateRestaurantPage';
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/restaurants" element={<RestaurantListPage />} />
         <Route path="/restaurants/:restaurantId" element={<RestaurantDetailPage />} />
         <Route path="/basket" element={<BasketPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
 
         <Route
