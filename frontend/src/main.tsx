@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 
 import App from './App';
+import BasketContextProvider from './context/BasketContextProvider';
 import SecurityContextProvider from './context/SecurityContextProvider';
 import { theme } from './theme';
 import './index.css';
@@ -25,12 +26,14 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>
     <SecurityContextProvider>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </ThemeProvider>
+      <BasketContextProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ThemeProvider>
+      </BasketContextProvider>
     </SecurityContextProvider>
   </QueryClientProvider>,
 );
