@@ -235,6 +235,29 @@ export interface OrderTracking {
   deliveredAt: string | null;
 }
 
+/**
+ * One order as its restaurant sees it (US-10), from
+ * GET /api/restaurants/{restaurantId}/orders.
+ *
+ * Less than the customer's tracking view: a kitchen needs the dishes, the total
+ * and how long the order has been waiting, not the courier's timestamps.
+ */
+export interface RestaurantOrderSummary {
+  orderId: string;
+  status: OrderStatus;
+  customerName: string;
+  deliveryAddress: string;
+  /** The ordered dishes as one line, e.g. `2x Frieten, 1x Stoofvlees`. */
+  itemSummary: string;
+  itemCount: number;
+  totalPrice: number;
+  /** What the five-minute acceptance deadline counts from. */
+  placedAt: string;
+  acceptedAt: string | null;
+  readyAt: string | null;
+  rejectionReason: string | null;
+}
+
 /** The one error body every endpoint returns. */
 export interface ErrorResponse {
   status: number;
