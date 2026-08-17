@@ -1,10 +1,12 @@
 package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Address;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.OwnerId;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
+import be.kdg.keepdishesgoing.restaurant.port.out.GeocodeAddressPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
@@ -20,11 +22,14 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
     private final LoadRestaurantPort loadRestaurantPort;
     private final SaveRestaurantPort saveRestaurantPort;
     private final PublishEventPort publishEventPort;
+    private final GeocodeAddressPort geocodeAddressPort;
 
-    public CreateRestaurantUseCaseImpl(LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort, PublishEventPort publishEventPort) {
+    public CreateRestaurantUseCaseImpl(LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort,
+                                       PublishEventPort publishEventPort, GeocodeAddressPort geocodeAddressPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.saveRestaurantPort = saveRestaurantPort;
         this.publishEventPort = publishEventPort;
+        this.geocodeAddressPort = geocodeAddressPort;
     }
 
     @Override
@@ -41,11 +46,17 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
             throw new IllegalStateException("This owner already has a restaurant");
         }
 
+        // Looked up once, here, rather than on every browse: an address does
+        // not move, and Nominatim asks callers to be sparing.
+        Address address = geocodeAddressPort.locate(command.address())
+                .map(command.address()::locatedAt)
+                .orElse(command.address());
+
         Restaurant restaurant = Restaurant.createRestaurant(
                 RestaurantId.create(),
                 ownerId,
                 command.name(),
-                command.address(),
+                address,
                 command.contactEmail(),
                 command.cuisineType(),
                 command.defaultPreparationTime(),

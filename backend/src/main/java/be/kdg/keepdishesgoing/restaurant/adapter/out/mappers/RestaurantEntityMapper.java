@@ -47,6 +47,10 @@ public class RestaurantEntityMapper {
         emb.setPostalCode(address.postalCode());
         emb.setCity(address.city());
         emb.setCountry(address.country());
+        if (address.coordinates() != null) {
+            emb.setLatitude(address.coordinates().latitude());
+            emb.setLongitude(address.coordinates().longitude());
+        }
         return emb;
     }
 
@@ -99,12 +103,17 @@ public class RestaurantEntityMapper {
 
     private Address toAddress(AddressEmbeddable emb) {
         if (emb == null) return null;
+        // Both or neither: a half-written point is not a place.
+        Coordinates coordinates = emb.getLatitude() != null && emb.getLongitude() != null
+                ? new Coordinates(emb.getLatitude(), emb.getLongitude())
+                : null;
         return new Address(
                 emb.getStreet(),
                 emb.getNumber(),
                 emb.getPostalCode(),
                 emb.getCity(),
-                emb.getCountry()
+                emb.getCountry(),
+                coordinates
         );
     }
 
