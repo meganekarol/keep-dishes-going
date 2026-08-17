@@ -17,6 +17,15 @@ export interface RestaurantFilters {
   maxPrice?: number | '';
 }
 
+/**
+ * Where the browser says the customer is. Not a filter: it only sharpens the
+ * delivery guesstimate (US-19), and nothing is hidden for being far away.
+ */
+export interface CustomerPosition {
+  lat?: number;
+  lon?: number;
+}
+
 /** Filters for one restaurant's menu (US-17, US-18). Food tags are AND-combined. */
 export interface MenuFilters {
   type?: DishType | '';
@@ -25,17 +34,22 @@ export interface MenuFilters {
 }
 
 export const restaurantService = {
-  browse: (filters: RestaurantFilters = {}) =>
+  browse: (filters: RestaurantFilters = {}, position: CustomerPosition = {}) =>
     api.get<RestaurantSummary[]>('/api/restaurants', {
       cuisineType: filters.cuisineType,
       // Only sent when true: `openNow=false` is the server's default anyway.
       openNow: filters.openNow ? true : undefined,
       minPrice: filters.minPrice,
       maxPrice: filters.maxPrice,
+      lat: position.lat,
+      lon: position.lon,
     }),
 
-  getById: (restaurantId: string) =>
-    api.get<RestaurantDetail>(`/api/restaurants/${restaurantId}`),
+  getById: (restaurantId: string, position: CustomerPosition = {}) =>
+    api.get<RestaurantDetail>(`/api/restaurants/${restaurantId}`, {
+      lat: position.lat,
+      lon: position.lon,
+    }),
 
   getMenu: (restaurantId: string, filters: MenuFilters = {}) =>
     api.get<MenuItem[]>(`/api/restaurants/${restaurantId}/dishes`, {

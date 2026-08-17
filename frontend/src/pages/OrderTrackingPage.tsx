@@ -15,11 +15,12 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 
 import { QueryState } from '../components/shared/QueryState';
 import { useOrderTracking } from '../hooks/useOrderTracking';
 import type { OrderStatus, OrderTracking } from '../types/api';
-import { formatDateTime, formatPrice, humanise } from '../utils/format';
+import { formatClockTime, formatDateTime, formatPrice, humanise } from '../utils/format';
 
 const STATUS_COLOURS: Record<OrderStatus, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
   PENDING_ACCEPTANCE: 'warning',
@@ -58,6 +59,12 @@ export function OrderTrackingPage() {
             <Alert severity="error" sx={{ my: 2 }}>
               The restaurant could not take this order
               {data.rejectionReason ? `: ${data.rejectionReason}` : '.'}
+            </Alert>
+          )}
+
+          {data.estimatedDeliveryAt && (
+            <Alert severity="info" icon={<ScheduleIcon />} sx={{ my: 2 }}>
+              Expected around {formatClockTime(data.estimatedDeliveryAt)}, give or take.
             </Alert>
           )}
 

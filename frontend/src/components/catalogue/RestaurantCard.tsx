@@ -36,7 +36,9 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
               {formatPriceRange(restaurant.lowestPrice, restaurant.highestPrice)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {restaurant.menuSize} dishes · ~{restaurant.defaultPreparationTime} min prep
+              {/* The delivery guess, not the prep time: what a customer
+                  compares restaurants on is when the food turns up. */}
+              {restaurant.menuSize} dishes · delivery in ~{restaurant.guesstimatedDeliveryTime} min
             </Typography>
           </Box>
         </CardContent>

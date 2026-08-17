@@ -81,6 +81,8 @@ export interface RestaurantSummary {
   address: Address;
   pictureUrls: string[];
   defaultPreparationTime: number;
+  /** Cooking plus the ride, in minutes. A guess, not a promise (US-19). */
+  guesstimatedDeliveryTime: number;
   open: boolean;
   /** Null when the restaurant has nothing published yet. */
   lowestPrice: number | null;
@@ -96,6 +98,8 @@ export interface RestaurantDetail {
   contactEmail: string;
   pictureUrls: string[];
   defaultPreparationTime: number;
+  /** Cooking plus the ride, in minutes. A guess, not a promise (US-19). */
+  guesstimatedDeliveryTime: number;
   open: boolean;
   openingHours: WeeklyOpeningHours;
   menu: MenuItem[];
@@ -233,6 +237,11 @@ export interface OrderTracking {
   readyAt: string | null;
   pickedUpAt: string | null;
   deliveredAt: string | null;
+  /**
+   * Roughly when the food should arrive (US-19), or null once the order has
+   * stopped moving because it was delivered or turned away.
+   */
+  estimatedDeliveryAt: string | null;
 }
 
 /**

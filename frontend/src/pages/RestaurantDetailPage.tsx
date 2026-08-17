@@ -24,6 +24,7 @@ import { MenuItemCard } from '../components/catalogue/MenuItemCard';
 import { OpeningHoursTable } from '../components/shared/OpeningHoursTable';
 import { QueryState } from '../components/shared/QueryState';
 import BasketContext from '../context/BasketContext';
+import { useCustomerLocation } from '../hooks/useCustomerLocation';
 import { useMenu, useRestaurant } from '../hooks/useRestaurants';
 import type { DishSortOrder, DishType, FoodTag, MenuItem } from '../types/api';
 import { humanise } from '../utils/format';
@@ -53,6 +54,7 @@ export function RestaurantDetailPage() {
 
   const restaurantQuery = useRestaurant(restaurantId);
   const menuQuery = useMenu(restaurantId, { type, foodTags, sort });
+  const { denied: locationDenied } = useCustomerLocation();
 
   const { basket, addItem } = useContext(BasketContext);
   const [dishFromElsewhere, setDishFromElsewhere] = useState<MenuItem | null>(null);
@@ -100,6 +102,15 @@ export function RestaurantDetailPage() {
             {restaurantQuery.data.address.number}, {restaurantQuery.data.address.postalCode}{' '}
             {restaurantQuery.data.address.city}
           </Typography>
+
+          {/* Only worth saying while they can act on it: a closed kitchen
+              delivers in no minutes at all. */}
+          {restaurantQuery.data.open && (
+            <Typography variant="body2" color="text.secondary">
+              Roughly {restaurantQuery.data.guesstimatedDeliveryTime} minutes to your door
+              {locationDenied ? ', assuming an average distance' : ''}.
+            </Typography>
+          )}
 
           <Box sx={{ mt: 2 }}>
             <OpeningHoursTable hours={restaurantQuery.data.openingHours} />
