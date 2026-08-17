@@ -1,11 +1,14 @@
 package be.kdg.keepdishesgoing.restaurant.adapter.in;
 
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Coordinates;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.CuisineType;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.DishType;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.FoodTag;
 import be.kdg.keepdishesgoing.restaurant.port.in.BrowseRestaurantsQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.ViewRestaurantMenuQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +35,8 @@ import java.util.UUID;
 @RequestMapping("/api/restaurants")
 public class RestaurantCatalogController {
 
+    private static final Logger log = LoggerFactory.getLogger(RestaurantCatalogController.class);
+
     private final BrowseRestaurantsQuery browseRestaurantsQuery;
     private final ViewRestaurantMenuQuery viewRestaurantMenuQuery;
 
@@ -44,24 +49,52 @@ public class RestaurantCatalogController {
     /**
      * Browse the catalogue, optionally narrowed by cuisine, opening state or
      * price (US-14, US-16).
+     *
+     * <p>{@code lat} and {@code lon} come from the browser and are optional:
+     * they only sharpen the delivery guesstimate (US-19). A customer who
+     * refuses the location prompt still sees the whole catalogue, quoted
+     * against an assumed distance.
      */
     @GetMapping
     public ResponseEntity<List<RestaurantSummary>> browseRestaurants(
             @RequestParam(required = false) CuisineType cuisineType,
             @RequestParam(defaultValue = "false") boolean openNow,
             @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice) {
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lon) {
 
         RestaurantSearchQuery query = new RestaurantSearchQuery(cuisineType, openNow, minPrice, maxPrice);
-        return ResponseEntity.ok(browseRestaurantsQuery.browse(query));
+        return ResponseEntity.ok(browseRestaurantsQuery.browse(query, customerLocation(lat, lon)));
     }
 
     /**
      * One restaurant with its full menu (US-15).
      */
     @GetMapping("/{restaurantId}")
-    public ResponseEntity<RestaurantDetail> viewRestaurant(@PathVariable UUID restaurantId) {
-        return ResponseEntity.ok(viewRestaurantMenuQuery.viewRestaurant(restaurantId));
+    public ResponseEntity<RestaurantDetail> viewRestaurant(
+            @PathVariable UUID restaurantId,
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lon) {
+        return ResponseEntity.ok(
+                viewRestaurantMenuQuery.viewRestaurant(restaurantId, customerLocation(lat, lon)));
+    }
+
+    /**
+     * Both or neither. A half-given position is treated as none rather than
+     * being pinned to the equator, and a nonsensical one is ignored instead of
+     * failing the whole request over an optional extra.
+     */
+    private static Coordinates customerLocation(Double lat, Double lon) {
+        if (lat == null || lon == null) {
+            return null;
+        }
+        try {
+            return new Coordinates(lat, lon);
+        } catch (IllegalArgumentException e) {
+            log.warn("Ignoring an impossible customer location: {}, {}", lat, lon);
+            return null;
+        }
     }
 
     /**

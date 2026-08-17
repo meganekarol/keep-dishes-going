@@ -1,7 +1,9 @@
 package be.kdg.keepdishesgoing.restaurant.port.in.queries;
 
+import be.kdg.keepdishesgoing.common.DeliveryEstimate;
 import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Address;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Coordinates;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.CuisineType;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.TimeRange;
 
@@ -27,12 +29,15 @@ public record RestaurantDetail(
         String contactEmail,
         List<String> pictureUrls,
         int defaultPreparationTime,
+        /** Cooking plus the ride, quoted before the customer orders (US-19). */
+        int guesstimatedDeliveryTime,
         boolean open,
         Map<DayOfWeek, TimeRange> openingHours,
         List<MenuItem> menu
 ) {
 
-    public static RestaurantDetail from(Restaurant restaurant, List<MenuItem> menu, LocalDateTime now) {
+    public static RestaurantDetail from(Restaurant restaurant, List<MenuItem> menu, LocalDateTime now,
+                                        Coordinates customerLocation, int ordersNotReady) {
         return new RestaurantDetail(
                 restaurant.getRestaurantId().uuid(),
                 restaurant.getName(),
@@ -41,6 +46,10 @@ public record RestaurantDetail(
                 restaurant.getContactEmail(),
                 restaurant.getPictureUrls(),
                 restaurant.getDefaultPrepTime(),
+                DeliveryEstimate.totalMinutes(
+                        RestaurantSummary.distanceBetween(restaurant.getAddress(), customerLocation),
+                        restaurant.getDefaultPrepTime(),
+                        ordersNotReady),
                 restaurant.isOpen(now),
                 restaurant.getOpeningHours().schedule(),
                 menu

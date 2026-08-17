@@ -1,5 +1,6 @@
 package be.kdg.keepdishesgoing.restaurant.port.in;
 
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Coordinates;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.DishSearchQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.MenuItem;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.RestaurantDetail;
@@ -17,11 +18,11 @@ public interface ViewRestaurantMenuQuery {
      * @throws be.kdg.keepdishesgoing.common.exceptions.NotFoundException
      *         if no such restaurant exists
      */
-    RestaurantDetail viewRestaurant(UUID restaurantId);
+    RestaurantDetail viewRestaurant(UUID restaurantId, Coordinates customerLocation);
 
     /**
      * The same menu, filtered and sorted. Split from
-     * {@link #viewRestaurant(UUID)} because a customer narrowing the menu should
+     * {@link #viewRestaurant} because a customer narrowing the menu should
      * not re-fetch the restaurant's address and schedule on every keystroke.
      *
      * @throws be.kdg.keepdishesgoing.common.exceptions.NotFoundException

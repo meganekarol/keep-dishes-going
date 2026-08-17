@@ -1,12 +1,14 @@
 package be.kdg.keepdishesgoing.restaurant.core;
 
 import be.kdg.keepdishesgoing.restaurant.domain.Dish;
+import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Coordinates;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.CuisineType;
 import be.kdg.keepdishesgoing.restaurant.port.in.BrowseRestaurantsQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.MenuItem;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.RestaurantSearchQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.RestaurantSummary;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantBusynessPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,16 +41,22 @@ public class BrowseRestaurantsQueryImpl implements BrowseRestaurantsQuery {
 
     private final LoadRestaurantPort loadRestaurantPort;
     private final LoadDishPort loadDishPort;
+    private final LoadRestaurantBusynessPort loadRestaurantBusynessPort;
 
-    public BrowseRestaurantsQueryImpl(LoadRestaurantPort loadRestaurantPort, LoadDishPort loadDishPort) {
+    public BrowseRestaurantsQueryImpl(LoadRestaurantPort loadRestaurantPort, LoadDishPort loadDishPort,
+                                      LoadRestaurantBusynessPort loadRestaurantBusynessPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.loadDishPort = loadDishPort;
+        this.loadRestaurantBusynessPort = loadRestaurantBusynessPort;
     }
 
     @Override
-    public List<RestaurantSummary> browse(RestaurantSearchQuery query) {
+    public List<RestaurantSummary> browse(RestaurantSearchQuery query, Coordinates customerLocation) {
         LocalDateTime now = LocalDateTime.now();
         Map<UUID, List<MenuItem>> menusByRestaurant = loadMenus();
+        // One query for the whole catalogue, in keeping with the note above:
+        // the point is a fixed number of queries, not one per restaurant.
+        Map<UUID, Integer> busyness = loadRestaurantBusynessPort.ordersNotReadyByRestaurant();
 
         return loadRestaurantPort.loadAll().stream()
                 .filter(restaurant -> matchesCuisine(restaurant.getCuisineType(), query))
@@ -56,7 +64,9 @@ public class BrowseRestaurantsQueryImpl implements BrowseRestaurantsQuery {
                 .map(restaurant -> RestaurantSummary.from(
                         restaurant,
                         menusByRestaurant.getOrDefault(restaurant.getRestaurantId().uuid(), List.of()),
-                        now))
+                        now,
+                        customerLocation,
+                        busyness.getOrDefault(restaurant.getRestaurantId().uuid(), 0)))
                 .filter(summary -> matchesPrice(summary, query, menusByRestaurant))
                 .sorted(Comparator.comparing(RestaurantSummary::name, String.CASE_INSENSITIVE_ORDER))
                 .toList();
