@@ -20,4 +20,10 @@ public interface LoadOrderSummaryPort {
      * model can lag and is not allowed to decide that an order gets rejected.
      */
     List<UUID> findPendingAcceptanceBefore(LocalDateTime cutoff);
+
+    /**
+     * Orders this restaurant has taken but not yet marked ready for pickup,
+     * which is the busyness factor in the delivery guesstimate (US-19).
+     */
+    int countNotReadyForRestaurant(UUID restaurantId);
 }

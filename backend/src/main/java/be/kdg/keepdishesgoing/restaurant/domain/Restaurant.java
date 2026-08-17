@@ -69,6 +69,7 @@ public class Restaurant {
                 ownerId.uuid(),
                 name,
                 cuisineType.toString(),
+                defaultPrepTime,
                 toSlots(openingHours)
         ));
 

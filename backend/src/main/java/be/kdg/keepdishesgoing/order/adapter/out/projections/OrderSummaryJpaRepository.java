@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,4 +34,10 @@ public interface OrderSummaryJpaRepository extends JpaRepository<OrderSummaryJpa
             """)
     List<UUID> findIdsByStatusPlacedBefore(@Param("status") OrderStatus status,
                                            @Param("cutoff") LocalDateTime cutoff);
+
+    /**
+     * Orders still occupying a kitchen: taken on but not yet handed over.
+     * Everything past ready for pickup belongs to the courier, not the cooks.
+     */
+    long countByRestaurantIdAndStatusIn(UUID restaurantId, Collection<OrderStatus> statuses);
 }

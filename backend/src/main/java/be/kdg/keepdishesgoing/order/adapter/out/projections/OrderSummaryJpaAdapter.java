@@ -35,6 +35,15 @@ public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort, SaveOrderSu
         return summaryRepository.findIdsByStatusPlacedBefore(OrderStatus.PENDING_ACCEPTANCE, cutoff);
     }
 
+    /** Placed but not yet cooked: the two states that keep a kitchen busy. */
+    private static final List<OrderStatus> STILL_IN_THE_KITCHEN =
+            List.of(OrderStatus.PENDING_ACCEPTANCE, OrderStatus.ACCEPTED);
+
+    @Override
+    public int countNotReadyForRestaurant(UUID restaurantId) {
+        return (int) summaryRepository.countByRestaurantIdAndStatusIn(restaurantId, STILL_IN_THE_KITCHEN);
+    }
+
     @Override
     public void replaceAll(List<OrderSummaryData> summaries) {
         summaryRepository.deleteAllInBatch();

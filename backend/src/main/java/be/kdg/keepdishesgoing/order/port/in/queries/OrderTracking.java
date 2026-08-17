@@ -1,5 +1,6 @@
 package be.kdg.keepdishesgoing.order.port.in.queries;
 
+import be.kdg.keepdishesgoing.common.DeliveryEstimate;
 import be.kdg.keepdishesgoing.order.domain.Order;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.DeliveryAddress;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderLine;
@@ -21,6 +22,11 @@ import java.util.UUID;
  * @param rejectionReason set only when {@code status} is
  *                        {@link OrderStatus#REJECTED}; a customer who is turned
  *                        away is owed the reason the restaurant gave
+ * @param estimatedDeliveryAt
+ *                        roughly when the food should arrive (US-19), or
+ *                        {@code null} once the order has stopped moving.
+ *                        Counted from acceptance where there is one, because
+ *                        the kitchen's clock only starts when it says yes
  */
 public record OrderTracking(
         UUID orderId,
@@ -36,7 +42,8 @@ public record OrderTracking(
         LocalDateTime acceptedAt,
         LocalDateTime readyAt,
         LocalDateTime pickedUpAt,
-        LocalDateTime deliveredAt
+        LocalDateTime deliveredAt,
+        LocalDateTime estimatedDeliveryAt
 ) {
 
     /** One ordered dish, priced as it was when the order was placed. */
@@ -58,7 +65,13 @@ public record OrderTracking(
         }
     }
 
-    public static OrderTracking from(Order order, String restaurantName) {
+    /**
+     * @param preparationMinutes the restaurant's own estimate, {@code 0} when
+     *                           it was never recorded
+     * @param ordersNotReady     how many orders that kitchen still has to cook
+     */
+    public static OrderTracking from(Order order, String restaurantName,
+                                     int preparationMinutes, int ordersNotReady) {
         return new OrderTracking(
                 order.getOrderId().uuid(),
                 order.getRestaurantId().uuid(),
@@ -73,7 +86,27 @@ public record OrderTracking(
                 order.getAcceptedAt(),
                 order.getReadyAt(),
                 order.getPickedUpAt(),
-                order.getDeliveredAt()
+                order.getDeliveredAt(),
+                estimateFor(order, preparationMinutes, ordersNotReady)
         );
+    }
+
+    /**
+     * Nothing is quoted once the order has stopped moving: a delivered order
+     * has a real time on it, and a rejected one is never coming.
+     *
+     * <p>The distance is left unknown here. The customer's browser position was
+     * only ever available while they were choosing a restaurant, and where they
+     * happen to be standing now is not where the food is going.
+     */
+    private static LocalDateTime estimateFor(Order order, int preparationMinutes, int ordersNotReady) {
+        if (order.getStatus().isTerminal()) {
+            return null;
+        }
+        LocalDateTime startedFrom = order.getAcceptedAt() != null
+                ? order.getAcceptedAt()
+                : order.getPlacedAt();
+        return startedFrom.plusMinutes(
+                DeliveryEstimate.totalMinutes(null, preparationMinutes, ordersNotReady));
     }
 }

@@ -41,6 +41,7 @@ public class RestaurantProjectionListener {
             event.restaurantId(),
             event.name(),
             event.cuisineType(),
+            event.defaultPreparationTime(),
             event.openingHours()
         );
         

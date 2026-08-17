@@ -30,6 +30,14 @@ public class RestaurantProjectionJpaEntity {
     @Column(nullable = false)
     private String cuisineType;
 
+    /**
+     * Minutes the kitchen asks for, used to quote a delivery time (US-19).
+     *
+     * <p>Nullable, and read as "unknown" rather than "instant": rows written
+     * before this column existed have nothing in it.
+     */
+    private Integer defaultPreparationTime;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "manual_override", nullable = false)
     private ManualOverride manualOverride = ManualOverride.NONE;
@@ -50,10 +58,12 @@ public class RestaurantProjectionJpaEntity {
     }
 
     public RestaurantProjectionJpaEntity(UUID restaurantId, String restaurantName,
-                                         String cuisineType, List<OpeningHoursSlot> slots) {
+                                         String cuisineType, int defaultPreparationTime,
+                                         List<OpeningHoursSlot> slots) {
         this.restaurantId = restaurantId;
         this.restaurantName = restaurantName;
         this.cuisineType = cuisineType;
+        this.defaultPreparationTime = defaultPreparationTime;
         if (slots != null) {
             slots.stream()
                     .map(slot -> new OpeningHoursSlotEmbeddable(
@@ -108,6 +118,11 @@ public class RestaurantProjectionJpaEntity {
 
     public String getRestaurantName() {
         return restaurantName;
+    }
+
+    /** @return {@code 0} when it was never recorded, which callers read as unknown */
+    public int getDefaultPreparationTime() {
+        return defaultPreparationTime == null ? 0 : defaultPreparationTime;
     }
 
     public String getCuisineType() {
