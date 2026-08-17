@@ -1,10 +1,14 @@
-import { useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import {
   Alert,
   Box,
+  Button,
   Chip,
   Divider,
+  Link,
   Paper,
+  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -14,6 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 
@@ -41,6 +46,7 @@ const STATUS_COLOURS: Record<OrderStatus, 'default' | 'info' | 'success' | 'erro
 export function OrderTrackingPage() {
   const { orderId = '' } = useParams();
   const { data, isLoading, error } = useOrderTracking(orderId);
+  const [copied, setCopied] = useState(false);
 
   return (
     <QueryState isLoading={isLoading} error={error}>
@@ -54,6 +60,32 @@ export function OrderTrackingPage() {
           <Typography color="text.secondary" gutterBottom>
             {data.restaurantName} · placed {formatDateTime(data.placedAt)}
           </Typography>
+
+          {/* The order id is the whole proof of ownership, so the customer is
+              given it as something they can keep rather than being left to
+              copy the address bar (US-24). */}
+          <Alert
+            severity="success"
+            sx={{ my: 2 }}
+            action={
+              <Button
+                size="small"
+                startIcon={<ContentCopyIcon />}
+                onClick={() => {
+                  void navigator.clipboard.writeText(window.location.href);
+                  setCopied(true);
+                }}
+              >
+                Copy link
+              </Button>
+            }
+          >
+            Keep this link to come back to your order. It is also under{' '}
+            <Link component={RouterLink} to="/orders">
+              My orders
+            </Link>{' '}
+            on this device.
+          </Alert>
 
           {data.status === 'REJECTED' && (
             <Alert severity="error" sx={{ my: 2 }}>
@@ -113,6 +145,13 @@ export function OrderTrackingPage() {
             {data.customerName} · {data.deliveryAddress.street} {data.deliveryAddress.number},{' '}
             {data.deliveryAddress.postalCode} {data.deliveryAddress.city}
           </Typography>
+
+          <Snackbar
+            open={copied}
+            autoHideDuration={3000}
+            onClose={() => setCopied(false)}
+            message="Link copied"
+          />
         </>
       )}
     </QueryState>

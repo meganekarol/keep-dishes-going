@@ -6,6 +6,7 @@ import { Alert, Button, Divider, Paper, Stack, Typography } from '@mui/material'
 import { FormTextField } from '../components/form/FormTextField';
 import BasketContext from '../context/BasketContext';
 import { usePlaceOrder } from '../hooks/useOrderTracking';
+import { usePlacedOrders } from '../hooks/usePlacedOrders';
 import { formatPrice } from '../utils/format';
 
 interface CheckoutFormValues {
@@ -38,6 +39,7 @@ export function CheckoutPage() {
   const { basket, total, clear } = useContext(BasketContext);
   const navigate = useNavigate();
   const placeOrder = usePlaceOrder();
+  const { remember } = usePlacedOrders();
   const { control, handleSubmit } = useForm<CheckoutFormValues>({ defaultValues: EMPTY_CHECKOUT });
 
   if (!basket && !placeOrder.isSuccess) return <Navigate to="/basket" replace />;
@@ -54,6 +56,11 @@ export function CheckoutPage() {
       },
       {
         onSuccess: (response) => {
+          remember({
+            orderId: response.orderId,
+            restaurantName: basket.restaurantName,
+            placedAt: new Date().toISOString(),
+          });
           clear();
           navigate(`/orders/${response.orderId}`, { replace: true });
         },

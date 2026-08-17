@@ -7,6 +7,7 @@ import { RestaurantListPage } from './pages/RestaurantListPage';
 import { RestaurantDetailPage } from './pages/RestaurantDetailPage';
 import { BasketPage } from './pages/BasketPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { MyOrdersPage } from './pages/MyOrdersPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { OwnerDashboardPage } from './pages/owner/OwnerDashboardPage';
 import { CreateRestaurantPage } from './pages/owner/CreateRestaurantPage';
@@ -27,6 +28,9 @@ export default function App() {
         <Route path="/restaurants/:restaurantId" element={<RestaurantDetailPage />} />
         <Route path="/basket" element={<BasketPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        {/* Listed before the tracking route: "orders" would otherwise be read
+            as an order id and looked up as one. */}
+        <Route path="/orders" element={<MyOrdersPage />} />
         <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
 
         <Route

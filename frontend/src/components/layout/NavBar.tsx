@@ -6,10 +6,12 @@ import { Link } from 'react-router-dom';
 
 import BasketContext from '../../context/BasketContext';
 import SecurityContext from '../../context/SecurityContext';
+import { usePlacedOrders } from '../../hooks/usePlacedOrders';
 
 export function NavBar() {
   const { isAuthenticated, loggedInUser, login, logout } = useContext(SecurityContext);
   const { itemCount } = useContext(BasketContext);
+  const { orders } = usePlacedOrders();
 
   return (
     <AppBar position="static" color="primary" elevation={0}>
@@ -25,6 +27,14 @@ export function NavBar() {
         </Typography>
 
         <Box sx={{ flexGrow: 1 }} />
+
+        {/* The only way back to a guest's order once the tab is closed, so it
+            stays visible for as long as this browser remembers one. */}
+        {orders.length > 0 && (
+          <Button color="inherit" component={Link} to="/orders">
+            My orders
+          </Button>
+        )}
 
         {/* Hidden while empty: an owner working on their menu has no basket,
             and an empty one is nothing to click. */}
