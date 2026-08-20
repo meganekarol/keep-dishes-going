@@ -63,12 +63,39 @@ public class UpdateOrderStatusUseCaseImpl implements UpdateOrderStatusUseCase {
         log.info("Order {} status updated to {}", command.orderId(), command.newStatus());
     }
     
+    /**
+     * Moves the order along, filling in a step the delivery service skipped.
+     *
+     * <p>Their specification says an {@code OrderPickedUpEvent} follows the
+     * ready event within a minute. The running service never sends one: a spy
+     * queue bound to every routing key on the exchange saw only location and
+     * delivered messages across a full run. So an order would sit at
+     * "waiting for a courier" until a delivered message arrived and was
+     * refused, because the aggregate rightly will not deliver what was never
+     * picked up.
+     *
+     * <p>Rather than weaken that rule, the missing step is recorded here. Food
+     * that has been delivered was necessarily collected first, so writing both
+     * events is the truth, not a workaround.
+     */
     private void updateStatus(Order order, OrderStatus newStatus) {
         switch (newStatus) {
             case IN_DELIVERY:
-                order.markPickedUp();
+                // A second picked-up message, or one arriving after we inferred
+                // the pickup ourselves, must not fail the whole delivery.
+                if (order.isReadyForPickup()) {
+                    order.markPickedUp();
+                } else {
+                    log.debug("Order {} is already past pickup, leaving it at {}",
+                            order.getOrderId(), order.getStatus());
+                }
                 break;
             case DELIVERED:
+                if (order.isReadyForPickup()) {
+                    log.info("Order {} was delivered without a pickup message, recording the pickup too",
+                            order.getOrderId());
+                    order.markPickedUp();
+                }
                 order.markDelivered();
                 break;
             default:
