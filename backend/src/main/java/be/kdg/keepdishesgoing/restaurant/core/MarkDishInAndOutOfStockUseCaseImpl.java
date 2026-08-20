@@ -7,7 +7,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.MarkDishInAndOutOfStockUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.MarkDishInStockCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.MarkDishOutOfStockCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantEventPublisherPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveDishPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,13 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfStockUseCase {
     private final SaveDishPort saveDishPort;
     private final LoadDishPort loadDishPort;
-    private final PublishEventPort publishEventPort;
+    private final RestaurantEventPublisherPort restaurantEventPublisherPort;
 
-    public MarkDishInAndOutOfStockUseCaseImpl(SaveDishPort saveDishPort, LoadDishPort loadDishPort, PublishEventPort publishEventPort) {
+    public MarkDishInAndOutOfStockUseCaseImpl(SaveDishPort saveDishPort, LoadDishPort loadDishPort, RestaurantEventPublisherPort restaurantEventPublisherPort) {
         this.saveDishPort = saveDishPort;
         this.loadDishPort = loadDishPort;
 
-        this.publishEventPort = publishEventPort;
+        this.restaurantEventPublisherPort = restaurantEventPublisherPort;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfSto
         dish.markDishInStock();
 
         saveDishPort.saveDish(dish);
-        publishEventPort.publishAll(dish.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(dish.getUncommittedEvents());
         dish.markEventAsCommitted();
     }
 
@@ -53,7 +53,7 @@ public class MarkDishInAndOutOfStockUseCaseImpl implements MarkDishInAndOutOfSto
 
         saveDishPort.saveDish(dish);
 
-        publishEventPort.publishAll(dish.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(dish.getUncommittedEvents());
         dish.markEventAsCommitted();
 
     }

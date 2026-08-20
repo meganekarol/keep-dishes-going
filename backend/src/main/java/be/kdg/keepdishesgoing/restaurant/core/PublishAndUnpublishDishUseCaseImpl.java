@@ -17,14 +17,14 @@ public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDi
     private final SaveDishPort saveDishPort;
     private final LoadRestaurantPort loadRestaurantPort;
     private final SaveRestaurantPort saveRestaurantPort;
-    private final PublishEventPort publishEventPort;
+    private final RestaurantEventPublisherPort restaurantEventPublisherPort;
 
-    public PublishAndUnpublishDishUseCaseImpl(LoadDishPort loadDishPort, SaveDishPort saveDishPort, LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort, PublishEventPort publishEventPort) {
+    public PublishAndUnpublishDishUseCaseImpl(LoadDishPort loadDishPort, SaveDishPort saveDishPort, LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort, RestaurantEventPublisherPort restaurantEventPublisherPort) {
         this.loadDishPort = loadDishPort;
         this.saveDishPort = saveDishPort;
         this.loadRestaurantPort = loadRestaurantPort;
         this.saveRestaurantPort = saveRestaurantPort;
-        this.publishEventPort = publishEventPort;
+        this.restaurantEventPublisherPort = restaurantEventPublisherPort;
     }
 
 
@@ -55,8 +55,8 @@ public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDi
         saveRestaurantPort.saveRestaurant(restaurant);
 
         // Publish events
-        publishEventPort.publishAll(dish.getUncommittedEvents());
-        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(dish.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(restaurant.getUncommittedEvents());
 
         // Clear events
         dish.markEventAsCommitted();
@@ -90,8 +90,8 @@ public class PublishAndUnpublishDishUseCaseImpl implements PublishAndUnpublishDi
         saveDishPort.saveDish(dish);
         saveRestaurantPort.saveRestaurant(restaurant);
 
-        publishEventPort.publishAll(dish.getUncommittedEvents());
-        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(dish.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(restaurant.getUncommittedEvents());
 
         // Clear events
         dish.markEventAsCommitted();

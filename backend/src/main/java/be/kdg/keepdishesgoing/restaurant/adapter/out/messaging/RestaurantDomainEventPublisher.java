@@ -1,14 +1,14 @@
 package be.kdg.keepdishesgoing.restaurant.adapter.out.messaging;
 
 import be.kdg.keepdishesgoing.common.DomainEvent;
-import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantEventPublisherPort;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public class RestaurantDomainEventPublisher implements PublishEventPort {
+public class RestaurantDomainEventPublisher implements RestaurantEventPublisherPort {
 
     private final ApplicationEventPublisher eventPublisher;
 

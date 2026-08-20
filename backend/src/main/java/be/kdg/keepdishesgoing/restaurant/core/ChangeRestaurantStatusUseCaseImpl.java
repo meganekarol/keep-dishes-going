@@ -6,7 +6,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantStatus;
 import be.kdg.keepdishesgoing.restaurant.port.in.ChangeRestaurantStatusUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.ChangeRestaurantStatusCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantEventPublisherPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,12 +20,12 @@ public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatus
 
     private final LoadRestaurantPort loadRestaurantPort;
     private final SaveRestaurantPort saveRestaurantPort;
-    private final PublishEventPort publishEventPort;
+    private final RestaurantEventPublisherPort restaurantEventPublisherPort;
 
-    public ChangeRestaurantStatusUseCaseImpl(LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort, PublishEventPort publishEventPort) {
+    public ChangeRestaurantStatusUseCaseImpl(LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort, RestaurantEventPublisherPort restaurantEventPublisherPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.saveRestaurantPort = saveRestaurantPort;
-        this.publishEventPort = publishEventPort;
+        this.restaurantEventPublisherPort = restaurantEventPublisherPort;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatus
 
         saveRestaurantPort.saveRestaurant(restaurant);
 
-        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(restaurant.getUncommittedEvents());
 
         // Clear events
         restaurant.markEventAsCommitted();
@@ -58,7 +58,7 @@ public class ChangeRestaurantStatusUseCaseImpl implements ChangeRestaurantStatus
         restaurant.followSchedule(LocalDateTime.now());
 
         saveRestaurantPort.saveRestaurant(restaurant);
-        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(restaurant.getUncommittedEvents());
         restaurant.markEventAsCommitted();
     }
 

@@ -7,7 +7,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.PublishScheduledChangesUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.PublishScheduledChangesCommand;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadDishPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantEventPublisherPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveDishPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
 import org.springframework.stereotype.Service;
@@ -25,19 +25,19 @@ public class PublishScheduledChangesUseCaseImpl implements PublishScheduledChang
     private final SaveDishPort saveDishPort;
     private final LoadRestaurantPort loadRestaurantPort;
     private final SaveRestaurantPort saveRestaurantPort;
-    private final PublishEventPort publishEventPort;
+    private final RestaurantEventPublisherPort restaurantEventPublisherPort;
 
     public PublishScheduledChangesUseCaseImpl(
             LoadDishPort loadDishPort,
             SaveDishPort saveDishPort,
             LoadRestaurantPort loadRestaurantPort,
             SaveRestaurantPort saveRestaurantPort,
-            PublishEventPort publishEventPort) {
+            RestaurantEventPublisherPort restaurantEventPublisherPort) {
         this.loadDishPort = loadDishPort;
         this.saveDishPort = saveDishPort;
         this.loadRestaurantPort = loadRestaurantPort;
         this.saveRestaurantPort = saveRestaurantPort;
-        this.publishEventPort = publishEventPort;
+        this.restaurantEventPublisherPort = restaurantEventPublisherPort;
     }
 
     /**
@@ -63,12 +63,12 @@ public class PublishScheduledChangesUseCaseImpl implements PublishScheduledChang
             dish.publishDish();
             saveDishPort.saveDish(dish);
 
-            publishEventPort.publishAll(dish.getUncommittedEvents());
+            restaurantEventPublisherPort.publishAll(dish.getUncommittedEvents());
             dish.markEventAsCommitted();
         }
 
         saveRestaurantPort.saveRestaurant(restaurant);
-        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(restaurant.getUncommittedEvents());
         restaurant.markEventAsCommitted();
     }
 }

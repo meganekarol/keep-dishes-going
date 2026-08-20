@@ -6,7 +6,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateDishCommand;
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateDishUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantEventPublisherPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveDishPort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -17,12 +17,12 @@ public class CreateDishUseCaseImpl implements CreateDishUseCase {
 
     private final LoadRestaurantPort restaurantPort;
     private final SaveDishPort dishPort;
-    private final PublishEventPort publishEventPort;
+    private final RestaurantEventPublisherPort restaurantEventPublisherPort;
 
-    public CreateDishUseCaseImpl(LoadRestaurantPort restaurantPort, SaveDishPort dishPort, PublishEventPort publishEventPort) {
+    public CreateDishUseCaseImpl(LoadRestaurantPort restaurantPort, SaveDishPort dishPort, RestaurantEventPublisherPort restaurantEventPublisherPort) {
         this.restaurantPort = restaurantPort;
         this.dishPort = dishPort;
-        this.publishEventPort = publishEventPort;
+        this.restaurantEventPublisherPort = restaurantEventPublisherPort;
     }
 
     @Override
@@ -47,8 +47,8 @@ public class CreateDishUseCaseImpl implements CreateDishUseCase {
 
         dishPort.saveDish(dish);
 
-        publishEventPort.publishAll(dish.getUncommittedEvents());
-        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(dish.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(restaurant.getUncommittedEvents());
 
         // Clear events
         dish.markEventAsCommitted();
