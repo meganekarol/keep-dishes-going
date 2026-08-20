@@ -1,16 +1,14 @@
 package be.kdg.keepdishesgoing.order.core;
 
 import be.kdg.keepdishesgoing.order.domain.Order;
+import be.kdg.keepdishesgoing.order.domain.valueObjects.DeliveryAddress;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderLine;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.order.port.in.PlaceOrderUseCase;
 import be.kdg.keepdishesgoing.order.port.in.commands.OrderItemCommand;
 import be.kdg.keepdishesgoing.order.port.in.commands.PlaceOrderCommand;
-import be.kdg.keepdishesgoing.order.port.out.LoadDishProjectionPort;
-import be.kdg.keepdishesgoing.order.port.out.LoadRestaurantProjectionPort;
-import be.kdg.keepdishesgoing.order.port.out.SaveOrderPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
+import be.kdg.keepdishesgoing.order.port.out.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,17 +29,20 @@ public class PlaceOrderUseCaseImpl implements PlaceOrderUseCase {
     private final LoadRestaurantProjectionPort loadRestaurantPort;
     private final LoadDishProjectionPort loadDishPort;
     private final SaveOrderPort updateOrderPort;
-    private final PublishEventPort publishEventPort;
-    
+    private final OrderEventPublisherPort publishEventPort;
+    private final GeocodeDeliveryAddressPort geocodeDeliveryAddressPort;
+
     public PlaceOrderUseCaseImpl(
             LoadRestaurantProjectionPort loadRestaurantPort,
             LoadDishProjectionPort loadDishPort,
             SaveOrderPort updateOrderPort,
-            PublishEventPort publishEventPort) {
+            OrderEventPublisherPort publishEventPort,
+            GeocodeDeliveryAddressPort geocodeDeliveryAddressPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.loadDishPort = loadDishPort;
         this.updateOrderPort = updateOrderPort;
         this.publishEventPort = publishEventPort;
+        this.geocodeDeliveryAddressPort = geocodeDeliveryAddressPort;
     }
     
     @Override
@@ -57,13 +58,17 @@ public class PlaceOrderUseCaseImpl implements PlaceOrderUseCase {
         // Resolve the requested items into priced order lines
         List<OrderLine> enrichedOrderLines = toOrderLines(command.items());
 
+        DeliveryAddress deliveryAddress = geocodeDeliveryAddressPort.locate(command.deliveryAddress())
+            .map(command.deliveryAddress()::locatedAt)
+            .orElse(command.deliveryAddress());
+
         // Create Order aggregate
         OrderId orderId = OrderId.create();
         Order order = Order.placeOrder(
             orderId,
             command.customerInfo(),
             RestaurantId.of(command.restaurantId()),
-            command.deliveryAddress(),
+            deliveryAddress,
             enrichedOrderLines
         );
         
