@@ -28,6 +28,14 @@ public record OrderPlacedEvent(
     String postalCode,
     String city,
     String country,
+    /**
+     * Where the delivery address is, geocoded at checkout, or {@code null} when
+     * that failed. Carried here because the aggregate is rebuilt from this
+     * event: without it the coordinates are lost on the first reload, and the
+     * courier is dispatched to an address with no dropoff point (US-28).
+     */
+    Double dropoffLatitude,
+    Double dropoffLongitude,
     List<LineItem> lines,
     BigDecimal totalPrice
 ) implements DomainEvent {

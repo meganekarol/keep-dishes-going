@@ -81,6 +81,8 @@ public class Order {
                 deliveryAddress.postalCode(),
                 deliveryAddress.city(),
                 deliveryAddress.country(),
+                deliveryAddress.location() == null ? null : deliveryAddress.location().lat(),
+                deliveryAddress.location() == null ? null : deliveryAddress.location().lng(),
                 lineItems,
                 totalPrice
         ));
@@ -109,17 +111,39 @@ public class Order {
 
     // ==================== Business methods (command side) ====================
 
-    public void accept() {
+    /**
+     * Takes the order on, and dispatches a courier by doing so (US-28).
+     *
+     * <p>The pickup half is passed in because an order knows which restaurant
+     * it belongs to but not where that restaurant is. The dropoff half it has,
+     * from the address the customer gave at checkout.
+     *
+     * @param pickupAddress     the restaurant's address
+     * @param pickupCoordinates where the restaurant is, or {@code null} when it
+     *                          was never geocoded
+     */
+    public void accept(OrderAcceptedEvent.Address pickupAddress,
+                       OrderAcceptedEvent.Point pickupCoordinates) {
         if (status != OrderStatus.PENDING_ACCEPTANCE) {
             throw new IllegalStateException("Order can only be accepted when pending acceptance");
         }
         applyAndRecord(new OrderAcceptedEvent(
-                UUID.randomUUID(),
-                LocalDateTime.now(),
                 orderId.uuid(),
                 restaurantId.uuid(),
-                deliveryAddress.getFullAddress()
+                pickupAddress,
+                pickupCoordinates,
+                new OrderAcceptedEvent.Address(
+                        deliveryAddress.street(),
+                        deliveryAddress.number(),
+                        deliveryAddress.postalCode(),
+                        deliveryAddress.city()),
+                dropoffCoordinates()
         ));
+    }
+
+    private OrderAcceptedEvent.Point dropoffCoordinates() {
+        GeoLocation located = deliveryAddress.location();
+        return located == null ? null : new OrderAcceptedEvent.Point(located.lat(), located.lng());
     }
 
     public void reject(String reason) {
@@ -152,27 +176,21 @@ public class Order {
         if (status != OrderStatus.ACCEPTED) {
             throw new IllegalStateException("Order must be accepted before marking ready");
         }
-        applyAndRecord(new OrderReadyEvent(
-                UUID.randomUUID(),
-                LocalDateTime.now(),
-                orderId.uuid(),
-                restaurantId.uuid(),
-                deliveryAddress.getFullAddress()
-        ));
+        applyAndRecord(new OrderReadyForPickupEvent(orderId.uuid(), restaurantId.uuid()));
     }
 
     public void markPickedUp() {
         if (status != OrderStatus.READY_FOR_PICKUP) {
             throw new IllegalStateException("Order must be ready before being picked up");
         }
-        applyAndRecord(new OrderPickedUpEvent(orderId.uuid(), null, null));
+        applyAndRecord(new OrderPickedUpEvent(orderId.uuid(), restaurantId.uuid()));
     }
 
     public void markDelivered() {
         if (status != OrderStatus.IN_DELIVERY) {
             throw new IllegalStateException("Order must be in delivery before being delivered");
         }
-        applyAndRecord(new OrderDeliveredEvent(orderId.uuid(), LocalDateTime.now()));
+        applyAndRecord(new OrderDeliveredEvent(orderId.uuid(), restaurantId.uuid()));
     }
 
     // ==================== Event sourcing (state mutation) ====================
@@ -187,7 +205,12 @@ public class Order {
             this.restaurantId = RestaurantId.of(e.restaurantId());
             this.customerInfo = new CustomerInfo(e.customerName(), e.contactEmail());
             this.deliveryAddress = new DeliveryAddress(
-                    e.street(), e.number(), e.postalCode(), e.city(), e.country());
+                    e.street(), e.number(), e.postalCode(), e.city(), e.country(),
+                    // Absent on orders placed before the address was geocoded,
+                    // and on any order whose lookup failed.
+                    e.dropoffLatitude() == null || e.dropoffLongitude() == null
+                            ? null
+                            : new GeoLocation(e.dropoffLatitude(), e.dropoffLongitude()));
             this.orderLines = new ArrayList<>(e.lines().stream()
                     .map(li -> new OrderLine(li.dishId(), li.dishName(), li.unitPrice(), li.quantity()))
                     .toList());
@@ -197,23 +220,23 @@ public class Order {
             this.version = 0;
         } else if (event instanceof OrderAcceptedEvent e) {
             this.status = OrderStatus.ACCEPTED;
-            this.acceptedAt = e.occurredOn();
+            this.acceptedAt = e.occurredAt();
             this.version++;
         } else if (event instanceof OrderRejectedEvent e) {
             this.status = OrderStatus.REJECTED;
             this.rejectionReason = e.rejectionReason();
             this.version++;
-        } else if (event instanceof OrderReadyEvent e) {
+        } else if (event instanceof OrderReadyForPickupEvent e) {
             this.status = OrderStatus.READY_FOR_PICKUP;
-            this.readyAt = e.occurredOn();
+            this.readyAt = e.occurredAt();
             this.version++;
         } else if (event instanceof OrderPickedUpEvent e) {
             this.status = OrderStatus.IN_DELIVERY;
-            this.pickedUpAt = e.occurredOn();
+            this.pickedUpAt = e.occurredAt();
             this.version++;
         } else if (event instanceof OrderDeliveredEvent e) {
             this.status = OrderStatus.DELIVERED;
-            this.deliveredAt = e.occurredOn();
+            this.deliveredAt = e.occurredAt();
             this.version++;
         } else {
             throw new IllegalStateException("Unknown order event type: " + event.getClass().getName());

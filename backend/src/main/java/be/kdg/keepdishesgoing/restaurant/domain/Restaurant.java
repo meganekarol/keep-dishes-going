@@ -70,6 +70,12 @@ public class Restaurant {
                 name,
                 cuisineType.toString(),
                 defaultPrepTime,
+                address.street(),
+                String.valueOf(address.number()),
+                address.postalCode(),
+                address.city(),
+                address.coordinates() == null ? null : address.coordinates().latitude(),
+                address.coordinates() == null ? null : address.coordinates().longitude(),
                 toSlots(openingHours)
         ));
 

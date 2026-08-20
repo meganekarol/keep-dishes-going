@@ -44,4 +44,17 @@ public class RestaurantProjectionJpaAdapter implements LoadRestaurantProjectionP
             .map(RestaurantProjectionJpaEntity::getDefaultPreparationTime)
             .orElseThrow(() -> new IllegalArgumentException("Restaurant not found: " + restaurantId));
     }
+
+    @Override
+    public PickupPoint getPickupPoint(UUID restaurantId) {
+        return repository.findById(restaurantId)
+            .map(restaurant -> new PickupPoint(
+                    restaurant.getStreet(),
+                    restaurant.getNumber(),
+                    restaurant.getPostalCode(),
+                    restaurant.getCity(),
+                    restaurant.getLatitude(),
+                    restaurant.getLongitude()))
+            .orElseThrow(() -> new IllegalArgumentException("Restaurant not found: " + restaurantId));
+    }
 }

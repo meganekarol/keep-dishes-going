@@ -42,6 +42,12 @@ public class RestaurantProjectionListener {
             event.name(),
             event.cuisineType(),
             event.defaultPreparationTime(),
+            event.street(),
+            event.number(),
+            event.postalCode(),
+            event.city(),
+            event.latitude(),
+            event.longitude(),
             event.openingHours()
         );
         

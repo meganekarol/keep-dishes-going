@@ -38,6 +38,23 @@ public class RestaurantProjectionJpaEntity {
      */
     private Integer defaultPreparationTime;
 
+    /**
+     * Where a courier collects from, sent to the delivery service when an order
+     * is accepted (US-28). Nullable throughout: rows written before these
+     * columns existed have nothing in them, and geocoding is allowed to fail.
+     */
+    private String street;
+
+    private String number;
+
+    private String postalCode;
+
+    private String city;
+
+    private Double latitude;
+
+    private Double longitude;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "manual_override", nullable = false)
     private ManualOverride manualOverride = ManualOverride.NONE;
@@ -59,11 +76,19 @@ public class RestaurantProjectionJpaEntity {
 
     public RestaurantProjectionJpaEntity(UUID restaurantId, String restaurantName,
                                          String cuisineType, int defaultPreparationTime,
+                                         String street, String number, String postalCode,
+                                         String city, Double latitude, Double longitude,
                                          List<OpeningHoursSlot> slots) {
         this.restaurantId = restaurantId;
         this.restaurantName = restaurantName;
         this.cuisineType = cuisineType;
         this.defaultPreparationTime = defaultPreparationTime;
+        this.street = street;
+        this.number = number;
+        this.postalCode = postalCode;
+        this.city = city;
+        this.latitude = latitude;
+        this.longitude = longitude;
         if (slots != null) {
             slots.stream()
                     .map(slot -> new OpeningHoursSlotEmbeddable(
@@ -123,6 +148,30 @@ public class RestaurantProjectionJpaEntity {
     /** @return {@code 0} when it was never recorded, which callers read as unknown */
     public int getDefaultPreparationTime() {
         return defaultPreparationTime == null ? 0 : defaultPreparationTime;
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
     }
 
     public String getCuisineType() {

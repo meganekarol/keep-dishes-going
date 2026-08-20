@@ -1,7 +1,7 @@
 package be.kdg.keepdishesgoing.restaurant.adapter.in;
 
 import be.kdg.keepdishesgoing.common.events.OrderPlacedEvent;
-import be.kdg.keepdishesgoing.common.events.OrderReadyEvent;
+import be.kdg.keepdishesgoing.common.events.OrderReadyForPickupEvent;
 import be.kdg.keepdishesgoing.common.events.OrderRejectedEvent;
 import be.kdg.keepdishesgoing.restaurant.adapter.out.projections.RestaurantBusynessJpaEntity;
 import be.kdg.keepdishesgoing.restaurant.adapter.out.projections.RestaurantBusynessJpaRepository;
@@ -48,7 +48,7 @@ public class OrderActivityListener {
 
     @EventListener
     @Transactional
-    public void on(OrderReadyEvent event) {
+    public void on(OrderReadyForPickupEvent event) {
         orderLeftTheKitchen(event.restaurantId());
     }
 

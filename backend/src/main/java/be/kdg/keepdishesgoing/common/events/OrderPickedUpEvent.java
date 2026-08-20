@@ -6,27 +6,17 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Integration event - received from external delivery service via RabbitMQ.
- * Published when courier picks up the order from restaurant.
- * Routing key: delivery.{orderId}.order.pickedup.v1
- * 
- * This event is NOT published by us (no @Externalized).
- * It's received from RabbitMQ via @RabbitListener.
+ * Received from the delivery service when a courier has collected the order
+ * (US-29). Routing key: {@code delivery.<id>.order.pickedup.v1}.
  */
 public record OrderPickedUpEvent(
         UUID eventId,
-        LocalDateTime occurredOn,
-        UUID orderId,
-        UUID courierId,
-        String courierName
+        LocalDateTime occurredAt,
+        UUID restaurantId,
+        UUID orderId
 ) implements DomainEvent {
-    
-    public OrderPickedUpEvent(UUID orderId, UUID courierId, String courierName) {
-        this(UUID.randomUUID(), LocalDateTime.now(), orderId, courierId, courierName);
-    }
 
-    @Override
-    public LocalDateTime occurredAt() {
-        return occurredOn;
+    public OrderPickedUpEvent(UUID orderId, UUID restaurantId) {
+        this(UUID.randomUUID(), LocalDateTime.now(), restaurantId, orderId);
     }
 }

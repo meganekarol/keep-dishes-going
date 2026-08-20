@@ -1,11 +1,11 @@
 package be.kdg.keepdishesgoing.order.core;
 
+import be.kdg.keepdishesgoing.common.events.OrderAcceptedEvent;
 import be.kdg.keepdishesgoing.order.domain.Order;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.port.in.AcceptOrderUseCase;
 import be.kdg.keepdishesgoing.order.port.in.commands.AcceptOrderCommand;
 import be.kdg.keepdishesgoing.order.port.out.*;
-import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,15 +24,18 @@ public class AcceptOrderUseCaseImpl implements AcceptOrderUseCase {
 
     private final LoadOrderPort loadOrderPort;
     private final SaveOrderPort updateOrderPort;
-    private final PublishEventPort publishEventPort;
+    private final OrderEventPublisherPort orderEventPublisherPort;
+    private final LoadRestaurantProjectionPort loadRestaurantProjectionPort;
 
     public AcceptOrderUseCaseImpl(
             LoadOrderPort loadOrderPort,
             SaveOrderPort updateOrderPort,
-            PublishEventPort publishEventPort) {
+            OrderEventPublisherPort orderEventPublisherPort, OrderEventPublisherPort orderEventPublisherPort1,
+            LoadRestaurantProjectionPort loadRestaurantProjectionPort) {
         this.loadOrderPort = loadOrderPort;
         this.updateOrderPort = updateOrderPort;
-        this.publishEventPort = publishEventPort;
+        this.orderEventPublisherPort = orderEventPublisherPort1;
+        this.loadRestaurantProjectionPort = loadRestaurantProjectionPort;
     }
 
     @Override
@@ -46,14 +49,23 @@ public class AcceptOrderUseCaseImpl implements AcceptOrderUseCase {
         // Validate restaurant owns the order
         validateRestaurantOwnership(order, command.restaurantId());
 
-        // Accept the order (domain logic)
-        order.accept();
+        // The courier needs collecting from somewhere, and the order only knows
+        // which restaurant it belongs to. Looked up here rather than inside the
+        // aggregate, which has no business reaching for another context's data.
+        var pickup = loadRestaurantProjectionPort.getPickupPoint(command.restaurantId());
+
+        order.accept(
+                new OrderAcceptedEvent.Address(
+                        pickup.street(), pickup.number(), pickup.postalCode(), pickup.city()),
+                pickup.hasCoordinates()
+                        ? new OrderAcceptedEvent.Point(pickup.latitude(), pickup.longitude())
+                        : null);
 
         // Save events
         updateOrderPort.save(order);
 
         // Publish events (includes OrderAcceptedEvent with @Externalized to RabbitMQ)
-        publishEventPort.publishAll(order.getUncommittedEvents());
+        orderEventPublisherPort.publishAll(order.getUncommittedEvents());
         order.clearUncommittedEvents();
 
         log.info("Order {} accepted successfully by restaurant {}", command.orderId(), command.restaurantId());

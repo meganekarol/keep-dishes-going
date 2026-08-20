@@ -52,14 +52,14 @@ public class OrderSummaryProjectionListener {
                 OrderSummaryData.describeItems(lines),
                 OrderSummaryData.countItems(lines),
                 event.totalPrice(),
-                event.occurredOn()
+                event.occurredAt()
         ));
     }
 
     @EventListener
     @Transactional
     public void on(OrderAcceptedEvent event) {
-        update(event.orderId(), summary -> summary.markAccepted(event.occurredOn()));
+        update(event.orderId(), summary -> summary.markAccepted(event.occurredAt()));
     }
 
     @EventListener
@@ -70,8 +70,8 @@ public class OrderSummaryProjectionListener {
 
     @EventListener
     @Transactional
-    public void on(OrderReadyEvent event) {
-        update(event.orderId(), summary -> summary.markReady(event.occurredOn()));
+    public void on(OrderReadyForPickupEvent event) {
+        update(event.orderId(), summary -> summary.markReady(event.occurredAt()));
     }
 
     @EventListener

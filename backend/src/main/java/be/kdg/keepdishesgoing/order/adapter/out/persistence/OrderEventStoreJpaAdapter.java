@@ -196,7 +196,7 @@ public class OrderEventStoreJpaAdapter implements LoadOrderPort, SaveOrderPort {
             case "OrderPlacedEvent" -> OrderPlacedEvent.class;
             case "OrderAcceptedEvent" -> OrderAcceptedEvent.class;
             case "OrderRejectedEvent" -> OrderRejectedEvent.class;
-            case "OrderReadyEvent" -> OrderReadyEvent.class;
+            case "OrderReadyForPickupEvent" -> OrderReadyForPickupEvent.class;
             case "OrderPickedUpEvent" -> OrderPickedUpEvent.class;
             case "OrderDeliveredEvent" -> OrderDeliveredEvent.class;
             default -> throw new IllegalStateException("Unknown order event type: " + eventType);
