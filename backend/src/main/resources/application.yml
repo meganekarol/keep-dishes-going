@@ -29,6 +29,15 @@ spring:
     username: user
     password: password
 
+  modulith:
+    events:
+      jdbc:
+        # Lets Modulith create its own event_publication table, with the
+        # serialised event as text. Left to Hibernate it becomes varchar(255),
+        # which an accepted order does not fit into.
+        schema-initialization:
+          enabled: true
+
   security:
     oauth2:
       resourceserver:
