@@ -8,7 +8,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantComman
 import be.kdg.keepdishesgoing.restaurant.port.in.CreateRestaurantUseCase;
 import be.kdg.keepdishesgoing.restaurant.port.out.GeocodeAddressPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.LoadRestaurantPort;
-import be.kdg.keepdishesgoing.restaurant.port.out.PublishEventPort;
+import be.kdg.keepdishesgoing.restaurant.port.out.RestaurantEventPublisherPort;
 import be.kdg.keepdishesgoing.restaurant.port.out.SaveRestaurantPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,14 +21,14 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
 
     private final LoadRestaurantPort loadRestaurantPort;
     private final SaveRestaurantPort saveRestaurantPort;
-    private final PublishEventPort publishEventPort;
+    private final RestaurantEventPublisherPort restaurantEventPublisherPort;
     private final GeocodeAddressPort geocodeAddressPort;
 
     public CreateRestaurantUseCaseImpl(LoadRestaurantPort loadRestaurantPort, SaveRestaurantPort saveRestaurantPort,
-                                       PublishEventPort publishEventPort, GeocodeAddressPort geocodeAddressPort) {
+                                       RestaurantEventPublisherPort restaurantEventPublisherPort, GeocodeAddressPort geocodeAddressPort) {
         this.loadRestaurantPort = loadRestaurantPort;
         this.saveRestaurantPort = saveRestaurantPort;
-        this.publishEventPort = publishEventPort;
+        this.restaurantEventPublisherPort = restaurantEventPublisherPort;
         this.geocodeAddressPort = geocodeAddressPort;
     }
 
@@ -66,7 +66,7 @@ public class CreateRestaurantUseCaseImpl implements CreateRestaurantUseCase {
 
         saveRestaurantPort.saveRestaurant(restaurant);
 
-        publishEventPort.publishAll(restaurant.getUncommittedEvents());
+        restaurantEventPublisherPort.publishAll(restaurant.getUncommittedEvents());
         restaurant.markEventAsCommitted();
 
         return restaurant;
