@@ -20,13 +20,30 @@ public interface OrderSummaryJpaRepository extends JpaRepository<OrderSummaryJpa
     /**
      * Newest first: an owner works through what just came in, and older orders
      * are history they scroll to.
+     *
+     * <p>Unpaid checkouts are left out. An order nobody has paid for is not the
+     * kitchen's business, and showing one would invite an owner to start cooking
+     * against money that may never arrive (US-23).
      */
-    List<OrderSummaryJpaEntity> findByRestaurantIdOrderByPlacedAtDesc(UUID restaurantId);
+    List<OrderSummaryJpaEntity> findByRestaurantIdAndStatusInOrderByPlacedAtDesc(
+            UUID restaurantId, Collection<OrderStatus> statuses);
 
     /**
-     * Ids of the orders a restaurant has not answered yet, placed before the
-     * cut-off. Only the ids are selected: the rows themselves are of no use to
-     * the auto-rejection run, which reloads each aggregate.
+     * Ids of the orders a restaurant has not answered yet, in front of it since
+     * before the cut-off. Only the ids are selected: the rows themselves are of
+     * no use to the auto-rejection run, which reloads each aggregate.
+     */
+    @Query("""
+            SELECT summary.orderId FROM OrderSummaryJpaEntity summary
+            WHERE summary.status = :status AND summary.pendingSince < :cutoff
+            """)
+    List<UUID> findIdsByStatusPendingSinceBefore(@Param("status") OrderStatus status,
+                                                 @Param("cutoff") LocalDateTime cutoff);
+
+    /**
+     * Ids of checkouts started before the cut-off that were never paid for.
+     * Counted from {@code placedAt}, which for these rows is when the customer
+     * was sent off to the payment provider (US-23).
      */
     @Query("""
             SELECT summary.orderId FROM OrderSummaryJpaEntity summary

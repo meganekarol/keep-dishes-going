@@ -5,6 +5,7 @@ import be.kdg.keepdishesgoing.order.domain.Order;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.DeliveryAddress;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderLine;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderStatus;
+import be.kdg.keepdishesgoing.order.domain.valueObjects.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,7 +39,14 @@ public record OrderTracking(
         DeliveryAddress deliveryAddress,
         List<Line> lines,
         BigDecimal totalPrice,
+        /**
+         * Where the customer's money is (US-23). Worth showing on its own: an
+         * order the restaurant turned down still had money held against it, and
+         * the customer is owed the fact that it was given back.
+         */
+        PaymentStatus paymentStatus,
         LocalDateTime placedAt,
+        LocalDateTime paidAt,
         LocalDateTime acceptedAt,
         LocalDateTime readyAt,
         LocalDateTime pickedUpAt,
@@ -82,7 +90,9 @@ public record OrderTracking(
                 order.getDeliveryAddress(),
                 order.getOrderLines().stream().map(Line::from).toList(),
                 order.getTotalPrice(),
+                order.getPayment() == null ? null : order.getPayment().status(),
                 order.getPlacedAt(),
+                order.getPayment() == null ? null : order.getPayment().authorizedAt(),
                 order.getAcceptedAt(),
                 order.getReadyAt(),
                 order.getPickedUpAt(),
@@ -95,12 +105,14 @@ public record OrderTracking(
      * Nothing is quoted once the order has stopped moving: a delivered order
      * has a real time on it, and a rejected one is never coming.
      *
+     * <p>Nor before it is paid for: no kitchen has seen an unpaid order (US-23).
+     *
      * <p>The distance is left unknown here. The customer's browser position was
      * only ever available while they were choosing a restaurant, and where they
      * happen to be standing now is not where the food is going.
      */
     private static LocalDateTime estimateFor(Order order, int preparationMinutes, int ordersNotReady) {
-        if (order.getStatus().isTerminal()) {
+        if (order.getStatus().isTerminal() || order.isAwaitingPayment()) {
             return null;
         }
         LocalDateTime startedFrom = order.getAcceptedAt() != null

@@ -73,6 +73,9 @@ public class RebuildOrderSummariesUseCaseImpl implements RebuildOrderSummariesUs
                 OrderSummaryData.countItems(lines),
                 order.getTotalPrice(),
                 order.getPlacedAt(),
+                // When the order reached its restaurant, which is when its
+                // payment was authorized (US-23).
+                order.getPayment() == null ? null : order.getPayment().authorizedAt(),
                 order.getAcceptedAt(),
                 order.getReadyAt(),
                 order.getRejectionReason()

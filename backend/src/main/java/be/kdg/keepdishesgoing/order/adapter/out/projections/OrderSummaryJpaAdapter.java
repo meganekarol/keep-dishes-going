@@ -7,6 +7,7 @@ import be.kdg.keepdishesgoing.order.port.out.SaveOrderSummaryPort;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,9 +23,14 @@ public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort, SaveOrderSu
         this.summaryRepository = summaryRepository;
     }
 
+    /** Everything a restaurant is allowed to know about, which excludes unpaid checkouts. */
+    private static final List<OrderStatus> VISIBLE_TO_RESTAURANT =
+            Arrays.stream(OrderStatus.values()).filter(OrderStatus::isVisibleToRestaurant).toList();
+
     @Override
     public List<OrderSummaryData> loadByRestaurant(UUID restaurantId) {
-        return summaryRepository.findByRestaurantIdOrderByPlacedAtDesc(restaurantId)
+        return summaryRepository
+                .findByRestaurantIdAndStatusInOrderByPlacedAtDesc(restaurantId, VISIBLE_TO_RESTAURANT)
                 .stream()
                 .map(OrderSummaryJpaAdapter::toData)
                 .toList();
@@ -32,7 +38,12 @@ public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort, SaveOrderSu
 
     @Override
     public List<UUID> findPendingAcceptanceBefore(LocalDateTime cutoff) {
-        return summaryRepository.findIdsByStatusPlacedBefore(OrderStatus.PENDING_ACCEPTANCE, cutoff);
+        return summaryRepository.findIdsByStatusPendingSinceBefore(OrderStatus.PENDING_ACCEPTANCE, cutoff);
+    }
+
+    @Override
+    public List<UUID> findAwaitingPaymentBefore(LocalDateTime cutoff) {
+        return summaryRepository.findIdsByStatusPlacedBefore(OrderStatus.AWAITING_PAYMENT, cutoff);
     }
 
     /** Placed but not yet cooked: the two states that keep a kitchen busy. */
@@ -61,7 +72,8 @@ public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort, SaveOrderSu
                 data.totalPrice(),
                 data.placedAt()
         );
-        entity.restoreProgress(data.status(), data.acceptedAt(), data.readyAt(), data.rejectionReason());
+        entity.restoreProgress(data.status(), data.pendingSince(), data.acceptedAt(),
+                data.readyAt(), data.rejectionReason());
         return entity;
     }
 
@@ -76,6 +88,7 @@ public class OrderSummaryJpaAdapter implements LoadOrderSummaryPort, SaveOrderSu
                 entity.getItemCount(),
                 entity.getTotalPrice(),
                 entity.getPlacedAt(),
+                entity.getPendingSince(),
                 entity.getAcceptedAt(),
                 entity.getReadyAt(),
                 entity.getRejectionReason()

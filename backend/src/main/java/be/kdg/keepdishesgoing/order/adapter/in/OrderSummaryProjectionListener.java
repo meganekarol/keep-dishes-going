@@ -56,6 +56,22 @@ public class OrderSummaryProjectionListener {
         ));
     }
 
+    /**
+     * The order becomes the restaurant's to answer, and its five-minute clock
+     * starts here rather than at checkout (US-23).
+     */
+    @EventListener
+    @Transactional
+    public void on(OrderPaymentAuthorizedEvent event) {
+        update(event.orderId(), summary -> summary.markPendingAcceptance(event.occurredAt()));
+    }
+
+    @EventListener
+    @Transactional
+    public void on(OrderPaymentExpiredEvent event) {
+        update(event.orderId(), OrderSummaryJpaEntity::markPaymentExpired);
+    }
+
     @EventListener
     @Transactional
     public void on(OrderAcceptedEvent event) {

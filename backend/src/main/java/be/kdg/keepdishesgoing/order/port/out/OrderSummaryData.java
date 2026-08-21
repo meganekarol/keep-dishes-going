@@ -29,6 +29,11 @@ public record OrderSummaryData(
         int itemCount,
         BigDecimal totalPrice,
         LocalDateTime placedAt,
+        /**
+         * When the order reached its restaurant, which is when it was paid for
+         * (US-23). Null while the customer is still at the payment provider.
+         */
+        LocalDateTime pendingSince,
         LocalDateTime acceptedAt,
         LocalDateTime readyAt,
         String rejectionReason

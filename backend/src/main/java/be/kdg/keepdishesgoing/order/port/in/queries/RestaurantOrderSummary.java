@@ -13,8 +13,10 @@ import java.util.UUID;
  * <p> A kitchen deciding whether to take an order needs the dishes,
  * the total and how long it has been waiting.
  *
- * @param itemSummary the ordered dishes as one line
- * @param placedAt    what the five-minute acceptance deadline counts from
+ * @param itemSummary  the ordered dishes as one line
+ * @param placedAt     when the customer checked out
+ * @param pendingSince what the five-minute deadline counts from: when the order
+ *                     was paid for, not when checkout started (US-23)
  */
 public record RestaurantOrderSummary(
         UUID orderId,
@@ -25,6 +27,7 @@ public record RestaurantOrderSummary(
         int itemCount,
         BigDecimal totalPrice,
         LocalDateTime placedAt,
+        LocalDateTime pendingSince,
         LocalDateTime acceptedAt,
         LocalDateTime readyAt,
         String rejectionReason
@@ -40,6 +43,7 @@ public record RestaurantOrderSummary(
                 data.itemCount(),
                 data.totalPrice(),
                 data.placedAt(),
+                data.pendingSince(),
                 data.acceptedAt(),
                 data.readyAt(),
                 data.rejectionReason()

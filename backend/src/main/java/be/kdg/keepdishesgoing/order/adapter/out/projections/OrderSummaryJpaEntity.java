@@ -20,6 +20,8 @@ import java.util.UUID;
 @Table(name = "order_summaries", schema = "kdg_order", indexes = {
     @Index(name = "idx_summary_restaurant", columnList = "restaurantId"),
     // The auto-rejection run asks for these two every minute.
+    @Index(name = "idx_summary_status_pending", columnList = "status, pendingSince"),
+    // As does the sweep for checkouts nobody paid for.
     @Index(name = "idx_summary_status_placed", columnList = "status, placedAt")
 })
 public class OrderSummaryJpaEntity {
@@ -53,6 +55,16 @@ public class OrderSummaryJpaEntity {
     @Column(nullable = false)
     private LocalDateTime placedAt;
 
+    /**
+     * When the order landed in front of its restaurant, which is when it was
+     * paid for and not when the customer started checking out (US-23).
+     *
+     * <p>What the five-minute acceptance deadline counts from. Counting from
+     * {@code placedAt} instead would spend the kitchen's window on the time the
+     * customer took to enter a card.
+     */
+    private LocalDateTime pendingSince;
+
     private LocalDateTime acceptedAt;
 
     private LocalDateTime readyAt;
@@ -69,7 +81,9 @@ public class OrderSummaryJpaEntity {
                                  BigDecimal totalPrice, LocalDateTime placedAt) {
         this.orderId = orderId;
         this.restaurantId = restaurantId;
-        this.status = OrderStatus.PENDING_ACCEPTANCE;
+        // Not yet the kitchen's problem: an order is unpaid until the provider
+        // says otherwise, and only then does it start counting down (US-23).
+        this.status = OrderStatus.AWAITING_PAYMENT;
         this.customerName = customerName;
         this.deliveryAddress = deliveryAddress;
         this.itemSummary = itemSummary;
@@ -82,12 +96,24 @@ public class OrderSummaryJpaEntity {
      * Sets the lifecycle fields outright, for rebuilding a row from an order
      * that has already run its course.
      */
-    public void restoreProgress(OrderStatus status, LocalDateTime acceptedAt,
-                                LocalDateTime readyAt, String rejectionReason) {
+    public void restoreProgress(OrderStatus status, LocalDateTime pendingSince,
+                                LocalDateTime acceptedAt, LocalDateTime readyAt,
+                                String rejectionReason) {
         this.status = status;
+        this.pendingSince = pendingSince;
         this.acceptedAt = acceptedAt;
         this.readyAt = readyAt;
         this.rejectionReason = rejectionReason;
+    }
+
+    /** The money is held, so the kitchen may now see the order (US-23). */
+    public void markPendingAcceptance(LocalDateTime pendingSince) {
+        this.status = OrderStatus.PENDING_ACCEPTANCE;
+        this.pendingSince = pendingSince;
+    }
+
+    public void markPaymentExpired() {
+        this.status = OrderStatus.PAYMENT_EXPIRED;
     }
 
     public void markAccepted(LocalDateTime acceptedAt) {
@@ -147,6 +173,10 @@ public class OrderSummaryJpaEntity {
 
     public LocalDateTime getPlacedAt() {
         return placedAt;
+    }
+
+    public LocalDateTime getPendingSince() {
+        return pendingSince;
     }
 
     public LocalDateTime getAcceptedAt() {
