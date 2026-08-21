@@ -2,11 +2,11 @@ package be.kdg.keepdishesgoing.order.adapter.in.web;
 
 import be.kdg.keepdishesgoing.order.domain.valueObjects.CustomerInfo;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.DeliveryAddress;
-import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
 import be.kdg.keepdishesgoing.order.port.in.commands.OrderItemCommand;
 import be.kdg.keepdishesgoing.order.port.in.commands.PlaceOrderCommand;
 import be.kdg.keepdishesgoing.order.port.in.PlaceOrderUseCase;
 import be.kdg.keepdishesgoing.order.port.in.TrackOrderQuery;
+import be.kdg.keepdishesgoing.order.port.in.queries.Checkout;
 import be.kdg.keepdishesgoing.order.port.in.queries.OrderTracking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,18 +35,23 @@ public class CustomerOrderController {
     }
 
     /**
-     * Place a new order
+     * Place a new order and open its payment (US-22, US-23).
+     *
+     * <p>Answers with the order id and a payment page to continue at. The id is
+     * handed over before the customer leaves to pay, so an order survives them
+     * abandoning the payment: they can still look it up and see it was never
+     * charged.
      */
     @PostMapping
     public ResponseEntity<PlaceOrderResponse> placeOrder(@RequestBody PlaceOrderRequest request) {
         log.info("Received order placement request for restaurant {}", request.restaurantId);
 
         PlaceOrderCommand command = mapToCommand(request);
-        OrderId orderId = placeOrderUseCase.placeOrder(command);
+        Checkout checkout = placeOrderUseCase.placeOrder(command);
 
-        log.info("Order placed successfully: {}", orderId);
+        log.info("Order {} placed, sending the customer to pay", checkout.orderId());
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(new PlaceOrderResponse(orderId.uuid(), "Order placed successfully"));
+            .body(new PlaceOrderResponse(checkout.orderId(), checkout.paymentUrl(), "Order placed, payment required"));
     }
     
     /**
@@ -107,8 +112,13 @@ public class CustomerOrderController {
         int quantity
     ) {}
     
+    /**
+     * @param paymentUrl the provider's payment page. The customer has to be sent
+     *                   there for the order to reach its restaurant at all.
+     */
     public record PlaceOrderResponse(
         UUID orderId,
+        String paymentUrl,
         String message
     ) {}
 }
