@@ -20,6 +20,8 @@ export interface PlaceOrderRequest {
 
 export interface PlaceOrderResponse {
   orderId: string;
+  /** The payment provider's hosted page to send the customer to (US-23). */
+  paymentUrl: string;
   message: string;
 }
 

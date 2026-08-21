@@ -30,10 +30,13 @@ const EMPTY_CHECKOUT: CheckoutFormValues = {
 };
 
 /**
- * Where the basket becomes an order (US-22).
+ * Where the basket becomes an order (US-22, US-23).
  *
  * No login (US-30): a guest leaves a name, an email and an address, and the
  * order id that comes back is what they track it with.
+ *
+ * Submitting starts a payment rather than finishing the order, so the order id
+ * is stored before the customer leaves for the provider's page (US-23).
  */
 export function CheckoutPage() {
   const { basket, total, clear } = useContext(BasketContext);
@@ -56,12 +59,23 @@ export function CheckoutPage() {
       },
       {
         onSuccess: (response) => {
+          // Written down before we hand the browser over. Everything after this
+          // line happens on someone else's site, and a customer who never comes
+          // back would otherwise have no way to find the order again (US-24).
           remember({
             orderId: response.orderId,
             restaurantName: basket.restaurantName,
             placedAt: new Date().toISOString(),
           });
           clear();
+
+          if (response.paymentUrl) {
+            window.location.assign(response.paymentUrl);
+            return;
+          }
+
+          // No payment page came back, which should not happen. Better to land
+          // the customer on their order than to leave them on a dead form.
           navigate(`/orders/${response.orderId}`, { replace: true });
         },
       },
@@ -174,8 +188,11 @@ export function CheckoutPage() {
           {placeOrder.error && <Alert severity="error">{placeOrder.error.message}</Alert>}
 
           <Stack direction="row" spacing={2}>
+            {/* Says where the button leads. The next screen is the payment
+                provider's, not ours, and a button labelled "place the order"
+                would make that a surprise (US-23). */}
             <Button type="submit" variant="contained" disabled={placeOrder.isPending}>
-              {placeOrder.isPending ? 'Placing your order...' : 'Place the order'}
+              {placeOrder.isPending ? 'Taking you to payment...' : `Pay ${formatPrice(total)}`}
             </Button>
             <Button onClick={() => navigate('/basket')} disabled={placeOrder.isPending}>
               Back to the basket
