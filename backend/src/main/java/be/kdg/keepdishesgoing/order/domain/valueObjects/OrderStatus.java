@@ -5,7 +5,13 @@ package be.kdg.keepdishesgoing.order.domain.valueObjects;
  */
 public enum OrderStatus {
     /**
-     * Order has been placed, awaiting restaurant acceptance
+     * Checkout is done but the customer has not paid yet (US-23)
+     * No restaurant has been told about this order
+     */
+    AWAITING_PAYMENT,
+
+    /**
+     * The customer's money is held, awaiting restaurant acceptance
      * Automatic rejection after 5 minutes if not decided
      */
     PENDING_ACCEPTANCE,
@@ -19,6 +25,11 @@ public enum OrderStatus {
      * Restaurant has rejected the order
      */
     REJECTED,
+
+    /**
+     * Checkout was started but never paid for (US-23)
+     */
+    PAYMENT_EXPIRED,
 
     /**
      * Order is prepared and ready for courier pickup
@@ -36,7 +47,15 @@ public enum OrderStatus {
     DELIVERED;
 
     public boolean isTerminal() {
-        return this == REJECTED || this == DELIVERED;
+        return this == REJECTED || this == DELIVERED || this == PAYMENT_EXPIRED;
+    }
+
+    /**
+     * Whether a restaurant has been told about this order at all. Keeps unpaid
+     * orders out of the owner's list and the busyness count (US-19).
+     */
+    public boolean isVisibleToRestaurant() {
+        return this != AWAITING_PAYMENT && this != PAYMENT_EXPIRED;
     }
 
     public boolean canBeAccepted() {

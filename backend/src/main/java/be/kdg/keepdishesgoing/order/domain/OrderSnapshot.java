@@ -25,6 +25,8 @@ public record OrderSnapshot(
     LocalDateTime pickedUpAt,
     LocalDateTime deliveredAt,
     String rejectionReason,
+    /** Where the order's money is (US-23), absent on snapshots taken before payment existed. */
+    Payment payment,
     int version
 ) {
     

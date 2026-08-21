@@ -194,6 +194,10 @@ public class OrderEventStoreJpaAdapter implements LoadOrderPort, SaveOrderPort {
     private Class<? extends DomainEvent> resolveEventType(String eventType) {
         return switch (eventType) {
             case "OrderPlacedEvent" -> OrderPlacedEvent.class;
+            case "OrderPaymentAuthorizedEvent" -> OrderPaymentAuthorizedEvent.class;
+            case "OrderPaymentCapturedEvent" -> OrderPaymentCapturedEvent.class;
+            case "OrderPaymentReleasedEvent" -> OrderPaymentReleasedEvent.class;
+            case "OrderPaymentExpiredEvent" -> OrderPaymentExpiredEvent.class;
             case "OrderAcceptedEvent" -> OrderAcceptedEvent.class;
             case "OrderRejectedEvent" -> OrderRejectedEvent.class;
             case "OrderReadyForPickupEvent" -> OrderReadyForPickupEvent.class;

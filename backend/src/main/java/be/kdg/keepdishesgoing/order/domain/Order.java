@@ -33,6 +33,7 @@ public class Order {
     private List<OrderLine> orderLines;
     private BigDecimal totalPrice;
     private OrderStatus status;
+    private Payment payment;
     private LocalDateTime placedAt;
     private LocalDateTime acceptedAt;
     private LocalDateTime readyAt;
@@ -105,11 +106,76 @@ public class Order {
         order.pickedUpAt = snapshot.pickedUpAt();
         order.deliveredAt = snapshot.deliveredAt();
         order.rejectionReason = snapshot.rejectionReason();
+        order.payment = snapshot.payment();
         order.version = snapshot.version();
         return order;
     }
 
     // ==================== Business methods (command side) ====================
+
+    /**
+     * Records that the provider is holding the money, which is what makes the
+     * order visible to its restaurant (US-23).
+     *
+     * <p>A repeat of a hold already recorded is ignored, since callbacks arrive
+     * more than once.
+     *
+     * @param paymentReference the provider's id for the payment being held
+     * @return whether this call changed anything
+     */
+    public boolean authorizePayment(String paymentReference) {
+        if (payment.isHeld() && paymentReference.equals(payment.reference())) {
+            return false;
+        }
+        if (status != OrderStatus.AWAITING_PAYMENT) {
+            throw new IllegalStateException("Only an order awaiting payment can be paid for");
+        }
+        applyAndRecord(new OrderPaymentAuthorizedEvent(
+                orderId.uuid(), restaurantId.uuid(), paymentReference, totalPrice));
+        return true;
+    }
+
+    /**
+     * Records the charge the provider has confirmed, as the restaurant accepts
+     * (US-23).
+     */
+    public void recordPaymentCaptured() {
+        if (!payment.isHeld()) {
+            throw new IllegalStateException("There is no held payment to take");
+        }
+        applyAndRecord(new OrderPaymentCapturedEvent(
+                orderId.uuid(), restaurantId.uuid(), payment.reference(), totalPrice));
+    }
+
+    /** Gives the hold back, for an order no kitchen is going to cook (US-23). */
+    public void recordPaymentReleased() {
+        if (!payment.isHeld()) {
+            throw new IllegalStateException("There is no held payment to give back");
+        }
+        applyAndRecord(new OrderPaymentReleasedEvent(
+                orderId.uuid(), restaurantId.uuid(), payment.reference()));
+    }
+
+    /** Abandons a checkout the customer walked away from (US-23). */
+    public void expirePayment() {
+        if (status != OrderStatus.AWAITING_PAYMENT) {
+            throw new IllegalStateException("Only an order awaiting payment can expire");
+        }
+        applyAndRecord(new OrderPaymentExpiredEvent(orderId.uuid(), restaurantId.uuid()));
+    }
+
+    /**
+     * Throws unless the kitchen may take this order on. Asked before capturing,
+     * which no rollback can undo.
+     */
+    public void ensureAcceptable() {
+        if (status != OrderStatus.PENDING_ACCEPTANCE) {
+            throw new IllegalStateException("Order can only be accepted when pending acceptance");
+        }
+        if (!payment.isHeld()) {
+            throw new IllegalStateException("Order has no held payment to take");
+        }
+    }
 
     /**
      * Takes the order on, and dispatches a courier by doing so (US-28).
@@ -126,6 +192,9 @@ public class Order {
                        OrderAcceptedEvent.Point pickupCoordinates) {
         if (status != OrderStatus.PENDING_ACCEPTANCE) {
             throw new IllegalStateException("Order can only be accepted when pending acceptance");
+        }
+        if (!payment.isCaptured()) {
+            throw new IllegalStateException("Order cannot be accepted before its payment is taken");
         }
         applyAndRecord(new OrderAcceptedEvent(
                 orderId.uuid(),
@@ -215,9 +284,25 @@ public class Order {
                     .map(li -> new OrderLine(li.dishId(), li.dishName(), li.unitPrice(), li.quantity()))
                     .toList());
             this.totalPrice = e.totalPrice();
-            this.status = OrderStatus.PENDING_ACCEPTANCE;
+            // An order starts unpaid, and no kitchen hears about it until the
+            // provider says the money is held (US-23).
+            this.status = OrderStatus.AWAITING_PAYMENT;
+            this.payment = Payment.pending();
             this.placedAt = e.occurredOn();
             this.version = 0;
+        } else if (event instanceof OrderPaymentAuthorizedEvent e) {
+            this.payment = this.payment.authorized(e.paymentReference(), e.occurredAt());
+            this.status = OrderStatus.PENDING_ACCEPTANCE;
+            this.version++;
+        } else if (event instanceof OrderPaymentCapturedEvent e) {
+            this.payment = this.payment.captured(e.occurredAt());
+            this.version++;
+        } else if (event instanceof OrderPaymentReleasedEvent e) {
+            this.payment = this.payment.released(e.occurredAt());
+            this.version++;
+        } else if (event instanceof OrderPaymentExpiredEvent) {
+            this.status = OrderStatus.PAYMENT_EXPIRED;
+            this.version++;
         } else if (event instanceof OrderAcceptedEvent e) {
             this.status = OrderStatus.ACCEPTED;
             this.acceptedAt = e.occurredAt();
@@ -264,6 +349,7 @@ public class Order {
                 pickedUpAt,
                 deliveredAt,
                 rejectionReason,
+                payment,
                 version
         );
     }
@@ -345,6 +431,23 @@ public class Order {
 
     public int getVersion() {
         return version;
+    }
+
+    public Payment getPayment() {
+        return payment;
+    }
+
+    /** What the provider calls this payment, {@code null} before checkout completes. */
+    public String getPaymentReference() {
+        return payment == null ? null : payment.reference();
+    }
+
+    public boolean hasHeldPayment() {
+        return payment != null && payment.isHeld();
+    }
+
+    public boolean isAwaitingPayment() {
+        return status == OrderStatus.AWAITING_PAYMENT;
     }
 
     public boolean isPendingAcceptance() {
