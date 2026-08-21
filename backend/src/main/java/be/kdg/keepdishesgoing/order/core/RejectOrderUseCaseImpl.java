@@ -12,6 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Turns an order down, and gives the customer their money back by doing so
+ * (US-10, US-23).
+ */
 @Service
 @Transactional
 public class RejectOrderUseCaseImpl implements RejectOrderUseCase {
@@ -21,15 +25,18 @@ public class RejectOrderUseCaseImpl implements RejectOrderUseCase {
     private final LoadOrderPort loadOrderPort;
     private final SaveOrderPort updateOrderPort;
     private final OrderEventPublisherPort orderEventPublisherPort;
+    private final PaymentReleaser paymentReleaser;
 
     public RejectOrderUseCaseImpl(
             LoadOrderPort loadOrderPort,
             SaveOrderPort updateOrderPort,
-            OrderEventPublisherPort orderEventPublisherPort
+            OrderEventPublisherPort orderEventPublisherPort,
+            PaymentReleaser paymentReleaser
             ) {
         this.loadOrderPort = loadOrderPort;
         this.updateOrderPort = updateOrderPort;
         this.orderEventPublisherPort = orderEventPublisherPort;
+        this.paymentReleaser = paymentReleaser;
     }
 
     @Override
@@ -43,6 +50,9 @@ public class RejectOrderUseCaseImpl implements RejectOrderUseCase {
 
         // Validate restaurant owns the order
         validateRestaurantOwnership(order, command.restaurantId());
+
+        // Nobody is cooking this, so nobody gets charged for it.
+        paymentReleaser.releaseIfHeld(order);
 
         // Reject the order (domain logic)
         order.reject(command.reason());

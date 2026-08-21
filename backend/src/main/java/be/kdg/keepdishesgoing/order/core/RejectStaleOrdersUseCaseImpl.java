@@ -34,16 +34,19 @@ public class RejectStaleOrdersUseCaseImpl implements RejectStaleOrdersUseCase {
     private final LoadOrderPort loadOrderPort;
     private final SaveOrderPort saveOrderPort;
     private final OrderEventPublisherPort publishEventPort;
+    private final PaymentReleaser paymentReleaser;
 
     public RejectStaleOrdersUseCaseImpl(
             LoadOrderSummaryPort loadOrderSummaryPort,
             LoadOrderPort loadOrderPort,
             SaveOrderPort saveOrderPort,
-            OrderEventPublisherPort publishEventPort) {
+            OrderEventPublisherPort publishEventPort,
+            PaymentReleaser paymentReleaser) {
         this.loadOrderSummaryPort = loadOrderSummaryPort;
         this.loadOrderPort = loadOrderPort;
         this.saveOrderPort = saveOrderPort;
         this.publishEventPort = publishEventPort;
+        this.paymentReleaser = paymentReleaser;
     }
 
     @Override
@@ -73,6 +76,10 @@ public class RejectStaleOrdersUseCaseImpl implements RejectStaleOrdersUseCase {
             log.debug("Order {} was answered after the read model was queried, leaving it alone", orderId);
             return;
         }
+
+        // A kitchen that never answered is still a kitchen that is not cooking,
+        // so the customer gets their money back either way (US-23).
+        paymentReleaser.releaseIfHeld(order);
 
         order.autoReject();
         saveOrderPort.save(order);

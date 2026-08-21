@@ -14,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 /**
- * Use case implementation for restaurant to accept an order
+ * Takes an order on, and takes the customer's money by doing so (US-10, US-23).
+ *
+ * <p>A restaurant saying yes is the only place the hold becomes a charge.
  */
 @Service
 @Transactional
@@ -26,16 +28,19 @@ public class AcceptOrderUseCaseImpl implements AcceptOrderUseCase {
     private final SaveOrderPort updateOrderPort;
     private final OrderEventPublisherPort orderEventPublisherPort;
     private final LoadRestaurantProjectionPort loadRestaurantProjectionPort;
+    private final PaymentProviderPort paymentProviderPort;
 
     public AcceptOrderUseCaseImpl(
             LoadOrderPort loadOrderPort,
             SaveOrderPort updateOrderPort,
-            OrderEventPublisherPort orderEventPublisherPort, OrderEventPublisherPort orderEventPublisherPort1,
-            LoadRestaurantProjectionPort loadRestaurantProjectionPort) {
+            OrderEventPublisherPort orderEventPublisherPort,
+            LoadRestaurantProjectionPort loadRestaurantProjectionPort,
+            PaymentProviderPort paymentProviderPort) {
         this.loadOrderPort = loadOrderPort;
         this.updateOrderPort = updateOrderPort;
-        this.orderEventPublisherPort = orderEventPublisherPort1;
+        this.orderEventPublisherPort = orderEventPublisherPort;
         this.loadRestaurantProjectionPort = loadRestaurantProjectionPort;
+        this.paymentProviderPort = paymentProviderPort;
     }
 
     @Override
@@ -48,6 +53,13 @@ public class AcceptOrderUseCaseImpl implements AcceptOrderUseCase {
 
         // Validate restaurant owns the order
         validateRestaurantOwnership(order, command.restaurantId());
+
+        // Everything that can be refused is refused before the money moves.
+        // Taking it is a call to Stripe, which no rollback here can undo.
+        order.ensureAcceptable();
+
+        paymentProviderPort.capture(order.getPaymentReference());
+        order.recordPaymentCaptured();
 
         // The courier needs collecting from somewhere, and the order only knows
         // which restaurant it belongs to. Looked up here rather than inside the
