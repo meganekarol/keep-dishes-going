@@ -44,3 +44,8 @@ infrastructure/idp_mysql_data/
 # Keep the seed/config directories that ARE part of the repo
 !infrastructure/init-scripts/
 !infrastructure/keycloak/
+
+# Local Stripe credentials, read by Spring Boot from ./config/ on startup.
+# Anchored to the project root so the config package under src/main/java
+# stays tracked.
+/config/

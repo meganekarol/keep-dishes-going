@@ -48,6 +48,20 @@ spring:
 cors:
   allowed-origins: http://localhost:5173
 
+kdg:
+  payment:
+    stripe:
+      # Test-mode keys only, kept out of git. Supply them either as environment
+      # variables or in config/application.yml, which overrides these empty
+      # defaults: sk_test_... for the API, whsec_... for the callback.
+      secret-key: ${STRIPE_SECRET_KEY:}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+      base-url: https://api.stripe.com
+      # Where Stripe sends the customer afterwards. {orderId} is filled in per
+      # order, so success lands straight on that order's tracking page.
+      success-url: http://localhost:5173/orders/{orderId}
+      cancel-url: http://localhost:5173/orders/{orderId}?payment=cancelled
+
 logging:
   level:
     org.springframework.security: INFO
