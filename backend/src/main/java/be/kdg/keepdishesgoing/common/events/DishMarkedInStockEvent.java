@@ -5,7 +5,11 @@ import org.springframework.modulith.events.Externalized;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
+/**
+ * Internal domain event - published when a dish is placed back in stock.
+ * Order context listens to update dish status in projection.
+ * NOT sent to RabbitMQ.
+ */
 public record DishMarkedInStockEvent(
         UUID eventId,
         LocalDateTime occurredOn,

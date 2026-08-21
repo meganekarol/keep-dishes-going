@@ -14,15 +14,6 @@ import java.util.Optional;
 
 /**
  * Looks an address up with OpenStreetMap's Nominatim.
- *
- * <p>Chosen because it needs no account. In return it asks for a real
- * User-Agent and no more than one call a second, which suits us: an address is
- * looked up once, when the thing that owns it is created.
- *
- * <p>A technical service in the shared kernel rather than an adapter, because
- * two contexts geocode. Each wraps this behind its own port, so neither's core
- * knows that OpenStreetMap exists.
- *
  * <p>Every failure is swallowed and logged. This runs inside transactions that
  * create restaurants and place orders, and neither should fail because a
  * public map server timed out.

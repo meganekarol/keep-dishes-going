@@ -52,7 +52,7 @@ public final class DeliveryEstimate {
     /**
      * How much longer a queue makes the wait.
      *
-     * <p>The assignment names the factor as the count of orders not yet ready.
+     * <p>The count of orders not yet ready.
      * Taken literally that multiplies an idle restaurant's estimate by zero and
      * makes it instant, so the count is floored at one: a kitchen with nothing
      * on and a kitchen with one order both quote their plain estimate.
