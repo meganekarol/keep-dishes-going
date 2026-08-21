@@ -13,9 +13,12 @@ import { useMyRestaurant } from '../../hooks/useMyRestaurant';
  * restaurant (US-31), so there is nothing to choose between here.
  */
 export function OwnerDashboardPage() {
-  const { data: restaurant, isLoading, error } = useMyRestaurant();
+  const { data: restaurant, isLoading, isFetching, error } = useMyRestaurant();
 
-  if (!isLoading && !error && restaurant === null) {
+  // isFetching, not isLoading: isLoading stays false once anything is cached, so
+  // a background refetch would redirect on the stale answer. This covers the
+  // first load too, which is always fetching.
+  if (!isFetching && !error && restaurant === null) {
     return <Navigate to="/owner/restaurant/new" replace />;
   }
 
