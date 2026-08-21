@@ -1,7 +1,6 @@
 package be.kdg.keepdishesgoing.common.events;
 
 import be.kdg.keepdishesgoing.common.DomainEvent;
-import org.springframework.modulith.events.Externalized;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
