@@ -11,7 +11,7 @@ export const orderKeys = {
 
 const POLL_INTERVAL_MS = 5000;
 
-const TERMINAL_STATUSES: OrderStatus[] = ['REJECTED', 'DELIVERED'];
+const TERMINAL_STATUSES: OrderStatus[] = ['REJECTED', 'DELIVERED', 'PAYMENT_EXPIRED'];
 
 /**
  * Follow an order from placement to delivery (US-24, US-25).

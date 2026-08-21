@@ -20,19 +20,25 @@ import { formatDateTime, formatPrice } from '../../utils/format';
 
 type ChipColour = 'default' | 'warning' | 'success' | 'error' | 'info';
 
+// Unpaid orders never reach a restaurant, so the two payment states are here
+// only to keep the map total (US-23).
 const STATUS_COLOURS: Record<OrderStatus, ChipColour> = {
+  AWAITING_PAYMENT: 'default',
   PENDING_ACCEPTANCE: 'warning',
   ACCEPTED: 'info',
   REJECTED: 'error',
+  PAYMENT_EXPIRED: 'default',
   READY_FOR_PICKUP: 'success',
   IN_DELIVERY: 'info',
   DELIVERED: 'default',
 };
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
+  AWAITING_PAYMENT: 'Not paid yet',
   PENDING_ACCEPTANCE: 'Waiting for you',
   ACCEPTED: 'Cooking',
   REJECTED: 'Turned away',
+  PAYMENT_EXPIRED: 'Never paid for',
   READY_FOR_PICKUP: 'Waiting for a courier',
   IN_DELIVERY: 'On its way',
   DELIVERED: 'Delivered',
@@ -98,8 +104,11 @@ export function OrderCard({ order, onAccept, onReject, onMarkReady, isBusy, erro
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {formatPrice(order.totalPrice)}
           </Typography>
+          {/* When it landed here, which is when it was paid for and not when
+              the customer started checking out. The five minutes run from
+              this (US-23). */}
           <Typography variant="body2" color="text.secondary">
-            Placed {formatDateTime(order.placedAt)}
+            Arrived {formatDateTime(order.pendingSince ?? order.placedAt)}
           </Typography>
         </Stack>
 

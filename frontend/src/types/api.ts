@@ -37,12 +37,22 @@ export type DayOfWeek =
   | 'SUNDAY';
 
 export type OrderStatus =
+  /** Checked out but not paid for yet, so no restaurant has seen it (US-23). */
+  | 'AWAITING_PAYMENT'
   | 'PENDING_ACCEPTANCE'
   | 'ACCEPTED'
   | 'REJECTED'
+  /** Checkout was started and abandoned (US-23). */
+  | 'PAYMENT_EXPIRED'
   | 'READY_FOR_PICKUP'
   | 'IN_DELIVERY'
   | 'DELIVERED';
+
+/**
+ * Where the customer's money is (US-23). `AUTHORIZED` means paid but not yet
+ * charged.
+ */
+export type PaymentStatus = 'PENDING' | 'AUTHORIZED' | 'CAPTURED' | 'RELEASED';
 
 export interface Address {
   street: string;
@@ -232,7 +242,10 @@ export interface OrderTracking {
   deliveryAddress: DeliveryAddress;
   lines: OrderLine[];
   totalPrice: number;
+  paymentStatus: PaymentStatus | null;
   placedAt: string;
+  /** When the payment was authorised, which is when the restaurant first saw the order. */
+  paidAt: string | null;
   acceptedAt: string | null;
   readyAt: string | null;
   pickedUpAt: string | null;
@@ -260,8 +273,10 @@ export interface RestaurantOrderSummary {
   itemSummary: string;
   itemCount: number;
   totalPrice: number;
-  /** What the five-minute acceptance deadline counts from. */
+  /** When the customer checked out. */
   placedAt: string;
+  /** What the five-minute deadline counts from: when the order was paid for (US-23). */
+  pendingSince: string | null;
   acceptedAt: string | null;
   readyAt: string | null;
   rejectionReason: string | null;

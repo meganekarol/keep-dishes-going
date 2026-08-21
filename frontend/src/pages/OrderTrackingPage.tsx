@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -28,9 +28,11 @@ import type { OrderStatus, OrderTracking } from '../types/api';
 import { formatClockTime, formatDateTime, formatPrice, humanise } from '../utils/format';
 
 const STATUS_COLOURS: Record<OrderStatus, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
+  AWAITING_PAYMENT: 'warning',
   PENDING_ACCEPTANCE: 'warning',
   ACCEPTED: 'info',
   REJECTED: 'error',
+  PAYMENT_EXPIRED: 'default',
   READY_FOR_PICKUP: 'info',
   IN_DELIVERY: 'info',
   DELIVERED: 'success',
@@ -45,8 +47,13 @@ const STATUS_COLOURS: Record<OrderStatus, 'default' | 'info' | 'success' | 'erro
  */
 export function OrderTrackingPage() {
   const { orderId = '' } = useParams();
+  const [search] = useSearchParams();
   const { data, isLoading, error } = useOrderTracking(orderId);
   const [copied, setCopied] = useState(false);
+
+  // Set by the payment provider's cancel link, which brings the customer back
+  // here rather than leaving them stranded on its page (US-23).
+  const cancelled = search.get('payment') === 'cancelled';
 
   return (
     <QueryState isLoading={isLoading} error={error}>
@@ -87,10 +94,39 @@ export function OrderTrackingPage() {
             on this device.
           </Alert>
 
+          {/* Coming back from the provider is not the same as having paid: the
+              confirmation reaches us from their servers, which can take a
+              moment longer than the redirect. The page polls, so this clears
+              itself (US-23). */}
+          {data.status === 'AWAITING_PAYMENT' && (
+            <Alert severity={cancelled ? 'warning' : 'info'} sx={{ my: 2 }}>
+              {cancelled
+                ? 'The payment was not completed, so this order was never sent to the restaurant. Nothing has been charged.'
+                : 'Waiting for your payment to be confirmed. The restaurant sees the order as soon as it is.'}
+            </Alert>
+          )}
+
+          {data.status === 'PAYMENT_EXPIRED' && (
+            <Alert severity="info" sx={{ my: 2 }}>
+              This order was never paid for, so it lapsed. Nothing was charged.
+            </Alert>
+          )}
+
           {data.status === 'REJECTED' && (
             <Alert severity="error" sx={{ my: 2 }}>
               The restaurant could not take this order
               {data.rejectionReason ? `: ${data.rejectionReason}` : '.'}
+              {data.paymentStatus === 'RELEASED' && ' Your payment has been released, you were not charged.'}
+            </Alert>
+          )}
+
+          {/* The money is held from checkout but only taken when a kitchen says
+              yes, and a customer looking at "paid" deserves to know which of
+              those has happened (US-23). */}
+          {data.paymentStatus === 'AUTHORIZED' && (
+            <Alert severity="info" sx={{ my: 2 }}>
+              {formatPrice(data.totalPrice)} is reserved on your card. It is only taken once the
+              restaurant accepts.
             </Alert>
           )}
 
@@ -166,6 +202,7 @@ export function OrderTrackingPage() {
 function Timeline({ order }: { order: OrderTracking }) {
   const steps = [
     { label: 'Placed', at: order.placedAt },
+    { label: 'Paid', at: order.paidAt },
     { label: 'Accepted', at: order.acceptedAt },
     { label: 'Ready for pickup', at: order.readyAt },
     { label: 'Picked up', at: order.pickedUpAt },

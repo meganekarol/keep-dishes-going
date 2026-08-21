@@ -19,6 +19,8 @@ import { formatDateTime, formatPrice, humanise } from '../utils/format';
 const LIST_POLL_MS = 30_000;
 
 const STATUS_COLOURS: Record<OrderStatus, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
+  AWAITING_PAYMENT: 'warning',
+  PAYMENT_EXPIRED: 'default',
   PENDING_ACCEPTANCE: 'warning',
   ACCEPTED: 'info',
   REJECTED: 'error',
