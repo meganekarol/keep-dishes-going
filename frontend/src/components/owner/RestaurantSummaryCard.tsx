@@ -1,5 +1,6 @@
-import { Box, Card, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 
+import { CoverImage } from '../shared/CoverImage';
 import { OpeningHoursTable } from '../shared/OpeningHoursTable';
 import type { OwnerRestaurant, RestaurantStatus } from '../../types/api';
 import { humanise } from '../../utils/format';
@@ -25,9 +26,7 @@ interface RestaurantSummaryCardProps {
 export function RestaurantSummaryCard({ restaurant }: RestaurantSummaryCardProps) {
   return (
     <Card variant="outlined">
-      {restaurant.pictureUrls.length > 0 && (
-        <CardMedia component="img" height="200" image={restaurant.pictureUrls[0]} alt="" />
-      )}
+      <CoverImage src={restaurant.pictureUrls[0]} alt={restaurant.name} ratio={21 / 9} />
       <CardContent>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 1 }}>
           <Typography variant="h2">{restaurant.name}</Typography>

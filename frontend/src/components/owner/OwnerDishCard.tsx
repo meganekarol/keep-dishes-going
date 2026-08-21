@@ -2,6 +2,7 @@ import { Box, Card, CardActions, CardContent, Chip, Stack, Typography } from '@m
 import ScheduleIcon from '@mui/icons-material/Schedule';
 
 import { DishActions } from './DishActions';
+import { CoverImage } from '../shared/CoverImage';
 import type { DishState, DishVersion, OwnerDishView } from '../../types/api';
 import { formatDateTime, formatPrice, humanise } from '../../utils/format';
 
@@ -35,6 +36,11 @@ interface OwnerDishCardProps {
 export function OwnerDishCard({ dish, restaurantId, menuIsFull }: OwnerDishCardProps) {
   const name = dish.published?.name ?? dish.draft?.name ?? 'Untitled dish';
 
+  // Two panels only when there is a live version and a changed one to hold
+  // against it. On a single panel the card heading already says the name and
+  // the status, so repeating them inside is noise.
+  const comparing = Boolean(dish.published && dish.pendingChanges && dish.draft);
+
   return (
     <Card variant="outlined">
       <CardContent>
@@ -59,7 +65,7 @@ export function OwnerDishCard({ dish, restaurantId, menuIsFull }: OwnerDishCardP
           {dish.published && (
             <DishVersionPanel
               version={dish.published}
-              label={dish.pendingChanges ? 'What customers see now' : 'On the menu'}
+              label={comparing ? 'What customers see now' : undefined}
             />
           )}
 
@@ -70,7 +76,7 @@ export function OwnerDishCard({ dish, restaurantId, menuIsFull }: OwnerDishCardP
           {dish.pendingChanges && dish.draft && (
             <DishVersionPanel
               version={dish.draft}
-              label={dish.published ? 'Waiting to go live' : 'Draft, not published yet'}
+              label={comparing ? 'Waiting to go live' : undefined}
               highlighted
             />
           )}
@@ -92,7 +98,8 @@ export function OwnerDishCard({ dish, restaurantId, menuIsFull }: OwnerDishCardP
 
 interface DishVersionPanelProps {
   version: DishVersion;
-  label: string;
+  /** Left out on a lone panel, where the card heading already says as much. */
+  label?: string;
   highlighted?: boolean;
 }
 
@@ -101,44 +108,48 @@ function DishVersionPanel({ version, label, highlighted }: DishVersionPanelProps
     <Box
       sx={{
         flex: 1,
+        minWidth: 0,
         p: 1.5,
         border: 1,
-        borderRadius: 1,
+        borderRadius: 2,
         borderColor: highlighted ? 'warning.main' : 'divider',
+        bgcolor: highlighted ? 'warning.light' : 'transparent',
       }}
     >
-      <Typography variant="overline" color="text.secondary">
-        {label}
-      </Typography>
-
-      {version.pictureUrl && (
-        <Box
-          component="img"
-          src={version.pictureUrl}
-          alt=""
-          sx={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 1, mt: 0.5 }}
-        />
+      {label && (
+        <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+          {label}
+        </Typography>
       )}
 
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'baseline', mt: 1 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {version.name}
-        </Typography>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-          {formatPrice(version.price)}
-        </Typography>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+        {/* A fixed width rather than a fixed height: the panel is full width on
+            its own and half of one when compared, and only the width changing
+            keeps the picture the same shape in both. */}
+        <Box sx={{ width: { xs: '100%', sm: 168 }, flexShrink: 0, borderRadius: 2, overflow: 'hidden' }}>
+          <CoverImage src={version.pictureUrl} alt={version.name} ratio={4 / 3} />
+        </Box>
+
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Typography variant="subtitle1">{version.name}</Typography>
+            <Typography variant="subtitle1" sx={{ whiteSpace: 'nowrap' }}>
+              {formatPrice(version.price)}
+            </Typography>
+          </Stack>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {version.description}
+          </Typography>
+
+          <Box sx={{ mt: 1.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+            <Chip size="small" variant="outlined" label={humanise(version.type)} />
+            {version.foodTags.map((tag) => (
+              <Chip key={tag} size="small" variant="outlined" color="secondary" label={humanise(tag)} />
+            ))}
+          </Box>
+        </Box>
       </Stack>
-
-      <Typography variant="body2" color="text.secondary">
-        {version.description}
-      </Typography>
-
-      <Box sx={{ mt: 1, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-        <Chip size="small" variant="outlined" label={humanise(version.type)} />
-        {version.foodTags.map((tag) => (
-          <Chip key={tag} size="small" variant="outlined" color="secondary" label={humanise(tag)} />
-        ))}
-      </Box>
     </Box>
   );
 }

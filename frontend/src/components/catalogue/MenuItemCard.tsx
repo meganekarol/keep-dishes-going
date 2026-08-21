@@ -4,13 +4,13 @@ import {
   Card,
   CardActions,
   CardContent,
-  CardMedia,
   Chip,
   Stack,
   Typography,
 } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 
+import { CoverImage } from '../shared/CoverImage';
 import type { MenuItem } from '../../types/api';
 import { formatPrice, humanise } from '../../utils/format';
 
@@ -37,7 +37,18 @@ export function MenuItemCard({ item, onAdd, inBasket = 0 }: MenuItemCardProps) {
         opacity: item.available ? 1 : 0.6,
       }}
     >
-      {item.pictureUrl && <CardMedia component="img" height="140" image={item.pictureUrl} alt="" />}
+      <Box sx={{ position: 'relative' }}>
+        <CoverImage src={item.pictureUrl} alt={item.name} ratio={16 / 10} />
+        {!item.available && (
+          <Chip
+            size="small"
+            color="warning"
+            label="Sold out"
+            sx={{ position: 'absolute', top: 12, left: 12, boxShadow: 1 }}
+          />
+        )}
+      </Box>
+
       <CardContent sx={{ flexGrow: 1 }}>
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -57,7 +68,6 @@ export function MenuItemCard({ item, onAdd, inBasket = 0 }: MenuItemCardProps) {
           {item.foodTags.map((tag) => (
             <Chip key={tag} size="small" variant="outlined" color="secondary" label={humanise(tag)} />
           ))}
-          {!item.available && <Chip size="small" color="warning" label="Out of stock" />}
         </Box>
       </CardContent>
 
