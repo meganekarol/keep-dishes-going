@@ -36,6 +36,14 @@ public class SecurityConfig {
                         // US-30: customers order as guests, so this must stay open.
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
 
+                        // US-23: the payment provider calls this from its own
+                        // servers and has no KDG account to authenticate with.
+                        // It proves who it is by signing the body with a shared
+                        // secret, which the controller checks before doing
+                        // anything. Open here means unauthenticated, not
+                        // unverified.
+                        .requestMatchers(HttpMethod.POST, "/api/payments/stripe/webhook").permitAll()
+
                         // US-24/25: tracking is open for the same reason. A guest
                         // order has no account to bind the check to, so the order's
                         // random id is what proves the caller placed it, and it is only
