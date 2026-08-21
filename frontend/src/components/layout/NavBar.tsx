@@ -14,17 +14,21 @@ export function NavBar() {
   const { orders } = usePlacedOrders();
 
   return (
-    <AppBar position="static" color="primary" elevation={0}>
+    <AppBar position="sticky">
       <Toolbar>
-        <RestaurantMenuIcon sx={{ mr: 1.5 }} />
+        <RestaurantMenuIcon sx={{ mr: 1.5, color: 'primary.main' }} />
         <Typography
           variant="h6"
           component={Link}
           to="/"
-          sx={{ color: 'inherit', textDecoration: 'none', fontWeight: 700 }}
+          sx={{ color: 'text.primary', textDecoration: 'none' }}
         >
           Keep Dishes Going
         </Typography>
+
+        <Button color="inherit" component={Link} to="/restaurants" sx={{ ml: 3 }}>
+          Restaurants
+        </Button>
 
         <Box sx={{ flexGrow: 1 }} />
 
@@ -50,10 +54,10 @@ export function NavBar() {
 
         {isAuthenticated() ? (
           <>
-            <Button color="inherit" component={Link} to="/owner">
+            <Button variant="outlined" color="inherit" component={Link} to="/owner">
               My restaurant
             </Button>
-            <Typography variant="body2" sx={{ mx: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
               {loggedInUser?.name}
             </Typography>
             <Button color="inherit" onClick={logout}>
@@ -63,7 +67,7 @@ export function NavBar() {
         ) : (
           // Customers never need this: ordering and tracking are open (US-30).
           // It is here for restaurant owners.
-          <Button color="inherit" onClick={login}>
+          <Button variant="contained" onClick={login}>
             Owner log in
           </Button>
         )}

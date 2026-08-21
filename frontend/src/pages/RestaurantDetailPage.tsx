@@ -4,13 +4,14 @@ import {
   Alert,
   Box,
   Button,
+  Card,
+  CardContent,
   Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Divider,
   MenuItem as SelectItem,
   Snackbar,
   Stack,
@@ -20,7 +21,10 @@ import {
   Typography,
 } from '@mui/material';
 
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+
 import { MenuItemCard } from '../components/catalogue/MenuItemCard';
+import { CoverImage } from '../components/shared/CoverImage';
 import { OpeningHoursTable } from '../components/shared/OpeningHoursTable';
 import { QueryState } from '../components/shared/QueryState';
 import BasketContext from '../context/BasketContext';
@@ -89,34 +93,46 @@ export function RestaurantDetailPage() {
     <QueryState isLoading={restaurantQuery.isLoading} error={restaurantQuery.error}>
       {restaurantQuery.data && (
         <>
-          <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-            <Typography variant="h1">{restaurantQuery.data.name}</Typography>
-            <Chip
-              label={restaurantQuery.data.open ? 'Open' : 'Closed'}
-              color={restaurantQuery.data.open ? 'success' : 'default'}
+          <Card sx={{ mb: 4 }}>
+            <CoverImage
+              src={restaurantQuery.data.pictureUrls[0]}
+              alt={restaurantQuery.data.name}
+              ratio={24 / 7}
             />
-          </Stack>
+            <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+              <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                <Typography variant="h1">{restaurantQuery.data.name}</Typography>
+                <Chip
+                  label={restaurantQuery.data.open ? 'Open' : 'Closed'}
+                  color={restaurantQuery.data.open ? 'success' : 'default'}
+                />
+              </Stack>
 
-          <Typography color="text.secondary" gutterBottom>
-            {humanise(restaurantQuery.data.cuisineType)} · {restaurantQuery.data.address.street}{' '}
-            {restaurantQuery.data.address.number}, {restaurantQuery.data.address.postalCode}{' '}
-            {restaurantQuery.data.address.city}
-          </Typography>
+              <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+                {humanise(restaurantQuery.data.cuisineType)} · {restaurantQuery.data.address.street}{' '}
+                {restaurantQuery.data.address.number}, {restaurantQuery.data.address.postalCode}{' '}
+                {restaurantQuery.data.address.city}
+              </Typography>
 
-          {/* Only worth saying while they can act on it: a closed kitchen
-              delivers in no minutes at all. */}
-          {restaurantQuery.data.open && (
-            <Typography variant="body2" color="text.secondary">
-              Roughly {restaurantQuery.data.guesstimatedDeliveryTime} minutes to your door
-              {locationDenied ? ', assuming an average distance' : ''}.
-            </Typography>
-          )}
+              {/* Only worth saying while they can act on it: a closed kitchen
+                  delivers in no minutes at all. */}
+              {restaurantQuery.data.open && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  icon={<AccessTimeIcon />}
+                  label={`Roughly ${restaurantQuery.data.guesstimatedDeliveryTime} minutes to your door${
+                    locationDenied ? ', assuming an average distance' : ''
+                  }`}
+                  sx={{ mt: 2 }}
+                />
+              )}
 
-          <Box sx={{ mt: 2 }}>
-            <OpeningHoursTable hours={restaurantQuery.data.openingHours} />
-          </Box>
-
-          <Divider sx={{ my: 3 }} />
+              <Box sx={{ mt: 2.5 }}>
+                <OpeningHoursTable hours={restaurantQuery.data.openingHours} />
+              </Box>
+            </CardContent>
+          </Card>
 
           <Typography variant="h2" gutterBottom>
             Menu

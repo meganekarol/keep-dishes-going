@@ -19,9 +19,16 @@ export function RestaurantListPage() {
 
   return (
     <>
-      <Typography variant="h1" gutterBottom>
-        Restaurants
-      </Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h1" gutterBottom>
+          Restaurants
+        </Typography>
+        <Typography color="text.secondary">
+          {data
+            ? `${data.length} ${data.length === 1 ? 'kitchen is' : 'kitchens are'} taking orders around you.`
+            : 'Finding kitchens around you.'}
+        </Typography>
+      </Box>
 
       <RestaurantFilterForm onApply={setFilters} />
 
@@ -32,7 +39,7 @@ export function RestaurantListPage() {
           <Box
             sx={{
               display: 'grid',
-              gap: 2,
+              gap: 3,
               gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
             }}
           >
