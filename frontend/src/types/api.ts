@@ -54,12 +54,24 @@ export type OrderStatus =
  */
 export type PaymentStatus = 'PENDING' | 'AUTHORIZED' | 'CAPTURED' | 'RELEASED';
 
-export interface Address {
+/** An address as an owner types it. The backend geocodes it from there. */
+export interface PostalAddress {
   street: string;
   number: number;
   postalCode: string;
   city: string;
   country: string;
+}
+
+/** Where an address sits on the map. */
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+/** A stored address. `coordinates` is null when geocoding it did not work. */
+export interface Address extends PostalAddress {
+  coordinates: Coordinates | null;
 }
 
 /** `open`/`closed` are local times, `HH:mm:ss`. */
@@ -137,7 +149,7 @@ export type RestaurantStatus = 'OPEN' | 'CLOSED' | 'MANUALLY_OPENED' | 'MANUALLY
  */
 export interface CreateRestaurantRequest {
   name: string;
-  address: Address;
+  address: PostalAddress;
   contactEmail: string;
   cuisineType: CuisineType;
   defaultPreparationTime: number;
