@@ -10,21 +10,15 @@ import java.util.UUID;
 public interface LoadDishProjectionPort {
     
     /**
-     * Check if a dish is available for ordering
-     * 
-     * @param dishId the dish ID
-     * @return true if available, false if out of stock or unpublished
-     * @throws IllegalArgumentException if dish not found
-     */
-    boolean isDishAvailable(UUID dishId);
-    
-    /**
-     * Check if all dishes in a list are available
-     * 
+     * Name the dishes in a list that cannot be ordered
+     *
+     * <p>Names rather than a yes/no, so a refused order can say which dish
+     * caused it (US-21).
+     *
      * @param dishIds list of dish IDs
-     * @return true if all are available
+     * @return the names of the unavailable dishes, empty if all can be ordered
      */
-    boolean areAllDishesAvailable(List<UUID> dishIds);
+    List<String> namesOfUnavailableDishes(List<UUID> dishIds);
     
     /**
      * Get the current price of a dish

@@ -1,5 +1,6 @@
 package be.kdg.keepdishesgoing.common.web;
 
+import be.kdg.keepdishesgoing.common.exceptions.DishesUnavailableException;
 import be.kdg.keepdishesgoing.common.exceptions.DomainException;
 import be.kdg.keepdishesgoing.common.exceptions.MessagePublishingException;
 import be.kdg.keepdishesgoing.common.exceptions.NotFoundException;
@@ -101,6 +102,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException e, HttpServletRequest request) {
         log.warn("Illegal state on {}: {}", request.getRequestURI(), e.getMessage());
+        return build(HttpStatus.CONFLICT, e.getMessage(), request);
+    }
+
+    /**
+     * A basket holding dishes the kitchen can no longer serve (US-21). The
+     * message names them, so it is passed through for the customer to read.
+     */
+    @ExceptionHandler(DishesUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleDishesUnavailable(DishesUnavailableException e,
+                                                                 HttpServletRequest request) {
+        log.warn("Unavailable dishes on {}: {}", request.getRequestURI(), e.getDishNames());
         return build(HttpStatus.CONFLICT, e.getMessage(), request);
     }
 

@@ -1,5 +1,6 @@
 package be.kdg.keepdishesgoing.order.core;
 
+import be.kdg.keepdishesgoing.common.exceptions.DishesUnavailableException;
 import be.kdg.keepdishesgoing.order.domain.Order;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.DeliveryAddress;
 import be.kdg.keepdishesgoing.order.domain.valueObjects.OrderId;
@@ -129,11 +130,13 @@ public class PlaceOrderUseCaseImpl implements PlaceOrderUseCase {
             .map(OrderItemCommand::dishId)
             .toList();
 
-        // Check all dishes are available
-        boolean allAvailable = loadDishPort.areAllDishesAvailable(dishIds);
-        if (!allAvailable) {
-            log.warn("Some dishes are not available for restaurant {}", restaurantId);
-            throw new IllegalStateException("One or more dishes are not available for ordering");
+        // Check all dishes are available. The basket blocks checkout on this too
+        // (US-21); this is what catches a dish that went out of stock between
+        // that check and the customer pressing pay.
+        List<String> unavailable = loadDishPort.namesOfUnavailableDishes(dishIds);
+        if (!unavailable.isEmpty()) {
+            log.warn("Dishes {} are not available for restaurant {}", unavailable, restaurantId);
+            throw new DishesUnavailableException(unavailable);
         }
         
         // Verify all dishes belong to the restaurant

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,21 +25,22 @@ public class DishProjectionJpaAdapter implements LoadDishProjectionPort {
     }
     
     @Override
-    public boolean isDishAvailable(UUID dishId) {
-        return repository.findById(dishId)
-            .map(dish -> dish.getStatus() == DishProjectionStatus.AVAILABLE)
-            .orElse(false);
-    }
-    
-    @Override
-    public boolean areAllDishesAvailable(List<UUID> dishIds) {
+    public List<String> namesOfUnavailableDishes(List<UUID> dishIds) {
+        List<String> names = new ArrayList<>();
+
         for (UUID dishId : dishIds) {
-            if (!isDishAvailable(dishId)) {
-                log.warn("Dish {} is not available", dishId);
-                return false;
+            DishProjectionJpaEntity dish = repository.findById(dishId).orElse(null);
+            if (dish != null && dish.getStatus() == DishProjectionStatus.AVAILABLE) {
+                continue;
             }
+
+            log.warn("Dish {} is not available", dishId);
+            // A dish the projection has never seen is unavailable too, and the
+            // only name there is to give is the id the caller sent.
+            names.add(dish == null ? dishId.toString() : dish.getDishName());
         }
-        return true;
+
+        return names;
     }
     
     @Override
