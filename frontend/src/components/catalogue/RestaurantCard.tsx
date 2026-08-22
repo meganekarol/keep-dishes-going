@@ -20,7 +20,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
           <Chip
             size="small"
             label={restaurant.open ? 'Open' : 'Closed'}
-            color={restaurant.open ? 'success' : 'default'}
+            color={restaurant.open ? 'success' : 'warning'}
             sx={{ position: 'absolute', top: 12, left: 12, boxShadow: 1 }}
           />
         </Box>

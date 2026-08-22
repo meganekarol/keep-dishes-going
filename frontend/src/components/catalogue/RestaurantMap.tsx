@@ -1,13 +1,12 @@
 import { useEffect } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Box, Button, Chip, Stack, Typography, useTheme } from '@mui/material';
+import { Alert, Box, Typography, useTheme } from '@mui/material';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+import { RestaurantCard } from './RestaurantCard';
 import { useCustomerLocation } from '../../hooks/useCustomerLocation';
 import type { RestaurantSummary } from '../../types/api';
-import { humanise } from '../../utils/format';
 
 type Point = [number, number];
 
@@ -103,7 +102,21 @@ export function RestaurantMap({ restaurants }: { restaurants: RestaurantSummary[
           borderColor: 'divider',
           // Leaflet ships its own font stack and link colour.
           '& .leaflet-container': { fontFamily: 'inherit' },
-          '& .leaflet-popup-content': { m: 1.5, minWidth: 180 },
+          '& .restaurant-popup .leaflet-popup-content-wrapper': {
+            p: 0,
+            bgcolor: 'transparent',
+            boxShadow: 'none',
+            borderRadius: '16px',
+          },
+          '& .restaurant-popup .leaflet-popup-content': { m: 0 },
+          '& .restaurant-popup .leaflet-popup-content a': { color: 'text.primary' },
+          '& .restaurant-popup .leaflet-popup-tip': { bgcolor: 'background.paper' },
+          // Leaflet's grey close button is invisible against the card picture.
+          '& .restaurant-popup .leaflet-popup-close-button': {
+            color: 'common.white',
+            textShadow: '0 1px 3px rgba(0,0,0,.6)',
+            zIndex: 1,
+          },
         }}
       >
         <MapContainer
@@ -131,40 +144,8 @@ export function RestaurantMap({ restaurants }: { restaurants: RestaurantSummary[
               position={position}
               icon={pin(restaurant.open ? theme.palette.primary.main : theme.palette.text.disabled)}
             >
-              <Popup>
-                <Stack spacing={0.5}>
-                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      {restaurant.name}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={restaurant.open ? 'Open' : 'Closed'}
-                      color={restaurant.open ? 'success' : 'default'}
-                    />
-                  </Stack>
-
-                  <Typography variant="body2" color="text.secondary">
-                    {humanise(restaurant.cuisineType)} · {restaurant.address.street}{' '}
-                    {restaurant.address.number}, {restaurant.address.city}
-                  </Typography>
-
-                  {restaurant.open && (
-                    <Typography variant="body2" color="text.secondary">
-                      Roughly {restaurant.guesstimatedDeliveryTime} minutes to your door
-                    </Typography>
-                  )}
-
-                  <Button
-                    size="small"
-                    variant="contained"
-                    component={RouterLink}
-                    to={`/restaurants/${restaurant.restaurantId}`}
-                    sx={{ mt: 1, alignSelf: 'flex-start' }}
-                  >
-                    View the menu
-                  </Button>
-                </Stack>
+              <Popup className="restaurant-popup" minWidth={264} maxWidth={264}>
+                <RestaurantCard restaurant={restaurant} />
               </Popup>
             </Marker>
           ))}
