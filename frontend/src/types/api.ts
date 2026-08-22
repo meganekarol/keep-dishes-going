@@ -84,6 +84,18 @@ export interface MenuItem {
   available: boolean;
 }
 
+/**
+ * Why a basket dish cannot be ordered (US-21). `REMOVED` covers a dish the
+ * owner unpublished as well as one that was never on this menu: the customer is
+ * told the same thing either way.
+ */
+export type Availability = 'AVAILABLE' | 'OUT_OF_STOCK' | 'REMOVED';
+
+export interface DishAvailability {
+  dishId: string;
+  availability: Availability;
+}
+
 export interface RestaurantSummary {
   restaurantId: string;
   name: string;

@@ -1,10 +1,11 @@
 import { useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Alert, Button, Divider, Paper, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Button, Divider, Paper, Stack, Typography } from '@mui/material';
 
 import { FormTextField } from '../components/form/FormTextField';
 import BasketContext from '../context/BasketContext';
+import { UNAVAILABLE_LABEL, useBasketAvailability } from '../hooks/useBasketAvailability';
 import { usePlaceOrder } from '../hooks/useOrderTracking';
 import { usePlacedOrders } from '../hooks/usePlacedOrders';
 import { formatPrice } from '../utils/format';
@@ -43,6 +44,9 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const placeOrder = usePlaceOrder();
   const { remember } = usePlacedOrders();
+  // Checked again here: this page can be reached straight from a bookmark,
+  // without the basket page ever having run the check (US-21).
+  const { unavailable, isChecking } = useBasketAvailability();
   const { control, handleSubmit } = useForm<CheckoutFormValues>({ defaultValues: EMPTY_CHECKOUT });
 
   if (!basket && !placeOrder.isSuccess) return <Navigate to="/basket" replace />;
@@ -183,15 +187,37 @@ export function CheckoutPage() {
             />
           </Stack>
 
-          {/* Whether the kitchen is open and every dish still in stock is
-              decided when the order lands, so that answer comes from there. */}
+          {unavailable.length > 0 && (
+            <Alert
+              severity="warning"
+              action={
+                <Button color="inherit" size="small" onClick={() => navigate('/basket')}>
+                  Fix my basket
+                </Button>
+              }
+            >
+              <AlertTitle>This order cannot be placed yet</AlertTitle>
+              {unavailable
+                .map((line) => `${line.name} (${UNAVAILABLE_LABEL[line.reason].toLowerCase()})`)
+                .join(', ')}
+              .
+            </Alert>
+          )}
+
+          {/* Whether the kitchen is open is decided when the order lands, so
+              that answer comes from there. So does a dish that sold out in the
+              seconds between the check above and this button. */}
           {placeOrder.error && <Alert severity="error">{placeOrder.error.message}</Alert>}
 
           <Stack direction="row" spacing={2}>
             {/* Says where the button leads. The next screen is the payment
                 provider's, not ours, and a button labelled "place the order"
                 would make that a surprise (US-23). */}
-            <Button type="submit" variant="contained" disabled={placeOrder.isPending}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={placeOrder.isPending || isChecking || unavailable.length > 0}
+            >
               {placeOrder.isPending ? 'Taking you to payment...' : `Pay ${formatPrice(total)}`}
             </Button>
             <Button onClick={() => navigate('/basket')} disabled={placeOrder.isPending}>

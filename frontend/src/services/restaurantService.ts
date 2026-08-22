@@ -1,6 +1,7 @@
 import { api } from './apiClient';
 import type {
   CuisineType,
+  DishAvailability,
   DishSortOrder,
   DishType,
   FoodTag,
@@ -56,5 +57,14 @@ export const restaurantService = {
       type: filters.type,
       foodTags: filters.foodTags?.length ? filters.foodTags : undefined,
       sort: filters.sort,
+    }),
+
+  /**
+   * Whether these dishes can still be ordered (US-21). Answers for every id,
+   * including ones that have left the menu and so are missing from `getMenu`.
+   */
+  checkAvailability: (restaurantId: string, dishIds: string[]) =>
+    api.get<DishAvailability[]>(`/api/restaurants/${restaurantId}/dishes/availability`, {
+      dishIds,
     }),
 };

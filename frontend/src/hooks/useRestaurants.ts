@@ -11,6 +11,8 @@ export const restaurantKeys = {
     [...restaurantKeys.all, 'detail', restaurantId, position] as const,
   menu: (restaurantId: string, filters: MenuFilters) =>
     [...restaurantKeys.all, 'menu', restaurantId, filters] as const,
+  availability: (restaurantId: string, dishIds: string[]) =>
+    [...restaurantKeys.all, 'availability', restaurantId, dishIds] as const,
 };
 
 /**
