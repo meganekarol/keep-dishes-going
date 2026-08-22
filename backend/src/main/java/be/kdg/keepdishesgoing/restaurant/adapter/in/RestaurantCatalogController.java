@@ -114,4 +114,19 @@ public class RestaurantCatalogController {
         DishSearchQuery query = new DishSearchQuery(restaurantId, type, foodTags, sort);
         return ResponseEntity.ok(viewRestaurantMenuQuery.browseMenu(query));
     }
+
+    /**
+     * Whether the dishes in a basket can still be ordered (US-21).
+     *
+     * <p>{@code dishIds} takes a comma-separated list. Unpublished dishes are
+     * missing from {@link #browseMenu} altogether, so a basket cannot work this
+     * out from the menu alone.
+     */
+    @GetMapping("/{restaurantId}/dishes/availability")
+    public ResponseEntity<List<DishAvailability>> checkAvailability(
+            @PathVariable UUID restaurantId,
+            @RequestParam List<UUID> dishIds) {
+
+        return ResponseEntity.ok(viewRestaurantMenuQuery.checkAvailability(restaurantId, dishIds));
+    }
 }

@@ -61,6 +61,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/restaurants/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/restaurants/*/dishes").permitAll()
 
+                        // US-21: a guest's basket checks itself before checkout,
+                        // so this is as open as the menu it asks about. Listed
+                        // separately because the single * above stops at the
+                        // "dishes" segment.
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants/*/dishes/availability").permitAll()
+
                         // Owner routes. The role proves the caller is *an* owner;
                         // proving they own *this* restaurant needs a lookup, so the
                         // endpoints additionally carry @PreAuthorize on restaurantId.

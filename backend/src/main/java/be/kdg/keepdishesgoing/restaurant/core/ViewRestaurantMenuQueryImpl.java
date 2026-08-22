@@ -6,6 +6,7 @@ import be.kdg.keepdishesgoing.restaurant.domain.Restaurant;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.Coordinates;
 import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.RestaurantId;
 import be.kdg.keepdishesgoing.restaurant.port.in.ViewRestaurantMenuQuery;
+import be.kdg.keepdishesgoing.restaurant.port.in.queries.DishAvailability;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.DishSearchQuery;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.MenuItem;
 import be.kdg.keepdishesgoing.restaurant.port.in.queries.RestaurantDetail;
@@ -17,7 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Serves one restaurant's page and its menu.
@@ -57,6 +61,23 @@ public class ViewRestaurantMenuQueryImpl implements ViewRestaurantMenuQuery {
     public List<MenuItem> browseMenu(DishSearchQuery query) {
         load(query.restaurantId());
         return menuOf(query.restaurantId(), query);
+    }
+
+    @Override
+    public List<DishAvailability> checkAvailability(UUID restaurantId, List<UUID> dishIds) {
+        load(restaurantId);
+
+        Map<UUID, Dish> menu = loadDishPort.loadByRestaurant(RestaurantId.of(restaurantId)).stream()
+                .collect(Collectors.toMap(dish -> dish.getDishId().uuid(), Function.identity()));
+
+        // Every id gets an answer, even one this restaurant has never heard of:
+        // a basket asking about a dish that is gone still needs telling.
+        return dishIds.stream()
+                .distinct()
+                .map(dishId -> menu.containsKey(dishId)
+                        ? DishAvailability.of(menu.get(dishId))
+                        : DishAvailability.removed(dishId))
+                .toList();
     }
 
     private Restaurant load(UUID restaurantId) {
