@@ -1,8 +1,10 @@
 # Keep Dishes Going — Backend
 
-Spring Boot 3.5 / Java 17 / Gradle. Two bounded contexts (`restaurant`, `order`) built with
-hexagonal architecture and Spring Modulith. The `order` context is event sourced with snapshots.
+Spring Boot 3.5 / Java 17 / Gradle. Three bounded contexts (`restaurant`, `order`, `pricing`) built with
+hexagonal architecture and Spring Modulith. `order` is event sourced with snapshots, `pricing` is
+event sourced without them.
 
+- **Setting up from scratch: [`documentation/getting-started.md`](documentation/getting-started.md)**
 - Domain model, command & event catalog: [`documentation/`](documentation/)
 - Infrastructure (Docker Compose): [`infrastructure/`](infrastructure/)
 
@@ -51,61 +53,18 @@ Schemas are created automatically (`ddl-auto: update` with `create_namespaces: t
 
 ## Keycloak realm
 
-The application expects a realm named **`keepdishesgoing`** — this is hardcoded in
-`src/main/resources/application.yml` as the `issuer-uri`. Without it, every secured endpoint
-fails token validation.
+The realm `keepdishesgoing` is version controlled at
+`infrastructure/keycloak/keepdishesgoing-realm.json` and imported automatically on a clean start,
+bringing two accounts and both clients with it.
 
-The realm is version controlled at `infrastructure/keycloak/realm-export.json` and imported
-automatically on startup, so a clean `docker compose up` yields a working identity provider.
+See [`documentation/getting-started.md`](documentation/getting-started.md) for what it contains,
+how to re-export it after console changes, and why `kdg-admin` deliberately has the default role
+mapping removed.
 
-### What the realm must contain
+## Payment credentials
 
-These values are dictated by the code and cannot be changed independently:
-
-| Item | Required value | Why |
-|---|---|---|
-| Realm name | `keepdishesgoing` | `application.yml` `issuer-uri` |
-| Realm role | `owner` (lowercase) | `SecurityConfig` uses `.hasRole("owner")`; `KeycloakRealmRoleConverter` maps `realm_access.roles` → `ROLE_owner` |
-| Client | `kdg-frontend`, public, PKCE `S256` | React SPA cannot hold a secret |
-| Valid redirect URIs | `http://localhost:5173/*` | Vite dev server |
-| Web origins | `http://localhost:5173` | Must match `cors.allowed-origins` |
-
-### Recreating the realm by hand
-
-Only needed if the export is lost. In the admin console at http://localhost:8180 (`admin`/`admin`):
-
-1. **Create realm** → name `keepdishesgoing`.
-2. **Realm roles** → *Create role* → name `owner`.
-3. **Clients** → *Create client*
-   - Client ID `kdg-frontend`, client type **OpenID Connect**
-   - Client authentication **Off** (public), Standard flow **On**
-   - Direct access grants **On** (lets you fetch a token with `curl` for `.http` testing)
-   - Valid redirect URIs `http://localhost:5173/*`, Web origins `http://localhost:5173`
-   - Advanced → *Proof Key for Code Exchange* → `S256`
-4. **Users** → *Create user* (e.g. `owner1`) → *Credentials* tab → set a password, Temporary **Off**
-   → *Role mapping* tab → *Assign role* → `owner`.
-
-Then re-export (see below) and commit the result.
-
-### Exporting the realm after console changes
-
-```bash
-docker compose exec idp_keycloak /opt/keycloak/bin/kc.sh export \
-  --dir /opt/keycloak/data/import --realm keepdishesgoing --users realm_file
-```
-
-The file lands in `infrastructure/keycloak/` via the bind mount. Commit it.
-
-> Note: exports do **not** include user passwords. After importing on a fresh machine, set the
-> test user's password again in the console.
-
-### Getting a token for manual API testing
-
-```bash
-curl -s -X POST http://localhost:8180/realms/keepdishesgoing/protocol/openid-connect/token \
-  -d grant_type=password -d client_id=kdg-frontend \
-  -d username=owner1 -d password=<password>
-```
+Stripe keys live in `config/application.yml`, which git ignores. Section 4 of the getting started
+guide has the shape, and section 6 covers forwarding webhooks with the Stripe CLI.
 
 ## Resetting
 

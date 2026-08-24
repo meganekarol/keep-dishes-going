@@ -8,6 +8,7 @@ Lightweight documentation for the Keep Dishes Going backend.
 | [`command-catalog.md`](command-catalog.md) | All 21 commands, their use case, aggregate and endpoint | Done |
 | [`event-catalog.md`](event-catalog.md) | All 20 events, payload, publisher, subscriber, routing key | Done |
 | [`user-stories.md`](user-stories.md) | The 32 user stories with implementation status | Done |
+| [`getting-started.md`](getting-started.md) | Setting the project up from scratch and running it | Done |
 | [`wireframes/`](wireframes/) | Frontend wireframes | TODO |
 
 ## Context map (summary)
