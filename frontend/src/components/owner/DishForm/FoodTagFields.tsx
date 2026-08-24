@@ -1,14 +1,9 @@
 import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
-import { Controller } from 'react-hook-form';
-import type { Control } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 
 import { FOOD_TAGS } from './types';
 import type { DishFormValues } from './types';
 import { humanise } from '../../../utils/format';
-
-interface FoodTagFieldsProps {
-  control: Control<DishFormValues>;
-}
 
 /**
  * The dietary tags customers filter on (US-13), as checkboxes.
@@ -16,7 +11,9 @@ interface FoodTagFieldsProps {
  * One Controller for the whole set rather than one per tag: the field is a
  * single array in the request, and ticking a box only adds or removes an entry.
  */
-export function FoodTagFields({ control }: FoodTagFieldsProps) {
+export function FoodTagFields() {
+  const { control } = useFormContext<DishFormValues>();
+
   return (
     <Controller
       control={control}

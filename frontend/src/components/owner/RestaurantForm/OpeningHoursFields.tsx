@@ -1,34 +1,26 @@
 import { Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
-import { Controller, useWatch } from 'react-hook-form';
-import type { Control } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 
 import { FormTextField } from '../../form/FormTextField';
 import { WEEK } from './types';
 import type { RestaurantFormValues } from './types';
 import { humanise } from '../../../utils/format';
 
-interface OpeningHoursFieldsProps {
-  control: Control<RestaurantFormValues>;
-}
-
-export function OpeningHoursFields({ control }: OpeningHoursFieldsProps) {
+export function OpeningHoursFields() {
   return (
     <Stack spacing={1.5}>
       {WEEK.map((day) => (
-        <DayRow key={day} control={control} day={day} />
+        <DayRow key={day} day={day} />
       ))}
     </Stack>
   );
 }
 
-interface DayRowProps {
-  control: Control<RestaurantFormValues>;
-  day: (typeof WEEK)[number];
-}
+function DayRow({ day }: { day: (typeof WEEK)[number] }) {
+  const { control } = useFormContext<RestaurantFormValues>();
 
-function DayRow({ control, day }: DayRowProps) {
-  // Watching just this day's checkbox so the two time fields can be disabled and
-  // exempted from validation while the restaurant is closed.
+  // Watching just this day's checkbox so the two time fields can be hidden while
+  // the restaurant is closed. The schema skips their check on a closed day.
   const enabled = useWatch({ control, name: `openingHours.${day}.enabled` });
 
   return (
@@ -54,7 +46,6 @@ function DayRow({ control, day }: DayRowProps) {
             type="time"
             size="small"
             slotProps={{ inputLabel: { shrink: true } }}
-            rules={{ required: 'Required' }}
           />
           <FormTextField
             control={control}
@@ -63,13 +54,6 @@ function DayRow({ control, day }: DayRowProps) {
             type="time"
             size="small"
             slotProps={{ inputLabel: { shrink: true } }}
-            rules={{
-              required: 'Required',
-              // The backend rejects a range that ends before it starts, so catch
-              // it here rather than on submit.
-              validate: (value, values) =>
-                value > values.openingHours[day].open || 'Must be after opening',
-            }}
           />
         </Stack>
       ) : (

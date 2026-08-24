@@ -1,5 +1,5 @@
 import { Controller } from 'react-hook-form';
-import type { Control, FieldPath, FieldValues, RegisterOptions } from 'react-hook-form';
+import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { TextField } from '@mui/material';
 import type { TextFieldProps } from '@mui/material';
 
@@ -8,8 +8,8 @@ type FormTextFieldProps<T extends FieldValues> = Omit<
   'name' | 'value' | 'onChange' | 'onBlur' | 'error'
 > & {
   name: FieldPath<T>;
-  control: Control<T>;
-  rules?: RegisterOptions<T, FieldPath<T>>;
+  /** Omit it inside a FormProvider, where Controller finds the form itself. */
+  control?: Control<T>;
 };
 
 /**
@@ -19,11 +19,13 @@ type FormTextFieldProps<T extends FieldValues> = Omit<
  * underlying input to whoever spreads props onto it, which is the case the
  * course slides call out. Wrapping it once keeps that decision in one file
  * instead of repeating it per field.
+ *
+ * It takes no validation rules. Every form here validates through a Zod schema,
+ * so the rules live in one place rather than beside each input.
  */
 export function FormTextField<T extends FieldValues>({
   name,
   control,
-  rules,
   helperText,
   ...textFieldProps
 }: FormTextFieldProps<T>) {
@@ -31,7 +33,6 @@ export function FormTextField<T extends FieldValues>({
     <Controller
       name={name}
       control={control}
-      rules={rules}
       render={({ field, fieldState }) => (
         <TextField
           {...textFieldProps}

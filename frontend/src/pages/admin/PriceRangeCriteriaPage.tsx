@@ -1,4 +1,6 @@
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Alert,
   Box,
@@ -23,12 +25,27 @@ import {
 } from '../../hooks/usePricing';
 import { formatPrice } from '../../utils/format';
 
-interface CriteriaFormValues {
-  effectiveFrom: string;
-  cheapUnder: string;
-  regularUnder: string;
-  expensiveUnder: string;
-}
+const threshold = z.string().regex(/^\d+(\.\d+)?$/, 'Required');
+
+const criteriaFormSchema = z
+  .object({
+    effectiveFrom: z.string().min(1, 'A date is required'),
+    cheapUnder: threshold,
+    regularUnder: threshold,
+    expensiveUnder: threshold,
+  })
+  // The aggregate rejects thresholds that do not rise, so say so here rather
+  // than letting the round trip fail.
+  .superRefine((values, ctx) => {
+    if (Number(values.regularUnder) <= Number(values.cheapUnder)) {
+      ctx.addIssue({ code: 'custom', path: ['regularUnder'], message: 'Must be above cheap' });
+    }
+    if (Number(values.expensiveUnder) <= Number(values.regularUnder)) {
+      ctx.addIssue({ code: 'custom', path: ['expensiveUnder'], message: 'Must be above regular' });
+    }
+  });
+
+type CriteriaFormValues = z.infer<typeof criteriaFormSchema>;
 
 /** The thresholds the platform launched with, offered as a starting point. */
 const DEFAULTS: CriteriaFormValues = {
@@ -45,7 +62,10 @@ export function PriceRangeCriteriaPage() {
   const { data, isLoading, error } = usePriceRangeCriteria();
   const adjust = useAdjustPriceRangeCriteria();
   const seed = useSeedDemoHistory();
-  const { control, handleSubmit, reset } = useForm<CriteriaFormValues>({ defaultValues: DEFAULTS });
+  const { control, handleSubmit, reset } = useForm<CriteriaFormValues>({
+    resolver: zodResolver(criteriaFormSchema),
+    defaultValues: DEFAULTS,
+  });
 
   const onSubmit = (values: CriteriaFormValues) => {
     adjust.mutate(
@@ -87,7 +107,6 @@ export function PriceRangeCriteriaPage() {
               label="In force from"
               type="date"
               slotProps={{ inputLabel: { shrink: true } }}
-              rules={{ required: 'A date is required' }}
               sx={{ minWidth: 190 }}
             />
             <FormTextField
@@ -96,7 +115,6 @@ export function PriceRangeCriteriaPage() {
               label="Cheap under"
               type="number"
               slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
-              rules={{ required: 'Required' }}
               sx={{ maxWidth: 150 }}
             />
             <FormTextField
@@ -105,7 +123,6 @@ export function PriceRangeCriteriaPage() {
               label="Regular under"
               type="number"
               slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
-              rules={{ required: 'Required' }}
               sx={{ maxWidth: 150 }}
             />
             <FormTextField
@@ -114,7 +131,6 @@ export function PriceRangeCriteriaPage() {
               label="Expensive under"
               type="number"
               slotProps={{ htmlInput: { min: 0, step: '0.01' } }}
-              rules={{ required: 'Required' }}
               sx={{ maxWidth: 170 }}
             />
           </Stack>

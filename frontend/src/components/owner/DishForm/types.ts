@@ -1,24 +1,51 @@
+import { z } from 'zod';
+
 import type { CreateDishRequest, DishType, DishVersion, FoodTag } from '../../../types/api';
 
+export const DISH_TYPES = ['STARTER', 'MAIN', 'DESSERT'] as const satisfies readonly DishType[];
+
+export const FOOD_TAGS = [
+  'GLUTEN_FREE',
+  'LACTOSE_FREE',
+  'VEGAN',
+  'SPICY',
+] as const satisfies readonly FoodTag[];
+
 /**
- * What the form holds while it is being filled in.
+ * What the form holds while it is being filled in (US-03).
  *
  * The price stays a string so a cleared field reads as empty instead of
  * collapsing to 0, and the type starts empty so the select shows no answer
  * until one is picked. Same reasoning as the restaurant form.
  */
-export interface DishFormValues {
-  name: string;
-  type: DishType | '';
-  foodTags: FoodTag[];
-  description: string;
-  price: string;
-  pictureUrl: string;
-}
+export const dishFormSchema = z.object({
+  name: z.string().trim().min(1, 'A name is required'),
 
-export const DISH_TYPES: DishType[] = ['STARTER', 'MAIN', 'DESSERT'];
+  // superRefine rather than refine, which would narrow '' out of the inferred
+  // type while the form still starts with it selected.
+  type: z.union([z.enum(DISH_TYPES), z.literal('')]).superRefine((type, ctx) => {
+    if (type === '') ctx.addIssue({ code: 'custom', message: 'Pick a course' });
+  }),
 
-export const FOOD_TAGS: FoodTag[] = ['GLUTEN_FREE', 'LACTOSE_FREE', 'VEGAN', 'SPICY'];
+  foodTags: z.array(z.enum(FOOD_TAGS)),
+
+  description: z.string().trim().min(1, 'A description is required'),
+
+  price: z
+    .string()
+    .min(1, 'A price is required')
+    .refine((price) => Number(price) >= 0.01, { message: 'A dish has to cost something' }),
+
+  // Optional, so an empty box passes and only a filled one has to look like a URL.
+  pictureUrl: z
+    .string()
+    .trim()
+    .refine((url) => url === '' || /^https?:\/\/.+/.test(url), {
+      message: 'Must start with http:// or https://',
+    }),
+});
+
+export type DishFormValues = z.infer<typeof dishFormSchema>;
 
 export const EMPTY_DISH_FORM: DishFormValues = {
   name: '',

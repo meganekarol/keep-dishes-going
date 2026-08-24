@@ -1,5 +1,7 @@
 import { useContext } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Alert, AlertTitle, Button, Divider, Paper, Stack, Typography } from '@mui/material';
 
@@ -10,15 +12,20 @@ import { usePlaceOrder } from '../hooks/useOrderTracking';
 import { usePlacedOrders } from '../hooks/usePlacedOrders';
 import { formatPrice } from '../utils/format';
 
-interface CheckoutFormValues {
-  customerName: string;
-  customerEmail: string;
-  deliveryStreet: string;
-  deliveryNumber: string;
-  deliveryPostalCode: string;
-  deliveryCity: string;
-  deliveryCountry: string;
-}
+const checkoutFormSchema = z.object({
+  customerName: z.string().trim().min(1, 'We need a name for the order'),
+  customerEmail: z
+    .string()
+    .trim()
+    .regex(/^\S+@\S+\.\S+$/, 'That does not look like an email'),
+  deliveryStreet: z.string().trim().min(1, 'Street is required'),
+  deliveryNumber: z.string().trim().min(1, 'Number is required'),
+  deliveryPostalCode: z.string().trim().min(1, 'Postal code is required'),
+  deliveryCity: z.string().trim().min(1, 'City is required'),
+  deliveryCountry: z.string().trim().min(1, 'Country is required'),
+});
+
+type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
 const EMPTY_CHECKOUT: CheckoutFormValues = {
   customerName: '',
@@ -47,7 +54,10 @@ export function CheckoutPage() {
   // Checked again here: this page can be reached straight from a bookmark,
   // without the basket page ever having run the check (US-21).
   const { unavailable, isChecking } = useBasketAvailability();
-  const { control, handleSubmit } = useForm<CheckoutFormValues>({ defaultValues: EMPTY_CHECKOUT });
+  const { control, handleSubmit } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutFormSchema),
+    defaultValues: EMPTY_CHECKOUT,
+  });
 
   if (!basket && !placeOrder.isSuccess) return <Navigate to="/basket" replace />;
   if (!basket) return null;
@@ -128,7 +138,6 @@ export function CheckoutPage() {
               name="customerName"
               label="Your name"
               fullWidth
-              rules={{ required: 'We need a name for the order' }}
             />
             <FormTextField
               control={control}
@@ -137,10 +146,6 @@ export function CheckoutPage() {
               type="email"
               fullWidth
               helperText="Where the confirmation goes"
-              rules={{
-                required: 'An email is required',
-                pattern: { value: /^\S+@\S+\.\S+$/, message: 'That does not look like an email' },
-              }}
             />
           </Stack>
 
@@ -150,7 +155,6 @@ export function CheckoutPage() {
               name="deliveryStreet"
               label="Street"
               fullWidth
-              rules={{ required: 'Street is required' }}
             />
             <FormTextField
               control={control}
@@ -158,7 +162,6 @@ export function CheckoutPage() {
               label="Number"
               sx={{ maxWidth: { sm: 140 } }}
               fullWidth
-              rules={{ required: 'Number is required' }}
             />
           </Stack>
 
@@ -169,21 +172,18 @@ export function CheckoutPage() {
               label="Postal code"
               sx={{ maxWidth: { sm: 160 } }}
               fullWidth
-              rules={{ required: 'Postal code is required' }}
             />
             <FormTextField
               control={control}
               name="deliveryCity"
               label="City"
               fullWidth
-              rules={{ required: 'City is required' }}
             />
             <FormTextField
               control={control}
               name="deliveryCountry"
               label="Country"
               fullWidth
-              rules={{ required: 'Country is required' }}
             />
           </Stack>
 
