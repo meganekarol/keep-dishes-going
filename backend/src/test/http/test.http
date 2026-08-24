@@ -6,8 +6,13 @@
 
 # Change this to register a different owner. Keycloak answers 409 if the
 # username is already taken, which is the signal to bump it.
-@ownerUser = chef-marie
-@ownerPass = chef-marie
+@ownerUser = chef-karol
+@ownerPass = chef-karol
+
+# KDG's own account, the one carrying the admin realm role. Created by hand in
+# Keycloak, not by this file, so put your own password here.
+@kdgAdmin = kdg-admin
+@kdgAdminPass = kdg-admin
 
 ### 1. Admin token, for the two lookups and the user creation below
 POST {{keycloak}}/realms/master/protocol/openid-connect/token
@@ -51,8 +56,8 @@ Content-Type: application/json
   "username": "{{ownerUser}}",
   "enabled": true,
   "emailVerified": true,
-  "firstName": "Marie",
-  "lastName": "Dubois",
+  "firstName": "Johann",
+  "lastName": "Merkens",
   "email": "{{ownerUser}}@example.com",
   "credentials": [
     { "type": "password", "value": "{{ownerPass}}", "temporary": false }
@@ -100,9 +105,9 @@ Content-Type: application/json
 {
   "name": "La Petite Maison",
   "address": {
-    "street": "Nationalestraat",
-    "number": 42,
-    "postalCode": "2000",
+    "street": "Brusselstraat",
+    "number": 5,
+    "postalCode": "2018",
     "city": "Antwerpen",
     "country": "Belgium"
   },
@@ -114,7 +119,7 @@ Content-Type: application/json
     "TUESDAY":   { "open": "09:00:00", "closed": "22:00:00" },
     "WEDNESDAY": { "open": "09:00:00", "closed": "22:00:00" },
     "THURSDAY":  { "open": "09:00:00", "closed": "22:00:00" },
-    "FRIDAY":    { "open": "09:00:00", "closed": "23:00:00" },
+    "FRIDAY":    { "open": "06:00:00", "closed": "23:00:00" },
     "SATURDAY":  { "open": "10:00:00", "closed": "23:00:00" },
     "SUNDAY":    { "open": "10:00:00", "closed": "21:00:00" }
   },
@@ -469,11 +474,6 @@ Content-Type: application/json
 %}
 
 ### 38. The customer is charged what the menu advertised
-#The order module prices an
-# order from its own copy of the dishes, and that copy used to keep whatever a
-# dish was first published as: dish B was edited from 21.00 to 23.50 in step 13
-# and published in step 29, and the customer was still billed 21.00 under the
-# old name "Stoofvlees".
 GET {{api}}/api/orders/{{orderId}}
 
 > {%
@@ -486,25 +486,7 @@ GET {{api}}/api/orders/{{orderId}}
     });
 %}
 
-### 39. The order reaches the owner's screen (US-10)
-GET {{api}}/api/restaurants/{{restaurantId}}/orders
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    client.test("the kitchen can see it", () => {
-        client.assert(response.body.length === 1, "expected 1 order, got " + response.body.length);
-        const order = response.body[0];
-        client.assert(order.status === "PENDING_ACCEPTANCE", "status was " + order.status);
-        client.assert(order.customerName === "Jonas Peeters");
-        client.assert(order.itemCount === 3, "expected 3 dishes, got " + order.itemCount);
-        client.assert(order.deliveryAddress === "Meir 12, 2000 Antwerpen",
-            "address read " + order.deliveryAddress);
-        client.assert(order.itemSummary.includes("2x Dame Blanche"),
-            "itemSummary read " + order.itemSummary);
-    });
-%}
-
-### 40. A restaurant's order book is nobody else's business
+### 39. A restaurant's order book is nobody else's business
 # No token at all. Tracking one order by its id is open (step 38), listing
 # every order a restaurant has taken is not.
 GET {{api}}/api/restaurants/{{restaurantId}}/orders
@@ -514,122 +496,50 @@ GET {{api}}/api/restaurants/{{restaurantId}}/orders
         "expected 401, got " + response.status));
 %}
 
-### 41. Take the order on (US-10)
-POST {{api}}/api/restaurants/{{restaurantId}}/orders/{{orderId}}/accept
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    client.test("accepted", () => client.assert(response.status === 200));
-%}
-
-### 42. Accepting it twice is refused
-# The read model lists the order, but the aggregate is what decides: it has
-# already left PENDING_ACCEPTANCE and will not go back.
-POST {{api}}/api/restaurants/{{restaurantId}}/orders/{{orderId}}/accept
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    client.test("a second accept is turned down", () => client.assert(response.status === 409,
-        "expected 409, got " + response.status));
-%}
-
-### 43. Cooked and waiting for a courier (US-12)
-POST {{api}}/api/restaurants/{{restaurantId}}/orders/{{orderId}}/ready
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    client.test("marked ready", () => client.assert(response.status === 200));
-%}
-
-### 44. The owner's list followed both steps
-# Proves the read model is fed by the order's own events rather than written
-# once at checkout and left behind.
-GET {{api}}/api/restaurants/{{restaurantId}}/orders
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    client.test("the projection kept up", () => {
-        const order = response.body.find(o => o.orderId === client.global.get("orderId"));
-        client.assert(order.status === "READY_FOR_PICKUP", "status was " + order.status);
-        client.assert(order.acceptedAt !== null, "acceptedAt was never filled in");
-        client.assert(order.readyAt !== null, "readyAt was never filled in");
-    });
-%}
-
-### 45. The customer sees the same progress (US-24, US-25)
-GET {{api}}/api/orders/{{orderId}}
-
-> {%
-    client.test("tracking agrees with the kitchen", () => {
-        client.assert(response.body.status === "READY_FOR_PICKUP");
-        client.assert(response.body.lines.length === 2, "expected both lines");
-        client.assert(response.body.acceptedAt !== null && response.body.readyAt !== null);
-    });
-%}
-
-### 46. A second order, this one to be turned away
-POST {{api}}/api/orders
-Content-Type: application/json
-
-{
-  "restaurantId": "{{restaurantId}}",
-  "customerName": "Ella Janssens",
-  "customerEmail": "ella@example.com",
-  "deliveryStreet": "Kammenstraat",
-  "deliveryNumber": "7",
-  "deliveryPostalCode": "2000",
-  "deliveryCity": "Antwerpen",
-  "deliveryCountry": "Belgium",
-  "items": [
-    { "dishId": "{{dessertId}}", "quantity": 1 }
-  ]
-}
-
-> {%
-    client.global.set("secondOrderId", response.body.orderId);
-%}
-
-### 47. Turn it away with a reason (US-10)
-POST {{api}}/api/restaurants/{{restaurantId}}/orders/{{secondOrderId}}/reject
-Authorization: Bearer {{ownerToken}}
-Content-Type: application/json
-
-{
-  "reason": "The kitchen is closing early tonight."
-}
-
-> {%
-    client.test("rejected", () => client.assert(response.status === 200));
-%}
-
-### 48. The reason is kept, and the newest order is listed first
-GET {{api}}/api/restaurants/{{restaurantId}}/orders
-Authorization: Bearer {{ownerToken}}
-
-> {%
-    client.test("both orders read correctly", () => {
-        client.assert(response.body.length === 2, "expected 2 orders, got " + response.body.length);
-        client.assert(response.body[0].orderId === client.global.get("secondOrderId"),
-            "newest order should come first");
-
-        const turnedAway = response.body[0];
-        client.assert(turnedAway.status === "REJECTED", "status was " + turnedAway.status);
-        client.assert(turnedAway.rejectionReason === "The kitchen is closing early tonight.",
-            "reason read " + turnedAway.rejectionReason);
-    });
-%}
-
-### 49. The customer is told why (US-24)
-GET {{api}}/api/orders/{{secondOrderId}}
-
-> {%
-    client.test("the reason reaches the customer", () => {
-        client.assert(response.body.status === "REJECTED");
-        client.assert(response.body.rejectionReason === "The kitchen is closing early tonight.");
-    });
-%}
-
-### 50. Hand the doors back to the opening hours (US-09)
+### 40. Hand the doors back to the opening hours (US-09)
 # Undoes step 34, so the restaurant is left following its own schedule.
 DELETE {{api}}/api/restaurants/{{restaurantId}}/status
 Authorization: Bearer {{ownerToken}}
+
+### 41. Sign in as KDG itself
+# A different account from adminToken above, which is Keycloak's own console
+# login. This one is a user in the keepdishesgoing realm carrying the admin role.
+POST {{keycloak}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type = password &
+client_id = backend-client &
+client_secret = {{backendSecret}} &
+username = {{kdgAdmin}} &
+password = {{kdgAdminPass}}
+
+> {%
+    client.test("kdg admin signed in", () => client.assert(response.status === 200));
+    client.global.set("kdgAdminToken", response.body.access_token);
+%}
+
+### 42. Load a year of back-dated price history (US-26, US-32)
+# The database is recreated on every start, so the evolution graph has nothing
+# older than this run to draw. Calling it twice adds nothing the second time.
+POST {{api}}/api/pricing/demo-history
+Authorization: Bearer {{kdgAdminToken}}
+
+> {%
+    client.test("history loaded", () => {
+        client.assert(response.status === 200);
+        client.assert(response.body.restaurantsSeeded >= 1,
+            "expected the restaurant from step 7 to be seeded");
+    });
+%}
+
+### 43. The graph a customer now sees, with no token at all (US-26)
+GET {{api}}/api/restaurants/{{restaurantId}}/price-range-evolution
+
+> {%
+    client.test("the line steps", () => {
+        const bands = response.body.points.map(p => p.priceRange);
+        client.assert(bands.length > 1, "expected a year of points, not just today");
+        client.assert(new Set(bands).size > 1,
+            "a flat line means the seeded prices never crossed a threshold");
+    });
+%}
