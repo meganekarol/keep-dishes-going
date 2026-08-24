@@ -11,6 +11,9 @@ cd ../backend/infrastructure && docker compose up -d
 cd ..                        && ./gradlew bootRun
 ```
 
+Setting up from scratch, including Keycloak, Stripe and demo data, is written up once in the
+backend repository at `documentation/getting-started.md`.
+
 Then:
 
 ```bash
