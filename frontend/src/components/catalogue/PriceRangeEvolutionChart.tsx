@@ -38,15 +38,15 @@ export function PriceRangeEvolutionChart({ restaurantId }: { restaurantId: strin
           Price over time
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Where this kitchen sits against the platform's price bands. The line moves when the menu
-          changes price, and when the bands themselves are adjusted.
+          Is this place getting more expensive? € is cheap and €€€€ is pricey,
+          judged against what restaurants generally charge. Hover a point to see what a dish cost
+          here on average at the time.
         </Typography>
 
         <QueryState isLoading={isLoading} error={error}>
           {points.length === 0 ? (
             <Alert severity="info">
-              No price history yet. It starts the next time this restaurant publishes or reprices a
-              dish.
+              Nothing to show yet. Prices here have not changed long enough to draw a line.
             </Alert>
           ) : (
             <Box sx={{ width: '100%' }}>
