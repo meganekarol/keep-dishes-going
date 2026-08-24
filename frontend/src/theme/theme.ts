@@ -1,31 +1,37 @@
 import { createTheme } from '@mui/material/styles';
 
+import { accent, brand, caution, negative, neutral, positive, shadow, tint } from './colors';
+
 const HEADING_FONT = '"Outfit", "Segoe UI", system-ui, sans-serif';
 const BODY_FONT = '"DM Sans", "Segoe UI", system-ui, sans-serif';
-
-/** Warm neutrals rather than grey, so the food photography sits on a kitchen palette. */
-const INK = '#1C1917';
-const MUTED = '#57534E';
-const RULE = '#EBE4DE';
-const SHADOW_RESTING = '0 1px 2px rgba(28,25,23,.04), 0 8px 20px -12px rgba(28,25,23,.10)';
-const SHADOW_LIFTED = '0 2px 4px rgba(28,25,23,.06), 0 18px 36px -16px rgba(28,25,23,.22)';
 
 /**
  * The one place the look is decided (US-13).
  *
  * Component defaults live here rather than in each screen's `sx`, so a card on
- * the owner's menu and a card in the catalogue cannot drift apart.
+ * the owner's menu and a card in the catalogue cannot drift apart. Every colour
+ * comes from a token in `colors.ts` rather than a hex typed in here.
  */
 export const theme = createTheme({
   palette: {
-    primary: { main: '#C2410C', light: '#FFF1E9', dark: '#9A3412', contrastText: '#FFFFFF' },
-    secondary: { main: '#0F766E', light: '#E4F1EF', dark: '#115E56', contrastText: '#FFFFFF' },
-    success: { main: '#15803D', light: '#E8F5EC' },
-    warning: { main: '#B45309', light: '#FDF3E3' },
-    error: { main: '#B91C1C', light: '#FCEBEA' },
+    primary: {
+      main: brand[700],
+      light: tint.brandLight,
+      dark: brand[800],
+      contrastText: '#FFFFFF',
+    },
+    secondary: {
+      main: accent[700],
+      light: tint.accentLight,
+      dark: accent[800],
+      contrastText: '#FFFFFF',
+    },
+    success: { main: positive[700], light: positive.light },
+    warning: { main: caution[700], light: caution.light },
+    error: { main: negative[700], light: negative.light },
     background: { default: '#FBF8F6', paper: '#FFFFFF' },
-    text: { primary: INK, secondary: MUTED },
-    divider: RULE,
+    text: { primary: neutral[900], secondary: neutral[600] },
+    divider: '#EBE4DE',
   },
 
   shape: { borderRadius: 12 },
@@ -58,34 +64,37 @@ export const theme = createTheme({
     MuiAppBar: {
       defaultProps: { color: 'inherit', elevation: 0 },
       styleOverrides: {
-        root: { backgroundColor: '#FFFFFF', borderBottom: `1px solid ${RULE}` },
+        root: ({ theme }) => ({
+          backgroundColor: theme.palette.background.paper,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        }),
       },
     },
 
     MuiCard: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        root: {
-          border: `1px solid ${RULE}`,
+        root: ({ theme }) => ({
+          border: `1px solid ${theme.palette.divider}`,
           borderRadius: 16,
           // Images sit flush against the card edge, so they have to be clipped
           // by the same radius.
           overflow: 'hidden',
-          boxShadow: SHADOW_RESTING,
+          boxShadow: shadow.resting,
           transition: 'transform 180ms ease, box-shadow 180ms ease',
 
           // Only cards you can actually click lift. A summary card that just
           // reports something must not pretend to be a button.
           '&:has(.MuiCardActionArea-root):hover': {
             transform: 'translateY(-3px)',
-            boxShadow: SHADOW_LIFTED,
+            boxShadow: shadow.lifted,
           },
 
           '@media (prefers-reduced-motion: reduce)': {
             transition: 'box-shadow 180ms ease',
             '&:has(.MuiCardActionArea-root):hover': { transform: 'none' },
           },
-        },
+        }),
       },
     },
 
@@ -105,7 +114,12 @@ export const theme = createTheme({
     },
 
     MuiOutlinedInput: {
-      styleOverrides: { root: { borderRadius: 10, backgroundColor: '#FFFFFF' } },
+      styleOverrides: {
+        root: ({ theme }) => ({
+          borderRadius: 10,
+          backgroundColor: theme.palette.background.paper,
+        }),
+      },
     },
 
     MuiToggleButton: {

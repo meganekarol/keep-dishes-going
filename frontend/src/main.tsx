@@ -6,7 +6,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material';
 import App from './App';
 import BasketContextProvider from './context/BasketContextProvider';
 import SecurityContextProvider from './context/SecurityContextProvider';
-import { theme } from './theme';
+import { theme } from './theme/theme';
 import './index.css';
 
 const queryClient = new QueryClient({
