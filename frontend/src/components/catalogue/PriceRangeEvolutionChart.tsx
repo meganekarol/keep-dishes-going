@@ -35,7 +35,7 @@ export function PriceRangeEvolutionChart({ restaurantId }: { restaurantId: strin
     <Card>
       <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
         <Typography variant="h2" gutterBottom>
-          Price over time
+          Restaurant price range evolution
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
           Is this place getting more expensive? € is cheap and €€€€ is pricey,
