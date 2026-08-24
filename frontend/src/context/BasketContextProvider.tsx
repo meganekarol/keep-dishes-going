@@ -89,6 +89,9 @@ export default function BasketContextProvider({ children }: PropsWithChildren) {
     else window.localStorage.removeItem(STORAGE_KEY);
   }, [basket]);
 
+  // Memoised because this is a context value. A fresh object on every render
+  // would re-render every basket consumer, which is the whole tree below the
+  // navbar, whether or not the basket actually changed.
   const value = useMemo(() => {
     const lines = basket?.lines ?? [];
     return {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /** Just enough to find an order again and label it in a list. */
 export interface PlacedOrder {
@@ -28,22 +28,22 @@ export function usePlacedOrders() {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const remember = useCallback((order: PlacedOrder) => {
+  function remember(order: PlacedOrder) {
     setOrders(() => {
       const current = read().filter((existing) => existing.orderId !== order.orderId);
       const next = [order, ...current].slice(0, KEEP_MOST_RECENT);
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
-  }, []);
+  }
 
-  const forget = useCallback((orderId: string) => {
+  function forget(orderId: string) {
     setOrders(() => {
       const next = read().filter((order) => order.orderId !== orderId);
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
-  }, []);
+  }
 
   return { orders, remember, forget };
 }
