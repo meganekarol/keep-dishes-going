@@ -1,11 +1,15 @@
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Paper, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { Link } from 'react-router-dom';
 import { useContext, type ReactNode } from 'react';
 
+import { CoverImage } from '../components/shared/CoverImage';
 import SecurityContext from '../context/SecurityContext';
+import { useRestaurants } from '../hooks/useRestaurants';
+
+const TILT = ['rotate(-2deg)', 'rotate(1.5deg)', 'rotate(-1deg)'];
 
 interface ChoiceCardProps {
   icon: ReactNode;
@@ -65,26 +69,34 @@ export function LandingPage() {
   const { isAuthenticated, register } = useContext(SecurityContext);
   const signedIn = isAuthenticated();
 
+  const { data: restaurants } = useRestaurants();
+  const showcase = (restaurants ?? []).slice(0, 3);
+
   return (
     <Stack spacing={5} sx={{ py: 2 }}>
       <Box
         sx={{
-          position: 'relative',
           overflow: 'hidden',
           borderRadius: 4,
-          bgcolor: 'primary.light',
+          color: 'common.white',
+          background: (theme) =>
+            `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
           px: { xs: 3, md: 6 },
-          py: { xs: 5, md: 8 },
+          py: { xs: 5, md: 7 },
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: showcase.length > 0 ? '1fr 1fr' : '1fr' },
+          alignItems: 'center',
+          gap: { xs: 4, md: 6 },
         }}
       >
-        <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 620 }}>
-          <Typography variant="overline" sx={{ color: 'primary.dark' }}>
+        <Box sx={{ maxWidth: 620 }}>
+          <Typography variant="overline" sx={{ opacity: 0.85 }}>
             Order in from kitchens nearby
           </Typography>
           <Typography variant="h1" sx={{ mt: 1, fontSize: { xs: '2.25rem', md: '3.25rem' } }}>
             Good food, still going.
           </Typography>
-          <Typography sx={{ mt: 2, color: 'text.secondary', fontSize: '1.1rem', maxWidth: '48ch' }}>
+          <Typography sx={{ mt: 2, opacity: 0.88, fontSize: '1.1rem', maxWidth: '48ch' }}>
             Browse the restaurants around you, build an order and follow it all the way to your
             door. No account needed.
           </Typography>
@@ -94,26 +106,56 @@ export function LandingPage() {
             component={Link}
             to="/restaurants"
             endIcon={<ArrowForwardIcon />}
-            sx={{ mt: 4 }}
+            sx={{
+              mt: 4,
+              bgcolor: 'common.white',
+              color: 'primary.dark',
+              '&:hover': { bgcolor: 'common.white', filter: 'brightness(0.94)' },
+            }}
           >
             Find a restaurant
           </Button>
         </Box>
 
-        {/* Decoration, so it is hidden from assistive tech and from narrow
-            screens where it would crowd the words. */}
-        <RestaurantMenuIcon
-          aria-hidden
-          sx={{
-            position: 'absolute',
-            right: -40,
-            bottom: -70,
-            fontSize: 320,
-            color: 'primary.main',
-            opacity: 0.09,
-            display: { xs: 'none', md: 'block' },
-          }}
-        />
+        {showcase.length > 0 && (
+          <Box
+            aria-hidden
+            sx={{
+              display: { xs: 'none', md: 'grid' },
+              '& > :first-of-type': { gridColumn: '1 / -1' },
+            }}
+          >
+            {showcase.map((restaurant, index) => (
+              <Paper
+                key={restaurant.restaurantId}
+                elevation={0}
+                sx={{
+                  position: 'relative',
+                  overflow: 'hidden',
+                  borderRadius: 3,
+                  transform: TILT[index],
+                  boxShadow: '0 22px 44px rgba(28,25,23,.35)',
+                  '@media (prefers-reduced-motion: reduce)': { transform: 'none' },
+                }}
+              >
+                <CoverImage
+                  src={restaurant.pictureUrls[0]}
+                  ratio={index === 0 ? 16 / 9 : 4 / 3}
+                  placeholderTone="dark"
+                />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    inset: 10,
+                    border: '1px solid rgba(255,255,255,.3)',
+                    borderRadius: 2,
+                    pointerEvents: 'none',
+                  }}
+                />
+              </Paper>
+            ))}
+          </Box>
+        )}
       </Box>
 
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>

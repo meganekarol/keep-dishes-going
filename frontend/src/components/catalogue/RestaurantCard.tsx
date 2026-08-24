@@ -13,22 +13,37 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
         to={`/restaurants/${restaurant.restaurantId}`}
         sx={{ height: '100%', display: 'block' }}
       >
-        {/* Always rendered, even with no picture: a card that skipped the image
-            would sit shorter than its neighbours and break the grid's rhythm. */}
+
         <Box sx={{ position: 'relative' }}>
-          <CoverImage src={restaurant.pictureUrls[0]} alt={restaurant.name} ratio={16 / 10} />
+
+          <CoverImage
+            src={restaurant.pictureUrls[0]}
+            alt={restaurant.name}
+            ratio={16 / 10}
+            scrim
+            placeholderTone="dark"
+          />
           <Chip
             size="small"
             label={restaurant.open ? 'Open' : 'Closed'}
             color={restaurant.open ? 'success' : 'warning'}
             sx={{ position: 'absolute', top: 12, left: 12, boxShadow: 1 }}
           />
-        </Box>
-        <CardContent>
-          <Typography variant="h3" sx={{ mb: 0.25 }}>
+          <Typography
+            variant="h3"
+            sx={{
+              position: 'absolute',
+              left: 16,
+              right: 16,
+              bottom: 12,
+              color: 'common.white',
+              textShadow: '0 1px 8px rgba(28,25,23,.5)',
+            }}
+          >
             {restaurant.name}
           </Typography>
-
+        </Box>
+        <CardContent>
           <Typography variant="body2" color="text.secondary">
             {humanise(restaurant.cuisineType)} · {restaurant.address.city}
           </Typography>
