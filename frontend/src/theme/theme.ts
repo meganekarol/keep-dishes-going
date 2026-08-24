@@ -98,9 +98,15 @@ export const theme = createTheme({
     MuiAppBar: {
       defaultProps: { color: 'inherit', elevation: 0 },
       styleOverrides: {
+        // theme.vars, not theme.palette: inside styleOverrides the palette
+        // resolves to one scheme's literal value, so the bar would keep the
+        // light colour after the toggle. The vars are the switching ones.
         root: ({ theme }) => ({
-          backgroundColor: theme.palette.background.paper,
-          borderBottom: `1px solid ${theme.palette.divider}`,
+          backgroundColor: (theme.vars ?? theme).palette.background.paper,
+          borderBottom: `1px solid ${(theme.vars ?? theme).palette.divider}`,
+          // MUI tints raised surfaces in dark mode, which would lighten the bar
+          // back towards the colour we just moved away from.
+          backgroundImage: 'none',
         }),
       },
     },
@@ -109,7 +115,7 @@ export const theme = createTheme({
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: ({ theme }) => ({
-          border: `1px solid ${theme.palette.divider}`,
+          border: `1px solid ${(theme.vars ?? theme).palette.divider}`,
           borderRadius: 16,
           // Images sit flush against the card edge, so they have to be clipped
           // by the same radius.
@@ -156,7 +162,7 @@ export const theme = createTheme({
       styleOverrides: {
         root: ({ theme }) => ({
           borderRadius: 10,
-          backgroundColor: theme.palette.background.paper,
+          backgroundColor: (theme.vars ?? theme).palette.background.paper,
         }),
       },
     },
