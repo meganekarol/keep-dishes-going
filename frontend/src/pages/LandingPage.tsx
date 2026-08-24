@@ -7,6 +7,7 @@ import { useContext, type ReactNode } from 'react';
 
 import { CoverImage } from '../components/shared/CoverImage';
 import SecurityContext from '../context/SecurityContext';
+import { brand } from '../theme/colors';
 import { useRestaurants } from '../hooks/useRestaurants';
 
 const TILT = ['rotate(-2deg)', 'rotate(1.5deg)', 'rotate(-1deg)'];
@@ -79,8 +80,10 @@ export function LandingPage() {
           overflow: 'hidden',
           borderRadius: 4,
           color: 'common.white',
-          background: (theme) =>
-            `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+          // Fixed brand steps rather than palette roles. This band is the same
+          // rust in both schemes, because it is a branded ground carrying white
+          // text, not a surface that should follow the page.
+          background: `linear-gradient(135deg, ${brand[800]} 0%, ${brand[700]} 100%)`,
           px: { xs: 3, md: 6 },
           py: { xs: 5, md: 7 },
           display: 'grid',

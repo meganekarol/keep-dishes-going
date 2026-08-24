@@ -4,6 +4,7 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 import { Link } from 'react-router-dom';
 
+import { ColorSchemeToggle } from './ColorSchemeToggle';
 import BasketContext from '../../context/BasketContext';
 import SecurityContext from '../../context/SecurityContext';
 import { usePlacedOrders } from '../../hooks/usePlacedOrders';
@@ -31,6 +32,8 @@ export function NavBar() {
         </Button>
 
         <Box sx={{ flexGrow: 1 }} />
+
+        <ColorSchemeToggle />
 
         {/* The only way back to a guest's order once the tab is closed, so it
             stays visible for as long as this browser remembers one. */}

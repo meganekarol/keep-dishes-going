@@ -9,29 +9,63 @@ const BODY_FONT = '"DM Sans", "Segoe UI", system-ui, sans-serif';
  * The one place the look is decided (US-13).
  *
  * Component defaults live here rather than in each screen's `sx`, so a card on
- * the owner's menu and a card in the catalogue cannot drift apart. Every colour
- * comes from a token in `colors.ts` rather than a hex typed in here.
+ * the owner's menu and a card in the catalogue cannot drift apart. Both colour
+ * schemes are defined, so a screen never has to ask which one is showing.
  */
 export const theme = createTheme({
-  palette: {
-    primary: {
-      main: brand[700],
-      light: tint.brandLight,
-      dark: brand[800],
-      contrastText: '#FFFFFF',
+  // A class on the root element rather than a media query, so the toggle can
+  // override what the operating system asked for.
+  cssVariables: { colorSchemeSelector: 'class' },
+
+  colorSchemes: {
+    light: {
+      palette: {
+        primary: {
+          main: brand[700],
+          light: tint.brandLight,
+          dark: brand[800],
+          contrastText: '#FFFFFF',
+        },
+        secondary: {
+          main: accent[700],
+          light: tint.accentLight,
+          dark: accent[800],
+          contrastText: '#FFFFFF',
+        },
+        success: { main: positive[700], light: positive.light },
+        warning: { main: caution[700], light: caution.light },
+        error: { main: negative[700], light: negative.light },
+        background: { default: '#FBF8F6', paper: '#FFFFFF' },
+        text: { primary: neutral[900], secondary: neutral[600] },
+        divider: '#EBE4DE',
+      },
     },
-    secondary: {
-      main: accent[700],
-      light: tint.accentLight,
-      dark: accent[800],
-      contrastText: '#FFFFFF',
+
+    dark: {
+      palette: {
+        // A step lighter than light mode's rust, which goes muddy on a dark
+        // ground. The tints invert: `light` is a background, so on dark it has
+        // to be dark, and `dark` stays dark because photography sits on it.
+        primary: {
+          main: brand[500],
+          light: tint.brandDark,
+          dark: brand[900],
+          contrastText: neutral[950],
+        },
+        secondary: {
+          main: accent[400],
+          light: tint.accentDark,
+          dark: accent[900],
+          contrastText: neutral[950],
+        },
+        success: { main: positive[400], light: positive.dark },
+        warning: { main: caution[400], light: caution.dark },
+        error: { main: negative[400], light: negative.dark },
+        background: { default: neutral[950], paper: neutral[900] },
+        text: { primary: neutral[50], secondary: neutral[400] },
+        divider: neutral[800],
+      },
     },
-    success: { main: positive[700], light: positive.light },
-    warning: { main: caution[700], light: caution.light },
-    error: { main: negative[700], light: negative.light },
-    background: { default: '#FBF8F6', paper: '#FFFFFF' },
-    text: { primary: neutral[900], secondary: neutral[600] },
-    divider: '#EBE4DE',
   },
 
   shape: { borderRadius: 12 },
@@ -94,6 +128,11 @@ export const theme = createTheme({
             transition: 'box-shadow 180ms ease',
             '&:has(.MuiCardActionArea-root):hover': { transform: 'none' },
           },
+
+          ...theme.applyStyles('dark', {
+            boxShadow: shadow.restingDark,
+            '&:has(.MuiCardActionArea-root):hover': { boxShadow: shadow.liftedDark },
+          }),
         }),
       },
     },

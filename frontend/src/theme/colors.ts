@@ -52,20 +52,26 @@ export const neutral = {
   950: '#0C0A09',
 } as const;
 
-export const positive = { 700: '#15803D', light: '#E8F5EC' } as const;
-export const caution = { 700: '#B45309', light: '#FDF3E3' } as const;
-export const negative = { 700: '#B91C1C', light: '#FCEBEA' } as const;
+export const positive = { 400: '#4ADE80', 700: '#15803D', light: '#E8F5EC', dark: '#0C2A16' } as const;
+export const caution = { 400: '#FBBF24', 700: '#B45309', light: '#FDF3E3', dark: '#2E2007' } as const;
+export const negative = { 400: '#F87171', 700: '#B91C1C', light: '#FCEBEA', dark: '#2E1010' } as const;
 
 /**
  * Tinted surfaces, used as backgrounds behind an icon or a highlighted row.
+ * Each scheme needs its own: a pale tint is invisible on a dark ground.
  */
 export const tint = {
   brandLight: '#FFF1E9',
+  brandDark: '#2A1409',
   accentLight: '#E4F1EF',
+  accentDark: '#0C2926',
 } as const;
 
 /** Built from the ink rather than black, so shadows warm up rather than grey out. */
 export const shadow = {
   resting: '0 1px 2px rgba(28,25,23,.04), 0 8px 20px -12px rgba(28,25,23,.10)',
   lifted: '0 2px 4px rgba(28,25,23,.06), 0 18px 36px -16px rgba(28,25,23,.22)',
+  // Warm shadows disappear on a dark ground, so dark leans on real black.
+  restingDark: '0 1px 2px rgba(0,0,0,.5), 0 8px 20px -12px rgba(0,0,0,.7)',
+  liftedDark: '0 2px 4px rgba(0,0,0,.6), 0 18px 36px -16px rgba(0,0,0,.9)',
 } as const;
