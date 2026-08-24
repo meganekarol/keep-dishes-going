@@ -108,6 +108,45 @@ export interface DishAvailability {
   availability: Availability;
 }
 
+/** How expensive a restaurant is, from its average menu price (US-26). */
+export type PriceRange = 'CHEAP' | 'REGULAR' | 'EXPENSIVE' | 'PREMIUM';
+
+/**
+ * One step on the evolution graph (US-26). The average comes along so the graph
+ * can say why it stepped: the menu got dearer, or the thresholds moved under it.
+ */
+export interface PriceRangePoint {
+  at: string;
+  averageMenuPrice: number;
+  priceRange: PriceRange;
+}
+
+export interface PriceRangeEvolution {
+  restaurantId: string;
+  points: PriceRangePoint[];
+}
+
+/**
+ * One set of thresholds and when they start to count (US-32).
+ *
+ * `effectiveFrom` may be in the past: the admin corrects history as well as
+ * setting it.
+ */
+export interface CriteriaVersion {
+  effectiveFrom: string;
+  cheapUnder: number;
+  regularUnder: number;
+  expensiveUnder: number;
+}
+
+/** The body of POST /api/price-range-criteria (US-32). A date, not an instant. */
+export interface AdjustPriceRangeCriteriaRequest {
+  effectiveFrom: string;
+  cheapUnder: number;
+  regularUnder: number;
+  expensiveUnder: number;
+}
+
 export interface RestaurantSummary {
   restaurantId: string;
   name: string;

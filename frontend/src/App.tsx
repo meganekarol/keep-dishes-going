@@ -1,7 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 
 import { Layout } from './components/layout/Layout';
+import { RequireAdmin } from './components/auth/RequireAdmin';
 import { RequireOwner } from './components/auth/RequireOwner';
+import { PriceRangeCriteriaPage } from './pages/admin/PriceRangeCriteriaPage';
 import { LandingPage } from './pages/LandingPage';
 import { RestaurantListPage } from './pages/RestaurantListPage';
 import { RestaurantDetailPage } from './pages/RestaurantDetailPage';
@@ -79,6 +81,16 @@ export default function App() {
             <RequireOwner>
               <EditDishPage />
             </RequireOwner>
+          }
+        />
+
+        {/* KDG itself, not an owner (US-32). */}
+        <Route
+          path="/admin/price-ranges"
+          element={
+            <RequireAdmin>
+              <PriceRangeCriteriaPage />
+            </RequireAdmin>
           }
         />
 

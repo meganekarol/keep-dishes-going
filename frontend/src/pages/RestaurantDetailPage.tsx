@@ -24,6 +24,7 @@ import {
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 import { MenuItemCard } from '../components/catalogue/MenuItemCard';
+import { PriceRangeEvolutionChart } from '../components/catalogue/PriceRangeEvolutionChart';
 import { CoverImage } from '../components/shared/CoverImage';
 import { OpeningHoursTable } from '../components/shared/OpeningHoursTable';
 import { QueryState } from '../components/shared/QueryState';
@@ -207,6 +208,10 @@ export function RestaurantDetailPage() {
               </Box>
             )}
           </QueryState>
+
+          <Box sx={{ mt: 5 }}>
+            <PriceRangeEvolutionChart restaurantId={restaurantId} />
+          </Box>
 
           <Dialog open={dishFromElsewhere !== null} onClose={() => setDishFromElsewhere(null)}>
             <DialogTitle>Start a new basket?</DialogTitle>

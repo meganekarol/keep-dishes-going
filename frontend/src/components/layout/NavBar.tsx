@@ -54,6 +54,12 @@ export function NavBar() {
 
         {isAuthenticated() ? (
           <>
+            {/* KDG's own screen, so it is only there for KDG. */}
+            {loggedInUser?.roles.includes('admin') && (
+              <Button color="inherit" component={Link} to="/admin/price-ranges">
+                Price ranges
+              </Button>
+            )}
             <Button variant="outlined" color="inherit" component={Link} to="/owner">
               My restaurant
             </Button>
