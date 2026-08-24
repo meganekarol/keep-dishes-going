@@ -3,14 +3,18 @@ package be.kdg.keepdishesgoing.restaurant.domain.valueObjects;
 /**
  * A point on the map, used to work out how far a courier has to drive (US-19).
  *
- * <p>Optional on an {@link Address}: geocoding is a call to somebody else's
- * service and it is allowed to fail. A restaurant with no coordinates still
- * works, it just cannot have its distance measured.
+ * @param latitude  the latitude, between -90 and 90
+ * @param longitude the longitude, between -180 and 180
  */
 public record Coordinates(double latitude, double longitude) {
 
     private static final double EARTH_RADIUS_KM = 6371.0;
 
+    /**
+     * Checks the point is on the globe.
+     *
+     * @throws IllegalArgumentException if either value is out of range
+     */
     public Coordinates {
         if (latitude < -90 || latitude > 90) {
             throw new IllegalArgumentException("Latitude must be between -90 and 90, got " + latitude);
@@ -21,10 +25,13 @@ public record Coordinates(double latitude, double longitude) {
     }
 
     /**
-     * Great-circle distance in kilometres.
+     * Measures the distance to another point in a straight line over the ground.
      *
-     * <p>Straight over the ground, not along the roads. Route lengths need a
-     * routing service, and the number this feeds is called a guesstimate.
+     * <p>This is not the length of the roads, which is why the delivery time it
+     * feeds is called a guesstimate.
+     *
+     * @param other the point to measure to
+     * @return the distance in kilometres
      */
     public double distanceInKmTo(Coordinates other) {
         double deltaLat = Math.toRadians(other.latitude - this.latitude);

@@ -10,15 +10,10 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * The platform's price range thresholds over time, event sourced (US-32).
+ * The platform's price range thresholds over time (US-32).
  *
- * <p>Event sourcing earns its keep here rather than being decoration. The admin
- * may date a new set of thresholds into the past, so the timeline cannot be a
- * row that gets overwritten. Adjusting appends an event; replaying sorts every
- * event by the date it takes effect, which drops a back-dated version into its
- * place and rewrites every answer that depended on it.
- *
- * <p>One policy governs the whole platform, so there is one aggregate and no id.
+ * <p>Kept as a list of versions, each with the date it starts to count. There is
+ * one set of criteria for the whole platform, so this aggregate has no id.
  */
 public class PriceRangeCriteria {
 
@@ -29,11 +24,20 @@ public class PriceRangeCriteria {
     private PriceRangeCriteria() {
     }
 
-    /** Blank aggregate used as the starting point for event replay. */
+    /**
+     * Creates an empty aggregate to replay events onto.
+     *
+     * @return a new aggregate with no versions yet
+     */
     public static PriceRangeCriteria blank() {
         return new PriceRangeCriteria();
     }
 
+    /**
+     * Records a new set of thresholds.
+     *
+     * @param criteria the new thresholds and the date they start to count
+     */
     public void adjust(CriteriaVersion criteria) {
         applyAndRecord(new PriceRangeCriteriaAdjustedEvent(
                 criteria.effectiveFrom(),
@@ -42,7 +46,11 @@ public class PriceRangeCriteria {
                 criteria.expensiveUnder()));
     }
 
-    /** Used by the persistence adapter to replay historical events during rehydration. */
+    /**
+     * Applies one event to the aggregate. Used when replaying stored events.
+     *
+     * @param event the event to apply, ignored if it is not a criteria adjustment
+     */
     public void apply(DomainEvent event) {
         if (event instanceof PriceRangeCriteriaAdjustedEvent adjusted) {
             versions.add(new CriteriaVersion(
@@ -51,10 +59,9 @@ public class PriceRangeCriteria {
                     adjusted.regularUnder(),
                     adjusted.expensiveUnder()));
 
-            // Sorted on the way in, because they do not arrive in the order they
-            // take effect. The sort is stable, so two versions dated the same
-            // moment stay in the order the admin recorded them and the later one
-            // wins in inForceAt.
+            // Events do not arrive in the order they take effect, so sort on the
+            // way in. The sort is stable, so two versions dated the same moment
+            // keep the order the admin recorded them in.
             versions.sort(Comparator.comparing(CriteriaVersion::effectiveFrom));
         }
         version++;
@@ -66,8 +73,11 @@ public class PriceRangeCriteria {
     }
 
     /**
-     * The thresholds in force at that moment, falling back to the platform's
-     * initial ones for any time before the admin set any.
+     * Finds the thresholds that were in force at a given moment.
+     *
+     * @param moment the point in time to look up
+     * @return the thresholds in force then, or {@code CriteriaVersion.INITIAL} if
+     *         the admin had not set any yet
      */
     public CriteriaVersion inForceAt(LocalDateTime moment) {
         CriteriaVersion inForce = CriteriaVersion.INITIAL;
@@ -80,19 +90,34 @@ public class PriceRangeCriteria {
         return inForce;
     }
 
-    /** Every version the admin has set, in the order they take effect. */
+    /**
+     * Lists every set of thresholds the admin has recorded.
+     *
+     * @return the versions, in the order they take effect
+     */
     public List<CriteriaVersion> timeline() {
         return List.copyOf(versions);
     }
 
+    /**
+     * Returns the events raised since this aggregate was loaded.
+     *
+     * @return the events that still need saving
+     */
     public List<DomainEvent> getUncommittedEvents() {
         return uncommittedEvents;
     }
 
+    /** Empties the list of uncommitted events, after they have been saved. */
     public void clearUncommittedEvents() {
         uncommittedEvents.clear();
     }
 
+    /**
+     * Returns how many events have been applied to this aggregate.
+     *
+     * @return the version number
+     */
     public int getVersion() {
         return version;
     }

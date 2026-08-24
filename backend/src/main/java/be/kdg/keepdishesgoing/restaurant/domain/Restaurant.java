@@ -12,6 +12,11 @@ import be.kdg.keepdishesgoing.restaurant.domain.valueObjects.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * A restaurant on the platform (US-02).
+ *
+ * <p>Owns its menu, its opening hours, and whether it is currently taking orders.
+ */
 public class Restaurant {
     private RestaurantId restaurantId;
     private OwnerId ownerId;
@@ -26,10 +31,22 @@ public class Restaurant {
 
     private RestaurantStatus status = RestaurantStatus.CLOSED;
 
-    // Composition: event publisher
     private final EventPublisherHelper eventPublisher = new EventPublisherHelper();
 
-    public Restaurant(RestaurantId restaurantId,OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<String> pictureUrls) {
+    /**
+     * Builds a restaurant with an empty menu.
+     *
+     * @param restaurantId    the restaurant's identifier
+     * @param ownerId         the owner it belongs to
+     * @param name            the restaurant's name
+     * @param address         where it is
+     * @param contactEmail    the address customers can reach it on
+     * @param cuisineType     the kind of food it serves
+     * @param defaultPrepTime how many minutes it usually needs to cook an order
+     * @param openingHours    when it is open
+     * @param pictureUrls     pictures of the restaurant
+     */
+    public Restaurant(RestaurantId restaurantId, OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<String> pictureUrls) {
         this.restaurantId = restaurantId;
         this.ownerId = ownerId;
         this.name = name;
@@ -39,12 +56,26 @@ public class Restaurant {
         this.defaultPrepTime = defaultPrepTime;
         this.openingHours = openingHours;
         this.pictureUrls = pictureUrls;
-        // A restaurant always has a menu, empty to begin with. Without this the
-        // menu policy (max 10 published dishes) has nothing to run against.
+        // A restaurant always has a menu, empty to begin with, so the ten dish
+        // rule has something to run against from the start.
         this.menu = RestaurantMenu.forRestaurant(restaurantId);
     }
 
-
+    /**
+     * Creates a new restaurant, works out whether it is open right now, and
+     * raises a restaurant created event.
+     *
+     * @param restaurantId    the restaurant's identifier
+     * @param ownerId         the owner it belongs to
+     * @param name            the restaurant's name
+     * @param address         where it is
+     * @param contactEmail    the address customers can reach it on
+     * @param cuisineType     the kind of food it serves
+     * @param defaultPrepTime how many minutes it usually needs to cook an order
+     * @param openingHours    when it is open
+     * @param pictureUrls     pictures of the restaurant
+     * @return the new restaurant, with its creation event waiting to be published
+     */
     public static Restaurant createRestaurant(RestaurantId restaurantId, OwnerId ownerId, String name, Address address, String contactEmail, CuisineType cuisineType, int defaultPrepTime, OpeningHours openingHours, List<String> pictureUrls) {
         Restaurant restaurant =  new Restaurant(
                 restaurantId,
@@ -58,7 +89,6 @@ public class Restaurant {
                 pictureUrls
         );
 
-        // Determine initial status using the domain logic itself
         LocalDateTime now = LocalDateTime.now();
         restaurant.status = restaurant.isOpen(now)
                 ? RestaurantStatus.OPEN
@@ -83,8 +113,10 @@ public class Restaurant {
     }
 
     /**
-     * Translates the weekly schedule into the shared-kernel representation, so
-     * other contexts can evaluate opening hours without reaching into this one.
+     * Turns the weekly schedule into the shared form other contexts understand.
+     *
+     * @param openingHours the schedule to convert
+     * @return one slot per open day, or an empty list if there is no schedule
      */
     private static List<OpeningHoursSlot> toSlots(OpeningHours openingHours) {
         if (openingHours == null || openingHours.schedule() == null) {
@@ -99,12 +131,24 @@ public class Restaurant {
                 .toList();
     }
 
+    /**
+     * Sets the status while rebuilding a restaurant from storage.
+     *
+     * @param status the stored status
+     * @return this restaurant, so calls can be chained
+     */
     public Restaurant withStatus(RestaurantStatus status) {
         this.status = status;
         return this;
     }
 
-    /** Restore the previously published dishes when rehydrating from persistence. */
+    /**
+     * Sets the menu while rebuilding a restaurant from storage.
+     *
+     * @param menu the stored menu
+     * @return this restaurant, so calls can be chained
+     * @throws IllegalArgumentException if the menu is missing
+     */
     public Restaurant withMenu(RestaurantMenu menu) {
         if (menu == null) {
             throw new IllegalArgumentException("Menu cannot be null");
@@ -113,14 +157,14 @@ public class Restaurant {
         return this;
     }
 
-    /** Manually open the restaurant (overrides schedule) */
+    /** Opens the restaurant by hand, ignoring the opening hours (US-09). */
     public void manuallyOpen() {
         if (status == RestaurantStatus.MANUALLY_OPENED) return;
         this.status = RestaurantStatus.MANUALLY_OPENED;
         eventPublisher.register(new RestaurantManuallyOpenedEvent(this.restaurantId.uuid()));
     }
 
-    /** Manually close the restaurant (overrides schedule) */
+    /** Closes the restaurant by hand, ignoring the opening hours (US-09). */
     public void manuallyClose() {
         if (status == RestaurantStatus.MANUALLY_CLOSED) return;
         this.status = RestaurantStatus.MANUALLY_CLOSED;
@@ -128,13 +172,12 @@ public class Restaurant {
     }
 
     /**
-     * Drop any manual override and let the weekly schedule decide again.
+     * Drops a manual override so the opening hours decide again (US-09).
      *
-     * <p>An override has no expiry of its own, so without this an owner who
-     * closes early is closed for good: {@link #isOpen} short-circuits on both
-     * manual states and never reaches the schedule again.
+     * <p>Does nothing if there is no override in place. Without this an owner who
+     * closes early would stay closed for good.
      *
-     * @param now used to work out which schedule-driven state applies right now
+     * @param now the moment to work the new status out from
      */
     public void followSchedule(LocalDateTime now) {
         if (status != RestaurantStatus.MANUALLY_OPENED && status != RestaurantStatus.MANUALLY_CLOSED) {
@@ -146,62 +189,85 @@ public class Restaurant {
         eventPublisher.register(new RestaurantScheduleResumedEvent(this.restaurantId.uuid()));
     }
 
-    /** Evaluate whether the restaurant is open based on schedule and manual overrides */
+    /**
+     * Checks whether the restaurant is taking orders.
+     *
+     * <p>A manual override wins over the opening hours.
+     *
+     * @param now the moment to check
+     * @return {@code true} if it is open
+     */
     public boolean isOpen(LocalDateTime now) {
         if (status == RestaurantStatus.MANUALLY_CLOSED) return false;
         if (status == RestaurantStatus.MANUALLY_OPENED) return true;
         return openingHours.isOpenAt(now.toLocalTime(), now.getDayOfWeek());
     }
 
-    // Event access methods
+    /**
+     * Returns the events raised since this restaurant was loaded.
+     *
+     * @return the events that still need publishing
+     */
     public List<DomainEvent> getUncommittedEvents() {
         return eventPublisher.getEvents();
     }
 
+    /** Empties the list of uncommitted events, after they have been published. */
     public void markEventAsCommitted() {
         eventPublisher.clear();
     }
 
+    /** @return the restaurant's identifier */
     public RestaurantId getRestaurantId() {
         return restaurantId;
     }
 
+    /** @return the owner the restaurant belongs to */
     public OwnerId getOwnerId() {
         return ownerId;
     }
 
+    /** @return the restaurant's name */
     public String getName() {
         return name;
     }
 
+    /** @return where the restaurant is */
     public Address getAddress() {
         return address;
     }
 
+    /** @return the address customers can reach it on */
     public String getContactEmail() {
         return contactEmail;
     }
 
+    /** @return the kind of food it serves */
     public CuisineType getCuisineType() {
         return cuisineType;
     }
 
+    /** @return how many minutes it usually needs to cook an order */
     public int getDefaultPrepTime() {
         return defaultPrepTime;
     }
 
+    /** @return when the restaurant is open */
     public OpeningHours getOpeningHours() {
         return openingHours;
     }
 
+    /** @return pictures of the restaurant */
     public List<String> getPictureUrls() {
         return pictureUrls;
     }
 
+    /** @return whether the restaurant is open, closed, or manually overridden */
     public RestaurantStatus getStatus() {
         return status;
     }
 
+    /** @return the dishes the restaurant currently has live */
     public RestaurantMenu getMenu() {
         return menu;
     }

@@ -3,12 +3,11 @@ package be.kdg.keepdishesgoing.order.domain.valueObjects;
 /**
  * Where an order's money is (US-23).
  *
- * <p>Separate from {@link OrderStatus} because the two move on different clocks;
- * combining them would need a state per combination.
+ * <p>Kept apart from {@link OrderStatus} because the two move at different times.
  */
 public enum PaymentStatus {
 
-    /** Checkout has started, the customer has not come back from the provider. */
+    /** Checkout has started and the customer has not come back from the provider. */
     PENDING,
 
     /** The provider is holding the money. It has not left the customer yet. */
@@ -20,7 +19,11 @@ public enum PaymentStatus {
     /** The hold was given back without being taken. */
     RELEASED;
 
-    /** Only an authorized hold can be taken or given back. */
+    /**
+     * Checks whether the money is being held.
+     *
+     * @return {@code true} if the hold can still be taken or given back
+     */
     public boolean isHeld() {
         return this == AUTHORIZED;
     }

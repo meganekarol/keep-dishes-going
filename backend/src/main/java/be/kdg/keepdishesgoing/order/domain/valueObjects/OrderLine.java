@@ -5,7 +5,15 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Value Object representing a single line item in an order
+ * One dish on an order, with the name and price copied from the menu at checkout.
+ *
+ * <p>Copying them means a later price change cannot rewrite what the customer
+ * already agreed to pay.
+ *
+ * @param dishId    which dish was ordered
+ * @param dishName  what it was called at the time
+ * @param unitPrice what one of them cost at the time
+ * @param quantity  how many were ordered
  */
 public record OrderLine(
         UUID dishId,
@@ -14,6 +22,13 @@ public record OrderLine(
         int quantity
 ) {
 
+    /**
+     * Checks the line makes sense.
+     *
+     * @throws NullPointerException     if the id, name or price is missing
+     * @throws IllegalArgumentException if the name is blank, or the price or
+     *                                  quantity is not above zero
+     */
     public OrderLine {
         Objects.requireNonNull(dishId, "Dish ID cannot be null");
         Objects.requireNonNull(dishName, "Dish name cannot be null");
@@ -33,14 +48,19 @@ public record OrderLine(
     }
 
     /**
-     * Calculate the subtotal for this order line
+     * Works out what this line costs in total.
+     *
+     * @return the unit price times the quantity
      */
     public BigDecimal subtotal() {
         return unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 
     /**
-     * Create a new order line with a different quantity
+     * Returns a copy of this line with a different quantity.
+     *
+     * @param newQuantity how many are wanted now
+     * @return a new line for the same dish with that quantity
      */
     public OrderLine withQuantity(int newQuantity) {
         return new OrderLine(dishId, dishName, unitPrice, newQuantity);
