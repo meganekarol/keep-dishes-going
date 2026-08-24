@@ -67,6 +67,14 @@ public class SecurityConfig {
                         // "dishes" segment.
                         .requestMatchers(HttpMethod.GET, "/api/restaurants/*/dishes/availability").permitAll()
 
+                        // US-26: the price range graph is an extra service for
+                        // customers, so it is as open as the menu it describes.
+                        .requestMatchers(HttpMethod.GET, "/api/restaurants/*/price-range-evolution").permitAll()
+
+                        // US-32: only KDG itself decides what the price ranges
+                        // mean, so this belongs to neither owners nor customers.
+                        .requestMatchers("/api/price-range-criteria").hasRole("admin")
+
                         // Owner routes. The role proves the caller is *an* owner;
                         // proving they own *this* restaurant needs a lookup, so the
                         // endpoints additionally carry @PreAuthorize on restaurantId.
