@@ -74,6 +74,8 @@ public class SecurityConfig {
                         // US-32: only KDG itself decides what the price ranges
                         // mean, so this belongs to neither owners nor customers.
                         .requestMatchers("/api/price-range-criteria").hasRole("admin")
+                        // Writes made-up history, so it stays behind the same role.
+                        .requestMatchers(HttpMethod.POST, "/api/pricing/demo-history").hasRole("admin")
 
                         // Owner routes. The role proves the caller is *an* owner;
                         // proving they own *this* restaurant needs a lookup, so the
