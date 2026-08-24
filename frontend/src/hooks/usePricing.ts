@@ -36,3 +36,13 @@ export function useAdjustPriceRangeCriteria() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: pricingKeys.all }),
   });
 }
+
+/** Loads back-dated sample history (US-26). */
+export function useSeedDemoHistory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: pricingService.seedDemoHistory,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: pricingKeys.all }),
+  });
+}

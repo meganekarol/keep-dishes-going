@@ -147,6 +147,12 @@ export interface AdjustPriceRangeCriteriaRequest {
   expensiveUnder: number;
 }
 
+/** What loading the demo history wrote. Both are 0 when it was already there. */
+export interface DemoHistoryResponse {
+  criteriaVersionsAdded: number;
+  restaurantsSeeded: number;
+}
+
 export interface RestaurantSummary {
   restaurantId: string;
   name: string;

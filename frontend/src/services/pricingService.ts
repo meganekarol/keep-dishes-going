@@ -2,6 +2,7 @@ import { api } from './apiClient';
 import type {
   AdjustPriceRangeCriteriaRequest,
   CriteriaVersion,
+  DemoHistoryResponse,
   PriceRangeEvolution,
 } from '../types/api';
 
@@ -19,4 +20,7 @@ export const pricingService = {
    */
   adjustCriteria: (request: AdjustPriceRangeCriteriaRequest) =>
     api.post<void>('/api/price-range-criteria', request),
+
+  /** Admin only. Back-dated sample history, so the graph has a year to draw. */
+  seedDemoHistory: () => api.post<DemoHistoryResponse>('/api/pricing/demo-history'),
 };

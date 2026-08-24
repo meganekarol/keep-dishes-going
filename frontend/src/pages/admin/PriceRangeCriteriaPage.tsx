@@ -16,7 +16,11 @@ import {
 
 import { FormTextField } from '../../components/form/FormTextField';
 import { QueryState } from '../../components/shared/QueryState';
-import { useAdjustPriceRangeCriteria, usePriceRangeCriteria } from '../../hooks/usePricing';
+import {
+  useAdjustPriceRangeCriteria,
+  usePriceRangeCriteria,
+  useSeedDemoHistory,
+} from '../../hooks/usePricing';
 import { formatPrice } from '../../utils/format';
 
 interface CriteriaFormValues {
@@ -40,6 +44,7 @@ const DEFAULTS: CriteriaFormValues = {
 export function PriceRangeCriteriaPage() {
   const { data, isLoading, error } = usePriceRangeCriteria();
   const adjust = useAdjustPriceRangeCriteria();
+  const seed = useSeedDemoHistory();
   const { control, handleSubmit, reset } = useForm<CriteriaFormValues>({ defaultValues: DEFAULTS });
 
   const onSubmit = (values: CriteriaFormValues) => {
@@ -169,6 +174,45 @@ export function PriceRangeCriteriaPage() {
           </Card>
         )}
       </QueryState>
+
+      {/* The database is recreated on every start, so a fresh install has no
+          history for the graph to draw. This writes a year of it. */}
+      <Box sx={{ mt: 5 }}>
+        <Typography variant="h2" gutterBottom>
+          Demo history
+        </Typography>
+        <Typography color="text.secondary" sx={{ mb: 2 }}>
+          Writes a year of back-dated thresholds and menu averages so the evolution graph has a
+          shape to show. It adds nothing if that history is already there.
+        </Typography>
+
+        {seed.error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {seed.error.message}
+          </Alert>
+        )}
+
+        {seed.data && (
+          <Alert
+            severity={
+              seed.data.criteriaVersionsAdded === 0 && seed.data.restaurantsSeeded === 0
+                ? 'info'
+                : 'success'
+            }
+            sx={{ mb: 2 }}
+          >
+            {seed.data.criteriaVersionsAdded === 0 && seed.data.restaurantsSeeded === 0
+              ? 'Nothing added, the history was already there.'
+              : `Added ${seed.data.criteriaVersionsAdded} sets of thresholds and a year of prices for ${
+                  seed.data.restaurantsSeeded
+                } ${seed.data.restaurantsSeeded === 1 ? 'restaurant' : 'restaurants'}.`}
+          </Alert>
+        )}
+
+        <Button variant="outlined" onClick={() => seed.mutate()} disabled={seed.isPending}>
+          {seed.isPending ? 'Loading...' : 'Load demo history'}
+        </Button>
+      </Box>
     </>
   );
 }
