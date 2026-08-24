@@ -78,10 +78,6 @@ token) and `frontend-client` (public, PKCE, used by the React app).
 > docker compose exec idp_keycloak /opt/keycloak/bin/kc.sh export \
 >   --dir /opt/keycloak/data/import --realm keepdishesgoing --users realm_file
 > ```
->
-> With `--file` instead of `--dir`, the flag is `--users same_file`. Both forms include user
-> passwords. Re-importing needs a clean Keycloak volume, so verifying an export means resetting
-> (section 8).
 
 **`kdg-admin` is deliberately not an owner.** Every account in the realm gets the `owner` role by
 default, which is how an owner can self-register from the landing page. KDG's own account has
