@@ -62,7 +62,8 @@ export default function SecurityContextProvider({ children }: PropsWithChildren)
    * Opens Keycloak's registration page (US-01).
    *
    * Only owners ever sign up, so the realm gives every new account the owner
-   * role by default. Customers order as guests and never register.
+   * role by default, KDG's own account aside. Customers order as guests and
+   * never register.
    */
   function register() {
     keycloak.register({ redirectUri: `${window.location.origin}/owner` });

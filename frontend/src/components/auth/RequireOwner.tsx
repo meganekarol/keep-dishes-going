@@ -1,5 +1,5 @@
 import { type PropsWithChildren, useContext, useEffect } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 
 import SecurityContext from '../../context/SecurityContext';
 
@@ -10,7 +10,7 @@ import SecurityContext from '../../context/SecurityContext';
  * and the owner role on every request, which is what actually protects the data.
  */
 export function RequireOwner({ children }: PropsWithChildren) {
-  const { isInitialised, isAuthenticated, login } = useContext(SecurityContext);
+  const { isInitialised, isAuthenticated, loggedInUser, login } = useContext(SecurityContext);
 
   useEffect(() => {
     if (isInitialised && !isAuthenticated()) {
@@ -25,6 +25,10 @@ export function RequireOwner({ children }: PropsWithChildren) {
         <Typography color="text.secondary">Signing you in</Typography>
       </Box>
     );
+  }
+
+  if (!loggedInUser?.roles.includes('owner')) {
+    return <Alert severity="error">This area is for restaurant owners.</Alert>;
   }
 
   return <>{children}</>;

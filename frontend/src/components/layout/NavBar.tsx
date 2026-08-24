@@ -54,15 +54,16 @@ export function NavBar() {
 
         {isAuthenticated() ? (
           <>
-            {/* KDG's own screen, so it is only there for KDG. */}
             {loggedInUser?.roles.includes('admin') && (
-              <Button color="inherit" component={Link} to="/admin/price-ranges">
+              <Button variant="outlined" color="inherit" component={Link} to="/admin/price-ranges">
                 Price ranges
               </Button>
             )}
-            <Button variant="outlined" color="inherit" component={Link} to="/owner">
-              My restaurant
-            </Button>
+            {loggedInUser?.roles.includes('owner') && (
+              <Button variant="outlined" color="inherit" component={Link} to="/owner">
+                My restaurant
+              </Button>
+            )}
             <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
               {loggedInUser?.name}
             </Typography>
