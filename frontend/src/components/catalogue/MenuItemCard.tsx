@@ -22,11 +22,6 @@ interface MenuItemCardProps {
   inBasket?: number;
 }
 
-/**
- * Out-of-stock dishes stay on the menu with `available: false` rather than
- * disappearing a customer who came for one deserves to see it is temporarily
- * off, not to wonder whether they misremembered.
- */
 export function MenuItemCard({ item, onAdd, inBasket = 0 }: MenuItemCardProps) {
   return (
     <Card
@@ -76,8 +71,6 @@ export function MenuItemCard({ item, onAdd, inBasket = 0 }: MenuItemCardProps) {
           <Button
             size="small"
             startIcon={<AddShoppingCartIcon />}
-            // The backend refuses an order holding a sold-out dish, so offering
-            // it here would only produce a rejection at checkout.
             disabled={!item.available}
             onClick={() => onAdd(item)}
           >

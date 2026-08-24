@@ -6,11 +6,6 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 import { FormTextField } from '../../form/FormTextField';
 import type { RestaurantFormValues } from './types';
 
-/**
- * The brief asks for picture(s), so the owner can add as many rows as they like.
- * The first one cannot be removed: the catalogue card shows a restaurant's first
- * picture, so a restaurant with none looks broken to customers.
- */
 export function PictureUrlFields() {
   const { control } = useFormContext<RestaurantFormValues>();
   const { fields, append, remove } = useFieldArray({ control, name: 'pictureUrls' });

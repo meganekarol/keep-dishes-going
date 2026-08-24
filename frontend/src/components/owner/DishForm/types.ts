@@ -20,9 +20,6 @@ export const FOOD_TAGS = [
  */
 export const dishFormSchema = z.object({
   name: z.string().trim().min(1, 'A name is required'),
-
-  // superRefine rather than refine, which would narrow '' out of the inferred
-  // type while the form still starts with it selected.
   type: z.union([z.enum(DISH_TYPES), z.literal('')]).superRefine((type, ctx) => {
     if (type === '') ctx.addIssue({ code: 'custom', message: 'Pick a course' });
   }),

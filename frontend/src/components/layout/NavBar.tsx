@@ -75,8 +75,7 @@ export function NavBar() {
             </Button>
           </>
         ) : (
-          // Customers never need this: ordering and tracking are open (US-30).
-          // It is here for restaurant owners.
+          // here for restaurant owners.
           <Button variant="contained" onClick={login}>
             Owner log in
           </Button>

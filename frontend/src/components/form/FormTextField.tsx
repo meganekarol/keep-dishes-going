@@ -15,11 +15,6 @@ type FormTextFieldProps<T extends FieldValues> = Omit<
 /**
  * An MUI text field bound to React Hook Form through a Controller.
  *
- * Controller rather than register because MUI does not hand the ref of its
- * underlying input to whoever spreads props onto it, which is the case the
- * course slides call out. Wrapping it once keeps that decision in one file
- * instead of repeating it per field.
- *
  * It takes no validation rules. Every form here validates through a Zod schema,
  * so the rules live in one place rather than beside each input.
  */

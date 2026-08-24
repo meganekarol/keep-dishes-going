@@ -56,8 +56,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantSummary }
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
               {formatPriceRange(restaurant.lowestPrice, restaurant.highestPrice)}
             </Typography>
-            {/* The delivery guess, not the prep time: what a customer compares
-                restaurants on is when the food turns up. */}
+            {/* The delivery guess, not the prep time*/}
             <Chip
               size="small"
               variant="outlined"
