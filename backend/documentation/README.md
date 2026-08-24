@@ -4,10 +4,10 @@ Lightweight documentation for the Keep Dishes Going backend.
 
 | Document | Purpose | Status |
 |---|---|---|
-| [`domain-model.md`](domain-model.md) | Bounded contexts, aggregates, entities, value objects | TODO |
+| [`domain-model.md`](domain-model.md) | Bounded contexts, aggregates, entities, value objects | Done |
 | [`command-catalog.md`](command-catalog.md) | All 21 commands, their use case, aggregate and endpoint | Done |
 | [`event-catalog.md`](event-catalog.md) | All 20 events, payload, publisher, subscriber, routing key | Done |
-| [`user-stories.md`](user-stories.md) | The 32 user stories with implementation status | TODO |
+| [`user-stories.md`](user-stories.md) | The 32 user stories with implementation status | Done |
 | [`wireframes/`](wireframes/) | Frontend wireframes | TODO |
 
 ## Context map (summary)
