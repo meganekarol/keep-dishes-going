@@ -62,7 +62,7 @@ export function PriceRangeCriteriaPage() {
   return (
     <>
       <Typography variant="h1" gutterBottom>
-        Price ranges
+        Price range criteria
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
         What the platform counts as cheap, regular, expensive and premium, measured on a

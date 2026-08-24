@@ -57,6 +57,14 @@ export function PriceRangeEvolutionChart({ restaurantId }: { restaurantId: strin
                   {
                     data: points.map((point) => new Date(point.at)),
                     scaleType: 'time',
+                    valueFormatter: (value: Date, context) =>
+                      context.location === 'tick'
+                        ? `${value.getFullYear()}/${String(value.getMonth() + 1).padStart(2, '0')}`
+                        : value.toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          }),
                   },
                 ]}
                 yAxis={[

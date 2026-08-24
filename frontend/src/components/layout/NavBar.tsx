@@ -56,7 +56,7 @@ export function NavBar() {
           <>
             {loggedInUser?.roles.includes('admin') && (
               <Button variant="outlined" color="inherit" component={Link} to="/admin/price-ranges">
-                Price ranges
+                Price range criteria
               </Button>
             )}
             {loggedInUser?.roles.includes('owner') && (
