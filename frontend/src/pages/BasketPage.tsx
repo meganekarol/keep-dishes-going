@@ -19,6 +19,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 
 import BasketContext from '../context/BasketContext';
 import { UNAVAILABLE_LABEL, useBasketAvailability } from '../hooks/useBasketAvailability';
+import { useRestaurant } from '../hooks/useRestaurants';
 import { formatPrice } from '../utils/format';
 
 /**
@@ -31,6 +32,10 @@ import { formatPrice } from '../utils/format';
 export function BasketPage() {
   const { basket, total, setQuantity, removeItem, clear } = useContext(BasketContext);
   const { unavailable, isChecking } = useBasketAvailability();
+
+  // A closed kitchen refuses the order anyway
+  const { data: restaurant, isLoading: isCheckingHours } = useRestaurant(basket?.restaurantId ?? '');
+  const closed = restaurant ? !restaurant.open : false;
 
   const reasonFor = (dishId: string) =>
     unavailable.find((line) => line.dishId === dishId)?.reason;
@@ -62,6 +67,13 @@ export function BasketPage() {
           {basket.restaurantName}
         </Link>
       </Typography>
+
+      {closed && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          <AlertTitle>{basket.restaurantName} is closed right now</AlertTitle>
+          Your basket is kept. You can order as soon as the kitchen opens again.
+        </Alert>
+      )}
 
       {/* The requirement is that the basket itself makes this obvious (US-21),
           so it is said here in full rather than left to the per-line chips. */}
@@ -156,13 +168,14 @@ export function BasketPage() {
       </Paper>
 
       <Stack direction="row" spacing={2} useFlexGap sx={{ mt: 3, flexWrap: 'wrap' }}>
-        {/* Blocked, not merely warned about (US-21). Also while the check is
-            still running: an unknown answer is not a yes. */}
+        {/* Blocked, not merely warned about (US-21), and blocked again while the
+            restaurant is closed. Also while either check is still running: an
+            unknown answer is not a yes. */}
         <Button
           variant="contained"
           component={RouterLink}
           to="/checkout"
-          disabled={isChecking || unavailable.length > 0}
+          disabled={isChecking || unavailable.length > 0 || isCheckingHours || closed}
         >
           Go to checkout
         </Button>
