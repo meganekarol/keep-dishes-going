@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { Alert, Box, Card, CardContent, Typography } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
 
 import { QueryState } from '../shared/QueryState';
 import { usePriceRangeEvolution } from '../../hooks/usePricing';
-import type { PriceRange } from '../../types/api';
+import type { PriceRange, PriceRangePoint } from '../../types/api';
 import { formatPrice } from '../../utils/format';
 
 /** The bands are ordered, so they plot as 1 to 4 and read back as symbols. */
@@ -29,7 +30,13 @@ const LABELS: Record<PriceRange, string> = {
 export function PriceRangeEvolutionChart({ restaurantId }: { restaurantId: string }) {
   const { data, isLoading, error } = usePriceRangeEvolution(restaurantId);
 
-  const points = data?.points ?? [];
+  // One point per day, keeping the last. Every menu edit writes a point, so a
+  // day of them would otherwise pile up on a single spot on the axis.
+  const points = useMemo(() => {
+    const byDay = new Map<string, PriceRangePoint>();
+    for (const point of data?.points ?? []) byDay.set(point.at.slice(0, 10), point);
+    return [...byDay.values()];
+  }, [data]);
 
   return (
     <Card>
@@ -57,6 +64,9 @@ export function PriceRangeEvolutionChart({ restaurantId }: { restaurantId: strin
                   {
                     data: points.map((point) => new Date(point.at)),
                     scaleType: 'time',
+                    // A tick on each point rather than on round months, so the
+                    // labels line up with the dots they belong to.
+                    tickInterval: points.map((point) => new Date(point.at)),
                     valueFormatter: (value: Date, context) =>
                       context.location === 'tick'
                         ? `${value.getFullYear()}/${String(value.getMonth() + 1).padStart(2, '0')}`
@@ -78,9 +88,8 @@ export function PriceRangeEvolutionChart({ restaurantId }: { restaurantId: strin
                 series={[
                   {
                     data: points.map((point) => RANK[point.priceRange]),
-                    // Stepped, not smooth: a restaurant is never halfway
-                    // between two bands, it is in one until the day it is not.
-                    curve: 'stepAfter',
+                    // Straight lines from point to point
+                    curve: 'linear',
                     showMark: true,
                     label: 'Price range',
                     valueFormatter: (value, context) => {
