@@ -1,0 +1,10 @@
+/* MUI's CssBaseline does the resetting; this is only what sits above it. */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
