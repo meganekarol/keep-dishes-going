@@ -1,0 +1,75 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: keep-dishes-going
+
+  datasource:
+    url: jdbc:postgresql://localhost:5443/keep-dishes-going
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        hbm2ddl:
+          create_namespaces: true
+    open-in-view: false
+
+  rabbitmq:
+    host: localhost      # Changed: use localhost
+    port: 5672
+    username: user
+    password: password
+
+  modulith:
+    events:
+      jdbc:
+        # Lets Modulith create its own event_publication table, with the
+        # serialised event as text. Left to Hibernate it becomes varchar(255),
+        # which an accepted order does not fit into.
+        schema-initialization:
+          enabled: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/keepdishesgoing  # Changed: use localhost
+          jwk-set-uri: http://localhost:8180/realms/keepdishesgoing/protocol/openid-connect/certs
+
+cors:
+  allowed-origins: http://localhost:5173
+
+kdg:
+  payment:
+    stripe:
+      # Test-mode keys only, kept out of git. Supply them either as environment
+      # variables or in config/application.yml, which overrides these empty
+      # defaults: sk_test_... for the API, whsec_... for the callback.
+      secret-key: ${STRIPE_SECRET_KEY:}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+      base-url: https://api.stripe.com
+      # Where Stripe sends the customer afterwards. {orderId} is filled in per
+      # order, so success lands straight on that order's tracking page.
+      success-url: http://localhost:5173/orders/{orderId}
+      cancel-url: http://localhost:5173/orders/{orderId}?payment=cancelled
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+    # RabbitMQ/AMQP logging
+    org.springframework.amqp: DEBUG
+    org.springframework.rabbit: DEBUG
+    org.springframework.amqp.rabbit.core.RabbitTemplate: TRACE
+    # Spring Modulith event externalization
+    org.springframework.modulith: DEBUG
+    org.springframework.modulith.events: DEBUG
