@@ -78,6 +78,11 @@ token) and `frontend-client` (public, PKCE, used by the React app).
 > docker compose exec idp_keycloak /opt/keycloak/bin/kc.sh export \
 >   --dir /opt/keycloak/data/import --realm keepdishesgoing --users realm_file
 > ```
+>
+> **Strip the secrets before committing.** An export contains the realm's signing keys (the
+> `org.keycloak.keys.KeyProvider` entry under `components`) and `backend-client`'s `secret`.
+> Delete both. Keycloak generates fresh ones on import, and the `.http` files fetch the client
+> secret through the admin API, so nothing depends on the exported values.
 
 **`kdg-admin` is deliberately not an owner.** Every account in the realm gets the `owner` role by
 default, which is how an owner can self-register from the landing page. KDG's own account has
@@ -91,7 +96,7 @@ rather than the export, redo that or the admin will see a "My restaurant" button
 Payment keys are **not** in the repository. Spring Boot reads them from `backend/config/`, which
 git ignores.
 
-Create `backend/config/application.yml`:
+Copy `backend/config/application.yml.example` to `backend/config/application.yml` and fill it in:
 
 ```yaml
 kdg:
