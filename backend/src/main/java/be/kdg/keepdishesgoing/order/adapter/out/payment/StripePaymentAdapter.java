@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
@@ -31,6 +32,7 @@ import java.util.List;
  * exists. Amounts go over the wire in cents.
  */
 @Component
+@ConditionalOnExpression("!'${kdg.payment.stripe.secret-key:}'.isBlank()")
 public class StripePaymentAdapter implements PaymentProviderPort {
 
     private static final Logger log = LoggerFactory.getLogger(StripePaymentAdapter.class);

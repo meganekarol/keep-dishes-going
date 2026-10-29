@@ -44,6 +44,11 @@ public class SecurityConfig {
                         // unverified.
                         .requestMatchers(HttpMethod.POST, "/api/payments/stripe/webhook").permitAll()
 
+                        // US-23 without a Stripe key: the simulated checkout page
+                        // stands in for Stripe's, which needs no login either. Only
+                        // served when no Stripe key is configured.
+                        .requestMatchers("/api/payments/fake/checkout/**").permitAll()
+
                         // US-24/25: tracking is open for the same reason. A guest
                         // order has no account to bind the check to, so the order's
                         // random id is what proves the caller placed it, and it is only

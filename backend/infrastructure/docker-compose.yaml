@@ -1,4 +1,4 @@
-name: kdg
+name: keep-dishes-going
 
 services:
   app_postgres:
@@ -91,11 +91,55 @@ services:
     networks:
       - kdg-kc
 
+  # ==================== The application itself ====================
+  # Only started with the "full" profile:
+  #   docker compose --profile full up -d --build
+  # Without it, the services above are the infrastructure for running the
+  # backend and frontend from an IDE or the command line.
+
+  backend:
+    profiles: [full]
+    build: ..
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://app_postgres:5432/keep-dishes-going
+      APP_DB_USER: ${APP_DB_USER:-user}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-password}
+      RABBITMQ_HOST: app_rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER:-user}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-password}
+      # Tokens are issued to the browser at localhost:8180, so that stays the
+      # issuer they are checked against. Only the signing keys are fetched over
+      # the Docker network.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://idp_keycloak:8080/realms/keepdishesgoing/protocol/openid-connect/certs
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+    volumes:
+      # The same optional Stripe keys file as for ./gradlew bootRun.
+      - ../config:/app/config:ro
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - app_postgres
+      - app_rabbitmq
+      - idp_keycloak
+    networks:
+      - kdg-backend
+      - kdg-kc
+
+  frontend:
+    profiles: [full]
+    build: ../../frontend
+    ports:
+      # The port the backend's CORS rule and Keycloak's redirect URIs expect.
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - kdg-backend
+
 networks:
   kdg-kc:
-    name: kdg-kc-network
     driver: bridge
   kdg-backend:
-    name: kdg-back-network
     driver: bridge
-

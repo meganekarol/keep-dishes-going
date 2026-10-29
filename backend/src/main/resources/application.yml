@@ -49,6 +49,10 @@ cors:
   allowed-origins: http://localhost:5173
 
 kdg:
+  demo:
+    # Creates a few restaurants on startup when they do not exist yet, one of
+    # them owned by the realm's owner/owner account. See DemoRestaurantSeeder.
+    seed-data: ${SEED_DEMO_DATA:true}
   payment:
     stripe:
       # Test-mode keys only, kept out of git. Supply them either as environment
@@ -61,6 +65,10 @@ kdg:
       # order, so success lands straight on that order's tracking page.
       success-url: http://localhost:5173/orders/{orderId}
       cancel-url: http://localhost:5173/orders/{orderId}?payment=cancelled
+    fake:
+      # Used only when no Stripe key is set: where the browser reaches this
+      # API to show the simulated checkout page.
+      base-url: ${PUBLIC_API_URL:http://localhost:8080}
 
 logging:
   level:
