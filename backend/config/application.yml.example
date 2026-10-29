@@ -1,0 +1,8 @@
+# Copy to application.yml in this folder (git ignores it) and fill in your
+# Stripe test-mode keys. Spring Boot reads ./config/ on startup, so these
+# override the empty defaults in src/main/resources/application.yml.
+kdg:
+  payment:
+    stripe:
+      secret-key: sk_test_your_key_here
+      webhook-secret: whsec_printed_by_stripe_listen

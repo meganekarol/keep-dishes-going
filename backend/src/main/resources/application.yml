@@ -7,8 +7,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5443/keep-dishes-going
-    username: user
-    password: password
+    username: ${APP_DB_USER:user}
+    password: ${APP_DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -24,10 +24,10 @@ spring:
     open-in-view: false
 
   rabbitmq:
-    host: localhost      # Changed: use localhost
+    host: ${RABBITMQ_HOST:localhost}
     port: 5672
-    username: user
-    password: password
+    username: ${RABBITMQ_USER:user}
+    password: ${RABBITMQ_PASSWORD:password}
 
   modulith:
     events:
@@ -42,7 +42,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/keepdishesgoing  # Changed: use localhost
+          issuer-uri: http://localhost:8180/realms/keepdishesgoing
           jwk-set-uri: http://localhost:8180/realms/keepdishesgoing/protocol/openid-connect/certs
 
 cors:

@@ -5,8 +5,8 @@ services:
     image: postgres:17.6-alpine
     restart: always
     environment:
-      POSTGRES_USER: 'user'
-      POSTGRES_PASSWORD: 'password'
+      POSTGRES_USER: ${APP_DB_USER:-user}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD:-password}
       POSTGRES_DB: 'keep-dishes-going'
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
@@ -20,8 +20,8 @@ services:
   app_rabbitmq:
     image: rabbitmq:3.13.7-management-alpine
     environment:
-      RABBITMQ_DEFAULT_USER: 'user'
-      RABBITMQ_DEFAULT_PASS: 'password'
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-password}
     ports:
       - "5672:5672" #AMQP
       - "15672:15672" #MGMT
@@ -47,19 +47,19 @@ services:
     volumes:
       - ./idp_mysql_data:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_ROOT_PASSWORD: ${IDP_DB_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: 'keycloak'
       MYSQL_USER: 'keycloak'
-      MYSQL_PASSWORD: 'password'
+      MYSQL_PASSWORD: ${IDP_DB_PASSWORD:-password}
     ports:
       - '3307:3306'
     networks:
       - kdg-kc
-    # Added: on a cold boot MySQL spends minutes initialising its data
+    # On a cold boot MySQL spends minutes initialising its data
     # directory. Without this gate Keycloak races it, fails to obtain a JDBC
     # connection and exits(1) permanently.
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ukeycloak", "-ppassword"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -ukeycloak -p$$MYSQL_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -68,13 +68,13 @@ services:
   idp_keycloak:
     image: quay.io/keycloak/keycloak:26.3
     environment:
-      KEYCLOAK_ADMIN: 'admin'
-      KEYCLOAK_ADMIN_PASSWORD: 'admin'
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: 'mysql'
       KC_DB_URL_HOST: 'idp_mysql'
       KC_DB_URL_DATABASE: 'keycloak'
       KC_DB_USERNAME: 'keycloak'
-      KC_DB_PASSWORD: 'password'
+      KC_DB_PASSWORD: ${IDP_DB_PASSWORD:-password}
     command: start-dev --import-realm
     restart: unless-stopped
     volumes:

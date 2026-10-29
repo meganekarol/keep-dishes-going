@@ -1,0 +1,18 @@
+# Per-folder rules live in backend/.gitignore and frontend/.gitignore.
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+.vscode/
+*.iml
+
+# Local tool settings
+.claude/settings.local.json
+
+# Local environment overrides
+.env.local
+*.env.local

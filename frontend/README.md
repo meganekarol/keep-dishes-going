@@ -12,7 +12,7 @@ cd ..                        && ./gradlew bootRun
 ```
 
 Setting up from scratch, including Keycloak, Stripe and demo data, is written up once in the
-backend repository at `documentation/getting-started.md`.
+backend at [`backend/documentation/getting-started.md`](../backend/documentation/getting-started.md).
 
 Then:
 

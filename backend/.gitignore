@@ -40,6 +40,7 @@ out/
 infrastructure/postgresql/
 infrastructure/rabbitmq/
 infrastructure/idp_mysql_data/
+infrastructure/.env
 
 # Keep the seed/config directories that ARE part of the repo
 !infrastructure/init-scripts/
@@ -48,4 +49,5 @@ infrastructure/idp_mysql_data/
 # Local Stripe credentials, read by Spring Boot from ./config/ on startup.
 # Anchored to the project root so the config package under src/main/java
 # stays tracked.
-/config/
+/config/*
+!/config/application.yml.example
