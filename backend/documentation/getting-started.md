@@ -140,8 +140,11 @@ The CLI bridges that:
 
 ```bash
 stripe login
-stripe listen --forward-to localhost:8080/api/payments/stripe/webhook
+stripe listen --events checkout.session.completed,checkout.session.expired --forward-to localhost:8080/api/payments/stripe/webhook
 ```
+
+Those two events are the only ones the backend handles. Newer CLI versions refuse to start without
+`--events`.
 
 It prints a `whsec_...` on startup. That is the value for `webhook-secret` in section 4. **Leave
 this running** for the whole session, and restart the backend if you had to add the secret.
