@@ -8,17 +8,22 @@ services:
       POSTGRES_USER: ${APP_DB_USER:-user}
       POSTGRES_PASSWORD: ${APP_DB_PASSWORD:-password}
       POSTGRES_DB: 'keep-dishes-going'
-      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - '5443:5432'
     networks:
       - kdg-backend
     volumes:
-      - ./postgresql/data:/var/lib/postgresql
+      # Mounted where the image keeps its data. One level higher, as before,
+      # Postgres wrote into an anonymous volume and every recreated container
+      # started with an empty database.
+      - app_postgres_data:/var/lib/postgresql/data
       - ./init-scripts/sql:/docker-entrypoint-initdb.d
 
   app_rabbitmq:
     image: rabbitmq:3.13.7-management-alpine
+    # RabbitMQ names its data directory after the host, so a fixed hostname
+    # keeps one directory instead of a new one per container.
+    hostname: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-user}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-password}
@@ -28,8 +33,7 @@ services:
     networks:
       - kdg-backend
     volumes:
-      - ./rabbitmq/data/:/var/lib/rabbitmq/
-      - ./rabbitmq/log/:/var/log/rabbitmq/
+      - app_rabbitmq_data:/var/lib/rabbitmq
   
   # Plays the external courier company: answers accepted and ready orders with
   # picked up, location and delivered messages over RabbitMQ (US-28, US-29).
@@ -49,7 +53,7 @@ services:
   idp_mysql:
     image: mysql:9.0.1
     volumes:
-      - ./idp_mysql_data:/var/lib/mysql
+      - idp_mysql_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${IDP_DB_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: 'keycloak'
@@ -137,6 +141,11 @@ services:
       - backend
     networks:
       - kdg-backend
+
+volumes:
+  app_postgres_data:
+  app_rabbitmq_data:
+  idp_mysql_data:
 
 networks:
   kdg-kc:
