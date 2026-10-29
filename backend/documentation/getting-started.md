@@ -33,7 +33,10 @@ cd backend/infrastructure
 docker compose up -d
 ```
 
-Five containers come up: Postgres, RabbitMQ, MySQL, Keycloak, and the delivery service.
+Five containers come up: Postgres, RabbitMQ, MySQL, Keycloak, and the delivery simulator. The
+simulator is built locally from `infrastructure/delivery-simulator/` on the first run. It plays the
+external courier company: once an owner marks an order ready, it reports the order picked up after
+about 10 seconds, sends a courier position every 3 seconds, and delivers it about 30 seconds later.
 
 **The first boot takes a few minutes.** MySQL initialises its data directory, and Keycloak waits
 on a healthcheck before starting, so it will look stuck for a while. That is expected.
@@ -54,7 +57,7 @@ A 200 from that last command means Keycloak came up **and** imported the realm.
 | RabbitMQ (management UI) | http://localhost:15672 | `user` / `password` |
 | Keycloak (admin console) | http://localhost:8180 | `admin` / `admin` |
 | MySQL (Keycloak's store) | `localhost:3307` | `keycloak` / `password` |
-| Delivery service | http://localhost:8095 | — |
+| Delivery simulator | no port, RabbitMQ only | — |
 
 ---
 

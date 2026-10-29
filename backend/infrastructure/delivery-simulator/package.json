@@ -1,0 +1,14 @@
+{
+  "name": "kdg-delivery-simulator",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Stands in for the external delivery service over RabbitMQ",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.9"
+  }
+}

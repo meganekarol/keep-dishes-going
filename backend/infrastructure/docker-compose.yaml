@@ -31,14 +31,18 @@ services:
       - ./rabbitmq/data/:/var/lib/rabbitmq/
       - ./rabbitmq/log/:/var/log/rabbitmq/
   
-  delivery_service:
-    image: registry.gitlab.com/kdg-ti/programming6/material/2025-2026/delivery-service
+  # Plays the external courier company: answers accepted and ready orders with
+  # picked up, location and delivered messages over RabbitMQ (US-28, US-29).
+  delivery_simulator:
+    build: ./delivery-simulator
     environment:
-      SPRING_PROFILES_ACTIVE: 'docker'
-      SPRING_RABBITMQ_HOST: 'app_rabbitmq'
-    pull_policy: "always"
-    ports:
-      - "8095:8095"
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-user}:${RABBITMQ_PASSWORD:-password}@app_rabbitmq:5672
+      PICKUP_DELAY_SECONDS: ${DELIVERY_PICKUP_DELAY_SECONDS:-10}
+      LOCATION_INTERVAL_SECONDS: ${DELIVERY_LOCATION_INTERVAL_SECONDS:-3}
+      LOCATION_UPDATES: ${DELIVERY_LOCATION_UPDATES:-10}
+    restart: unless-stopped
+    depends_on:
+      - app_rabbitmq
     networks:
       - kdg-backend
 
