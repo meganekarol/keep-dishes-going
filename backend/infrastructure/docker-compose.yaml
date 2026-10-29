@@ -117,6 +117,7 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://idp_keycloak:8080/realms/keepdishesgoing/protocol/openid-connect/certs
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
     volumes:
       # The same optional Stripe keys file as for ./gradlew bootRun.
       - ../config:/app/config:ro

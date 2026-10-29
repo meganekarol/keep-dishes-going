@@ -1,14 +1,45 @@
 # Getting started
 
-From a clean machine to a running Keep Dishes Going with demo data, in about fifteen minutes.
+From a clean machine to a running Keep Dishes Going with demo data.
 
-Two repositories are involved. This guide assumes they sit side by side:
+## Quick start: everything in Docker
 
-```text
-programming6/
-  backend/     this repository
-  frontend/    the React client
+All you need is Docker Desktop. From the repository root:
+
+```bash
+cd backend/infrastructure
+docker compose --profile full up -d --build
 ```
+
+The first run builds three images and takes several minutes. **Keycloak needs about two more
+minutes on its first boot** while it sets up its database; until then signing in fails. It is ready
+when http://localhost:8180/realms/keepdishesgoing answers.
+
+Then open **http://localhost:5173**:
+
+| As | Sign in with | Try |
+|---|---|---|
+| Customer | nothing, guests order without an account | Browse the list or map, add dishes to a basket, check out |
+| Owner | `owner` / `owner` | Manage La Petite Maison: dishes, opening hours, incoming orders |
+| Admin | `kdg-admin` / `kdg-admin` | Price range criteria, and **Load demo history** for the price graph |
+
+What is already there:
+
+- **Four demo restaurants** with published menus, created on first start by
+  `DemoRestaurantSeeder`. The first one belongs to `owner`. Turn it off with `SEED_DEMO_DATA=false`.
+- **Simulated payments.** Without a Stripe key, checkout opens a simulated payment page instead of
+  Stripe's. Pressing **Pay** goes through the same confirmation use case as a real Stripe callback.
+  To use Stripe instead, see section 4.
+- **A simulated courier.** Once the owner accepts an order and marks it ready, the delivery
+  simulator picks it up, reports positions along the route and delivers it within about 40 seconds.
+
+A full round trip: order as a guest, pay, sign in as `owner`, accept the order, mark it ready, then
+watch the tracking page until it says delivered.
+
+Stop it with `docker compose --profile full down`. Data is kept in Docker volumes, so the next
+`up` picks up where you left off.
+
+The rest of this guide runs the backend and frontend outside Docker, for development.
 
 ---
 
@@ -16,13 +47,13 @@ programming6/
 
 | Tool | Version | Check with |
 |---|---|---|
-| JDK | 17 | `java -version` |
+| JDK | 17 (Gradle downloads it if missing) | `java -version` |
 | Docker Desktop | any current | `docker compose version` |
 | Node.js | 20 or newer | `node -v` |
-| Stripe CLI | any current | `stripe --version` |
+| Stripe CLI | any current, optional | `stripe --version` |
 
-The Stripe CLI is only needed to demonstrate paying for an order (US-23). Everything else runs
-without it, and unpaid orders behave correctly — they simply never reach a restaurant.
+The Stripe CLI is only needed to pay through Stripe's real test checkout (US-23). Without a Stripe
+key the backend uses simulated payments instead, as in the quick start.
 
 ---
 
@@ -94,9 +125,14 @@ rather than the export, redo that or the admin will see a "My restaurant" button
 
 ---
 
-## 4. Stripe credentials
+## 4. Stripe credentials (optional)
 
-Payment keys are **not** in the repository. Spring Boot reads them from `backend/config/`, which
+**Skip this section to use simulated payments.** With no Stripe key configured, the backend logs
+`payments are SIMULATED` at startup and checkout opens a simulated payment page served by the
+backend. Everything after payment (the restaurant accepting, capturing, releasing) runs exactly as
+with Stripe.
+
+To use Stripe's real test checkout instead: payment keys are **not** in the repository. Spring Boot reads them from `backend/config/`, which
 git ignores.
 
 Copy `backend/config/application.yml.example` to `backend/config/application.yml` and fill it in:
@@ -112,8 +148,11 @@ kdg:
 `sk_test_...` comes from the Stripe dashboard in **test mode**. `whsec_...` comes from the
 listener you start in section 6 — run that first if you do not have one yet.
 
-Without these the application still boots. Checkout will fail when it tries to open a payment,
-and `StripeSignatureVerifier` logs a warning at startup saying every callback will be refused.
+Setting `secret-key` is what switches the backend from simulated payments to Stripe. Without
+`webhook-secret`, `StripeSignatureVerifier` refuses every callback, so orders never get past payment.
+
+The Docker quick start reads the same file, which is mounted into the backend container. It also
+accepts `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` from `infrastructure/.env`.
 
 ---
 
@@ -133,9 +172,9 @@ up once.
 
 ---
 
-## 6. Forward Stripe webhooks
+## 6. Forward Stripe webhooks (only with Stripe)
 
-Stripe cannot reach `localhost`, so a payment made in the browser will never come back on its own.
+Skip this with simulated payments. Stripe cannot reach `localhost`, so a payment made in the browser will never come back on its own.
 The CLI bridges that:
 
 ```bash
@@ -170,25 +209,28 @@ Keycloak client's redirect URIs say the same.
 
 ---
 
-## 8. Load some data
+## 8. Demo data
 
-A fresh database has no restaurants, so the catalogue is empty and the price graph has nothing to
-draw.
+**Restaurants are seeded for you.** On startup `DemoRestaurantSeeder` creates four restaurants in
+Antwerp with published menus, through the same use cases the owner's screens use. The first, La
+Petite Maison, belongs to the `owner` account. Each restaurant is only created when its owner has
+none yet, so restarts add nothing. Set `SEED_DEMO_DATA=false` (or `kdg.demo.seed-data: false`)
+to start from an empty catalogue.
 
-**Fastest path.** Open `src/test/http/test.http` in IntelliJ and run steps 1 to 43 in order. That
-registers an owner in Keycloak, creates a restaurant, builds a five-dish menu exercising drafts,
-scheduling and stock, places a guest order, and loads a year of back-dated price history.
+**Ordering.** Build a basket in the browser and check out:
 
-Set `@kdgAdminPass` at the top of the file first if you changed that account's password.
+- With simulated payments, press **Pay** on the simulated checkout page.
+- With Stripe, pay with test card `4242 4242 4242 4242`, any future expiry and any CVC. The
+  webhook arrives through the CLI from section 6.
 
-**Then, for the parts that need a real payment.** Steps 39 onward stop short of the owner's order
-flow, because `ConfirmPaymentUseCaseImpl` asks Stripe whether a payment is genuinely held before
-letting an order through — so nothing can fake its way past. To see US-10, US-12, US-24 and
-US-25:
+Either way the order then appears in the owner's list. `ConfirmPaymentUseCaseImpl` asks the
+payment provider whether the money is genuinely held before letting an order through, so a forged
+callback cannot get an order past payment.
 
-1. Build a basket in the browser and go through checkout
-2. Pay with test card `4242 4242 4242 4242`, any future expiry, any CVC
-3. The webhook arrives through the CLI from section 6 and the order appears in the owner's list
+**Exercising every feature through the API.** `src/test/http/test.http` registers a second owner,
+builds a menu that covers drafts, scheduling and stock, places a guest order and loads price
+history. Run steps 1 to 43 in order from IntelliJ. Set `@kdgAdminPass` at the top first if you
+changed that account's password.
 
 **For the price range graph.** Sign in as `kdg-admin`, open **Price range criteria**, and press
 **Load demo history**. It writes a year of back-dated thresholds and menu averages so the graph
@@ -200,18 +242,21 @@ has a shape. Pressing it twice adds nothing.
 
 ```bash
 cd backend/infrastructure
-docker compose down -v
-rm -rf postgresql rabbitmq idp_mysql_data
-docker compose up -d
+docker compose --profile full down -v
+docker compose up -d        # or --profile full up -d for the Docker quick start
 ```
 
-This wipes the application database **and** Keycloak, so the realm is re-imported from the
+`-v` deletes the Docker volumes. This wipes the application database **and** Keycloak, so the realm is re-imported from the
 committed export, and the two accounts in section 3 come back with their passwords. Any account
 you created yourself is gone.
 
 ---
 
 ## Troubleshooting
+
+**Signing in fails, or the login page does not load, right after the first start.** Keycloak
+takes about two minutes on its first boot while it creates its database. Wait until
+`curl http://localhost:8180/realms/keepdishesgoing` answers 200.
 
 **Keycloak exits immediately on first boot.** It raced MySQL. `docker compose up -d idp_keycloak`
 once MySQL is healthy.
@@ -226,8 +271,11 @@ under Users → the account → Role mapping.
 **The admin screen 403s.** The account needs the `admin` realm role, which only `kdg-admin` has by
 default.
 
-**Checkout fails to open a payment.** `backend/config/application.yml` is missing or has no
-`secret-key`. See section 4.
+**Checkout fails to open a payment.** With Stripe, the `secret-key` in
+`backend/config/application.yml` is wrong or not in test mode. See section 4.
+
+**Checkout opens the simulated page but you wanted Stripe.** No `secret-key` reached the backend.
+Check `backend/config/application.yml`, and restart the backend after changing it.
 
 **Payment succeeds but the order never reaches the restaurant.** `stripe listen` is not running,
 or `webhook-secret` does not match the one it printed. The backend logs
