@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
@@ -50,6 +51,12 @@ public class GlobalExceptionHandler {
         log.warn("Not found on {}: {}", request.getRequestURI(), e.getMessage());
         String message = e.getMessage() == null ? "Resource not found" : e.getMessage();
         return build(HttpStatus.NOT_FOUND, message, request);
+    }
+
+    /** A path no controller or static resource answers, such as a missing demo image. */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(NoResourceFoundException e, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Resource not found", request);
     }
 
     // ==================== Bad request ====================

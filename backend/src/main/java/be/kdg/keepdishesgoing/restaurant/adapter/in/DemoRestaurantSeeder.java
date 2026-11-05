@@ -17,6 +17,7 @@ import be.kdg.keepdishesgoing.restaurant.port.in.commands.CreateRestaurantComman
 import be.kdg.keepdishesgoing.restaurant.port.in.commands.PublishDishCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -65,15 +66,18 @@ public class DemoRestaurantSeeder implements ApplicationRunner {
     private final CreateRestaurantUseCase createRestaurantUseCase;
     private final CreateDishUseCase createDishUseCase;
     private final PublishAndUnpublishDishUseCase publishDishUseCase;
+    private final String imageBaseUrl;
 
     public DemoRestaurantSeeder(GetOwnerRestaurantQuery getOwnerRestaurantQuery,
                                 CreateRestaurantUseCase createRestaurantUseCase,
                                 CreateDishUseCase createDishUseCase,
-                                PublishAndUnpublishDishUseCase publishDishUseCase) {
+                                PublishAndUnpublishDishUseCase publishDishUseCase,
+                                @Value("${kdg.demo.image-base-url}") String imageBaseUrl) {
         this.getOwnerRestaurantQuery = getOwnerRestaurantQuery;
         this.createRestaurantUseCase = createRestaurantUseCase;
         this.createDishUseCase = createDishUseCase;
         this.publishDishUseCase = publishDishUseCase;
+        this.imageBaseUrl = imageBaseUrl;
     }
 
     @Override
@@ -120,7 +124,7 @@ public class DemoRestaurantSeeder implements ApplicationRunner {
         for (DemoDish dish : demo.dishes()) {
             Dish created = createDishUseCase.createDish(new CreateDishCommand(
                     restaurantId, dish.name(), dish.type(), dish.tags(), dish.description(),
-                    dish.price(), picture(demo.slug() + "-" + slug(dish.name()))));
+                    dish.price(), picture(slug(dish.name()))));
             publishDishUseCase.publishDish(new PublishDishCommand(restaurantId, created.getDishId().uuid()));
         }
         log.info("Demo restaurant {} created with {} dishes", demo.name(), demo.dishes().size());
@@ -141,8 +145,9 @@ public class DemoRestaurantSeeder implements ApplicationRunner {
                 .replaceAll("[^a-z0-9]+", "-");
     }
 
-    private static String picture(String seed) {
-        return "https://picsum.photos/seed/" + seed + "/600/400";
+    /** A photo in src/main/resources/images, named after the restaurant's or dish's slug. */
+    private String picture(String slug) {
+        return imageBaseUrl + "/" + slug + ".jpg";
     }
 
     // ==================== The demo catalogue ====================

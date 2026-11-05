@@ -55,6 +55,10 @@ public class SecurityConfig {
                         // ever handed to whoever completed the checkout.
                         .requestMatchers(HttpMethod.GET, "/api/orders/*").permitAll()
 
+                        // The demo catalogue's photos, loaded by the browser as
+                        // plain <img> requests that carry no token.
+                        .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
+
                         // Listed before the public catalogue below: "me" would
                         // otherwise be matched as a restaurant id and served to
                         // anyone.

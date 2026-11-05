@@ -53,6 +53,9 @@ kdg:
     # Creates a few restaurants on startup when they do not exist yet, one of
     # them owned by the realm's owner/owner account. See DemoRestaurantSeeder.
     seed-data: ${SEED_DEMO_DATA:true}
+    # Where the browser finds the demo photos in src/main/resources/images,
+    # which this API serves at /images.
+    image-base-url: ${PUBLIC_API_URL:http://localhost:8080}/images
   payment:
     stripe:
       # Test-mode keys only, kept out of git. Supply them either as environment
